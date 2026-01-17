@@ -24,8 +24,34 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const [showPaywall, setShowPaywall] = useState(false)
   const [isNewConversation, setIsNewConversation] = useState(true)
+  const [currentRemaining, setCurrentRemaining] = useState<number>(diagnosticsRemaining)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Check limit on page load for new conversations
+  useEffect(() => {
+    async function checkLimitOnLoad() {
+      // Only check for new conversations (no ID in URL)
+      if (id) {
+        return
+      }
+
+      console.log('[Chat] Checking limit on page load...')
+      const limitStatus = await checkDiagnosticLimit()
+      console.log('[Chat] Limit status:', limitStatus)
+
+      setCurrentRemaining(limitStatus.remaining)
+
+      if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
+        console.log('[Chat] User has no remaining diagnostics, showing paywall')
+        setShowPaywall(true)
+      }
+    }
+
+    if (user && profile) {
+      checkLimitOnLoad()
+    }
+  }, [id, user, profile, checkDiagnosticLimit])
 
   // Load existing diagnostic if ID provided
   useEffect(() => {
@@ -65,10 +91,12 @@ export default function Chat() {
     const messageContent = input.trim()
     setInput('')
 
-    // Check limits for new conversations
+    // Check limits for new conversations (double-check before sending)
     if (isNewConversation) {
       const limitStatus = await checkDiagnosticLimit()
-      if (!limitStatus.canDiagnose) {
+      console.log('[Chat] handleSubmit - Limit check:', limitStatus)
+
+      if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
         setShowPaywall(true)
         setInput(messageContent) // Restore input
         return
@@ -86,8 +114,17 @@ export default function Chat() {
 
         // Increment counter for free users after first message
         if (!isPremium) {
-          await incrementDiagnosticCount()
-          refreshProfile?.()
+          console.log('[Chat] Incrementing diagnostic counter...')
+          const success = await incrementDiagnosticCount()
+          console.log('[Chat] Increment result:', success)
+
+          // Refresh profile to get updated counter
+          if (refreshProfile) {
+            await refreshProfile()
+          }
+
+          // Update local remaining count
+          setCurrentRemaining(prev => Math.max(0, prev - 1))
         }
 
         // Update URL without triggering navigation
@@ -118,6 +155,9 @@ export default function Chat() {
       handleSubmit(e)
     }
   }
+
+  // Display remaining from fresh check if available, otherwise from profile
+  const displayRemaining = currentRemaining
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -151,7 +191,7 @@ export default function Chat() {
                 </Badge>
               ) : (
                 <Badge variant="secondary">
-                  {diagnosticsRemaining}/2 restants
+                  {displayRemaining}/2 restants
                 </Badge>
               )}
             </div>
