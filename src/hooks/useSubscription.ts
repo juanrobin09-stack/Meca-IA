@@ -137,23 +137,30 @@ export function useSubscription(profile: Profile | null) {
 
     setLoading(true)
     try {
-      // Use SQL increment to avoid race conditions and stale data issues
-      // This increments the value directly in the database
-      const newCount = freshProfile.free_diagnostics_used + 1
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          free_diagnostics_used: newCount,
-        })
-        .eq('id', profile.id)
+      // Use atomic RPC function to avoid race conditions
+      // This ensures the counter is incremented correctly even with concurrent requests
+      const { data, error } = await supabase.rpc('increment_diagnostic_count', {
+        p_user_id: profile.id,
+      })
 
       if (error) {
-        console.error('[useSubscription] Error incrementing counter:', error)
-        return false
+        console.error('[useSubscription] RPC error, using fallback:', error)
+        // Fallback to direct update if RPC not available (for backwards compatibility)
+        const newCount = (freshProfile.free_diagnostics_used || 0) + 1
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ free_diagnostics_used: newCount })
+          .eq('id', profile.id)
+
+        if (updateError) {
+          console.error('[useSubscription] Fallback update also failed:', updateError)
+          return false
+        }
+        console.log('[useSubscription] Counter incremented (fallback) to:', newCount)
+        return true
       }
 
-      console.log('[useSubscription] Counter incremented to:', newCount)
+      console.log('[useSubscription] Counter incremented atomically to:', data)
       return true
     } finally {
       setLoading(false)
@@ -172,22 +179,29 @@ export function useSubscription(profile: Profile | null) {
 
     setLoading(true)
     try {
-      const currentCount = freshProfile.free_devis_used ?? 0
-      const newCount = currentCount + 1
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          free_devis_used: newCount,
-        })
-        .eq('id', profile.id)
+      // Use atomic RPC function to avoid race conditions
+      const { data, error } = await supabase.rpc('increment_devis_count', {
+        p_user_id: profile.id,
+      })
 
       if (error) {
-        console.error('[useSubscription] Error incrementing devis counter:', error)
-        return false
+        console.error('[useSubscription] RPC error, using fallback:', error)
+        // Fallback to direct update
+        const newCount = (freshProfile.free_devis_used || 0) + 1
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ free_devis_used: newCount })
+          .eq('id', profile.id)
+
+        if (updateError) {
+          console.error('[useSubscription] Fallback update also failed:', updateError)
+          return false
+        }
+        console.log('[useSubscription] Devis counter incremented (fallback) to:', newCount)
+        return true
       }
 
-      console.log('[useSubscription] Devis counter incremented to:', newCount)
+      console.log('[useSubscription] Devis counter incremented atomically to:', data)
       return true
     } finally {
       setLoading(false)

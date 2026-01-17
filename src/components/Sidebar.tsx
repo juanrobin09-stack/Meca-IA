@@ -21,8 +21,6 @@ import {
   HelpCircle,
   Car,
   Bell,
-  Scale,
-  BarChart3
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -30,17 +28,15 @@ interface NavItem {
   href: string
   icon: React.ComponentType<{ className?: string }>
   label: string
-  tier?: 'premium' | 'pro'
+  tier?: 'premium'
 }
 
 const navItems: NavItem[] = [
   { href: '/app', icon: Home, label: 'Accueil' },
   { href: '/app/chat', icon: MessageSquarePlus, label: 'Nouveau diagnostic' },
   { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis' },
-  { href: '/app/comparer-devis', icon: Scale, label: 'Comparer des devis', tier: 'pro' },
   { href: '/app/vehicules', icon: Car, label: 'Mes vehicules', tier: 'premium' },
   { href: '/app/rappels', icon: Bell, label: 'Rappels entretien', tier: 'premium' },
-  { href: '/app/rapports', icon: BarChart3, label: 'Rapports', tier: 'pro' },
   { href: '/app/garages', icon: MapPin, label: 'Trouver un garage' },
   { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une piece' },
   { href: '/app/history', icon: History, label: 'Historique' },
@@ -92,12 +88,7 @@ export default function Sidebar() {
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href
-              // Determine if locked based on tier
-              // TODO: Get actual tier from user profile when available
-              const isFree = !isPremium
-              const isPro = false // Will be updated when Pro tier is available from profile
-              const isLocked = (item.tier === 'premium' && isFree) ||
-                              (item.tier === 'pro' && !isPro)
+              const isLocked = item.tier === 'premium' && !isPremium
 
               return (
                 <motion.div
@@ -117,12 +108,7 @@ export default function Sidebar() {
                   >
                     <item.icon className="h-5 w-5" />
                     <span className="flex-1">{item.label}</span>
-                    {item.tier === 'pro' && (
-                      <Badge className="ml-auto bg-amber-500 text-black text-[10px] px-1.5 py-0">
-                        PRO
-                      </Badge>
-                    )}
-                    {item.tier === 'premium' && isFree && (
+                    {item.tier === 'premium' && !isPremium && (
                       <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
                         Premium
                       </Badge>
