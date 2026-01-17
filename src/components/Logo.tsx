@@ -15,27 +15,56 @@ export default function Logo({ size = 'md', showText = true, linkTo, className =
   }
 
   const logoContent = (
-    <div className={`flex items-center gap-2 ${className}`}>
-      {/* Icône logo */}
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      {/* Icône logo - Clé à molette + IA */}
       <div className={`${sizes[size].icon} relative`}>
         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-          {/* Fond bleu arrondi */}
-          <rect x="2" y="2" width="44" height="44" rx="10" fill="#3B82F6" />
+          {/* Fond gradient */}
+          <defs>
+            <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1E40AF" />
+              <stop offset="100%" stopColor="#3B82F6" />
+            </linearGradient>
+            <linearGradient id="wrenchGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F8FAFC" />
+              <stop offset="100%" stopColor="#E2E8F0" />
+            </linearGradient>
+          </defs>
 
-          {/* Engrenage simple */}
-          <g fill="white">
-            <circle cx="22" cy="26" r="7" />
-            <circle cx="22" cy="26" r="3" fill="#3B82F6" />
-            {/* Dents */}
-            <rect x="19" y="13" width="6" height="6" rx="1" />
-            <rect x="19" y="33" width="6" height="6" rx="1" />
-            <rect x="9" y="23" width="6" height="6" rx="1" />
-            <rect x="29" y="23" width="6" height="6" rx="1" />
+          {/* Fond carré arrondi */}
+          <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#bgGradient)" />
+
+          {/* Clé à molette stylisée */}
+          <g transform="translate(8, 8)">
+            {/* Tête de la clé (hexagonale) */}
+            <path
+              d="M8 4 L12 6 L12 12 L8 14 L4 12 L4 6 Z"
+              fill="url(#wrenchGradient)"
+              stroke="#CBD5E1"
+              strokeWidth="0.5"
+            />
+            <circle cx="8" cy="9" r="2" fill="#1E40AF" />
+
+            {/* Manche de la clé */}
+            <rect x="6" y="14" width="4" height="14" rx="1" fill="url(#wrenchGradient)" />
+
+            {/* Bout de la clé (ouvert) */}
+            <path
+              d="M4 28 L6 28 L6 32 L4 32 L4 28 Z M10 28 L12 28 L12 32 L10 32 L10 28 Z"
+              fill="url(#wrenchGradient)"
+            />
           </g>
 
-          {/* Badge IA orange */}
-          <circle cx="36" cy="12" r="6" fill="#F97316" />
-          <text x="36" y="15.5" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial, sans-serif">IA</text>
+          {/* Circuit/Puce IA */}
+          <g transform="translate(22, 10)">
+            <rect x="2" y="2" width="12" height="12" rx="2" fill="#10B981" />
+            <text x="8" y="11" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold" fontFamily="system-ui, sans-serif">IA</text>
+            {/* Lignes de circuit */}
+            <line x1="8" y1="0" x2="8" y2="2" stroke="#10B981" strokeWidth="1.5" />
+            <line x1="8" y1="14" x2="8" y2="16" stroke="#10B981" strokeWidth="1.5" />
+            <line x1="0" y1="8" x2="2" y2="8" stroke="#10B981" strokeWidth="1.5" />
+            <line x1="14" y1="8" x2="16" y2="8" stroke="#10B981" strokeWidth="1.5" />
+          </g>
         </svg>
       </div>
 
