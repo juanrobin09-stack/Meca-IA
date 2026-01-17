@@ -38,9 +38,9 @@ export default function Signup() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
+          <Link to="/" className="flex justify-center mb-4">
             <Logo size="lg" showText={false} />
-          </div>
+          </Link>
           <CardTitle className="text-2xl">Créer un compte</CardTitle>
           <CardDescription>
             Inscris-toi pour commencer à diagnostiquer
@@ -101,6 +101,9 @@ export default function Signup() {
                 Se connecter
               </Link>
             </p>
+            <Link to="/" className="text-sm text-muted-foreground hover:text-primary text-center">
+              ← Retour à l'accueil
+            </Link>
           </CardFooter>
         </form>
       </Card>

@@ -37,9 +37,9 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
+          <Link to="/" className="flex justify-center mb-4">
             <Logo size="lg" showText={false} />
-          </div>
+          </Link>
           <CardTitle className="text-2xl">Connexion</CardTitle>
           <CardDescription>
             Entre tes identifiants pour accéder à MecaIA
@@ -86,6 +86,9 @@ export default function Login() {
                 Créer un compte
               </Link>
             </p>
+            <Link to="/" className="text-sm text-muted-foreground hover:text-primary text-center">
+              ← Retour à l'accueil
+            </Link>
           </CardFooter>
         </form>
       </Card>
