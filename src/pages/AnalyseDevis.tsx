@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { analyzeQuote as analyzeQuoteAPI } from '@/lib/anthropic'
+import { useConfetti } from '@/hooks/useConfetti'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
+import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +17,7 @@ import ReactMarkdown from 'react-markdown'
 export default function AnalyseDevis() {
   const { user, profile } = useAuth()
   const { isPremium, devisRemaining, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
+  const { celebrateSuccess } = useConfetti()
 
   const [selectedFile, setSelectedFile] = useState<{ dataUrl: string; base64: string } | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -82,6 +86,7 @@ export default function AnalyseDevis() {
     try {
       const result = await analyzeQuoteAPI(selectedFile.base64)
       setAnalysis(result)
+      celebrateSuccess() // Confetti on success!
 
       // Increment counter after successful analysis (for free users)
       if (!isPremium) {
@@ -106,15 +111,22 @@ export default function AnalyseDevis() {
   const displayRemaining = currentRemaining
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
 
       <main className="md:pl-64 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-8 max-w-3xl">
-          <div className="mb-8">
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <div className="flex items-center justify-between flex-wrap gap-4">
               <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
-                <FileText className="h-8 w-8 text-primary" />
+                <motion.div whileHover={{ rotate: 10 }}>
+                  <FileText className="h-8 w-8 text-primary" />
+                </motion.div>
                 Analyse ton devis garage
               </h1>
               {!isPremium && (
@@ -126,7 +138,7 @@ export default function AnalyseDevis() {
             <p className="text-muted-foreground mt-2">
               Upload ton devis, l'IA te dit si c'est le bon prix et comment négocier.
             </p>
-          </div>
+          </motion.div>
 
           {!analysis ? (
             <Card>
@@ -295,5 +307,6 @@ export default function AnalyseDevis() {
 
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} mode="devis" />
     </div>
+    </PageTransition>
   )
 }

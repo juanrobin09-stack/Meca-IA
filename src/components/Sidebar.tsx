@@ -1,9 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { DarkModeToggle } from '@/components/DarkModeToggle'
+import { Tooltip } from '@/components/ui/tooltip'
 import {
   Home,
   MessageSquarePlus,
@@ -14,7 +17,8 @@ import {
   Sparkles,
   FileText,
   MapPin,
-  ShoppingCart
+  ShoppingCart,
+  HelpCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -45,11 +49,18 @@ export default function Sidebar() {
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r bg-card">
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo */}
-          <div className="flex items-center gap-2 h-16 px-6 border-b">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <Wrench className="h-4 w-4 text-primary-foreground" />
+          <div className="flex items-center justify-between h-16 px-6 border-b">
+            <div className="flex items-center gap-2">
+              <motion.div
+                className="h-8 w-8 rounded-full bg-primary flex items-center justify-center"
+                whileHover={{ rotate: 15 }}
+                transition={{ type: 'spring', stiffness: 300 }}
+              >
+                <Wrench className="h-4 w-4 text-primary-foreground" />
+              </motion.div>
+              <span className="font-semibold text-xl">MecaIA</span>
             </div>
-            <span className="font-semibold text-xl">MecaIA</span>
+            <DarkModeToggle />
           </div>
 
           {/* Status Badge */}
@@ -60,9 +71,12 @@ export default function Sidebar() {
                 Premium
               </Badge>
             ) : (
-              <Badge variant="secondary" className="w-full justify-center py-1">
-                Gratuit: {diagnosticsRemaining}/2 restants
-              </Badge>
+              <Tooltip content="Passe Premium pour des diagnostics illimités !">
+                <Badge variant="secondary" className="w-full justify-center py-1 cursor-help">
+                  Gratuit: {diagnosticsRemaining}/2 restants
+                  <HelpCircle className="h-3 w-3 ml-1" />
+                </Badge>
+              </Tooltip>
             )}
           </div>
 
@@ -73,19 +87,24 @@ export default function Sidebar() {
             {navItems.map((item) => {
               const isActive = location.pathname === item.href
               return (
-                <Link
+                <motion.div
                   key={item.href}
-                  to={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  )}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
-                  <item.icon className="h-5 w-5" />
-                  {item.label}
-                </Link>
+                  <Link
+                    to={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    {item.label}
+                  </Link>
+                </motion.div>
               )
             })}
           </nav>

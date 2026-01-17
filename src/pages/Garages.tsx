@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import Sidebar from '@/components/Sidebar'
+import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -77,20 +79,27 @@ export default function Garages() {
   }
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
 
       <main className="md:pl-64 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
-              <MapPin className="h-8 w-8 text-primary" />
+              <motion.div whileHover={{ scale: 1.1 }}>
+                <MapPin className="h-8 w-8 text-primary" />
+              </motion.div>
               Trouve un garage de confiance
             </h1>
             <p className="text-muted-foreground">
               Garages vérifiés avec avis Google près de chez toi
             </p>
-          </div>
+          </motion.div>
 
           {/* Search */}
           <div className="flex gap-2 mb-8">
@@ -133,8 +142,15 @@ export default function Garages() {
                 {garages.length} garage{garages.length > 1 ? 's' : ''} trouvé{garages.length > 1 ? 's' : ''}
               </p>
               <div className="grid gap-4">
-                {garages.map((garage) => (
-                  <Card key={garage.id}>
+                {garages.map((garage, index) => (
+                  <motion.div
+                    key={garage.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                  <Card className="hover:shadow-lg transition-shadow">
                     <CardHeader className="pb-2">
                       <div className="flex items-start justify-between gap-4">
                         <div>
@@ -182,6 +198,7 @@ export default function Garages() {
                       </div>
                     </CardContent>
                   </Card>
+                  </motion.div>
                 ))}
               </div>
             </>
@@ -226,5 +243,6 @@ export default function Garages() {
         </div>
       </main>
     </div>
+    </PageTransition>
   )
 }

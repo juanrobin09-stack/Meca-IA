@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
 import Sidebar from '@/components/Sidebar'
+import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -21,20 +23,26 @@ export default function Dashboard() {
   })
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
 
       <main className="md:pl-64 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-8">
           {/* Welcome */}
-          <div className="mb-8">
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
             <h1 className="text-2xl md:text-3xl font-bold mb-2">
               Salut {displayName} !
             </h1>
             <p className="text-muted-foreground">
               Bienvenue sur MecaIA, ton assistant diagnostic auto.
             </p>
-          </div>
+          </motion.div>
 
           {/* Status Card for Free Users */}
           {!isPremium && (
@@ -59,31 +67,41 @@ export default function Dashboard() {
           {/* Quick Actions */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <Link to="/app/chat">
-              <Card className="hover:border-primary transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <MessageSquarePlus className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle>Nouveau diagnostic</CardTitle>
-                  <CardDescription>
-                    Décris ton problème de voiture et obtiens un diagnostic expert en quelques minutes.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              <motion.div whileHover={{ scale: 1.02, y: -4 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full">
+                  <CardHeader>
+                    <motion.div
+                      className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4"
+                      whileHover={{ rotate: 10 }}
+                    >
+                      <MessageSquarePlus className="h-6 w-6 text-primary" />
+                    </motion.div>
+                    <CardTitle>Nouveau diagnostic</CardTitle>
+                    <CardDescription>
+                      Décris ton problème de voiture et obtiens un diagnostic expert en quelques minutes.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
             </Link>
 
             <Link to="/app/history">
-              <Card className="hover:border-primary transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <History className="h-6 w-6 text-primary" />
-                  </div>
-                  <CardTitle>Historique</CardTitle>
-                  <CardDescription>
-                    Retrouve tous tes diagnostics passés et reprends une conversation.
-                  </CardDescription>
-                </CardHeader>
-              </Card>
+              <motion.div whileHover={{ scale: 1.02, y: -4 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full">
+                  <CardHeader>
+                    <motion.div
+                      className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4"
+                      whileHover={{ rotate: -10 }}
+                    >
+                      <History className="h-6 w-6 text-primary" />
+                    </motion.div>
+                    <CardTitle>Historique</CardTitle>
+                    <CardDescription>
+                      Retrouve tous tes diagnostics passés et reprends une conversation.
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
             </Link>
           </div>
 
@@ -161,5 +179,6 @@ export default function Dashboard() {
         </div>
       </main>
     </div>
+    </PageTransition>
   )
 }

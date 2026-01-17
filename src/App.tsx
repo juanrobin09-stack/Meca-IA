@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import Onboarding from '@/components/Onboarding'
 
 // Pages
 import Landing from '@/pages/Landing'
@@ -33,9 +36,35 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function OnboardingWrapper({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  useEffect(() => {
+    if (user) {
+      const done = localStorage.getItem('mecaia_onboarding_done')
+      if (!done) {
+        setShowOnboarding(true)
+      }
+    }
+  }, [user])
+
+  return (
+    <>
+      <AnimatePresence>
+        {showOnboarding && (
+          <Onboarding onComplete={() => setShowOnboarding(false)} />
+        )}
+      </AnimatePresence>
+      {children}
+    </>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <OnboardingWrapper>
       <Routes>
         {/* Public routes */}
         <Route
@@ -140,6 +169,7 @@ export default function App() {
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </OnboardingWrapper>
     </BrowserRouter>
   )
 }

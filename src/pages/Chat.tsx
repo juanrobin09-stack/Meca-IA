@@ -1,18 +1,22 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
 import { useChat } from '@/hooks/useChat'
+import { useConfetti } from '@/hooks/useConfetti'
 import Sidebar from '@/components/Sidebar'
 import ChatMessage from '@/components/ChatMessage'
 import PaywallModal from '@/components/PaywallModal'
 import PlateScanner from '@/components/PlateScanner'
+import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X, Car, CheckCircle2 } from 'lucide-react'
+import { Tooltip } from '@/components/ui/tooltip'
+import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X, Car, CheckCircle2, HelpCircle } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
 
@@ -26,6 +30,14 @@ interface VehicleInfo {
 
 const MAX_PHOTOS_PER_CONVERSATION = 2
 
+// Detect if diagnostic is complete (has all key sections)
+function isDiagnosticComplete(content: string): boolean {
+  const hasEstimation = content.includes('Estimation') || content.includes('estimation')
+  const hasDiagnostic = content.includes('Diagnostic') || content.includes('diagnostic')
+  const hasPieces = content.includes('pièce') || content.includes('Pièce')
+  return (hasEstimation && hasDiagnostic) || hasPieces
+}
+
 export default function Chat() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -33,6 +45,8 @@ export default function Chat() {
   const { isPremium, diagnosticsRemaining, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
   const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
   const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages } = useChat()
+  const { celebrate } = useConfetti()
+  const hasConfettiedRef = useRef(false)
 
   const [input, setInput] = useState('')
   const [showPaywall, setShowPaywall] = useState(false)
@@ -104,6 +118,17 @@ export default function Chat() {
       textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
     }
   }, [input])
+
+  // Trigger confetti when diagnostic is complete
+  useEffect(() => {
+    if (hasConfettiedRef.current) return
+
+    const lastMessage = messages[messages.length - 1]
+    if (lastMessage?.role === 'assistant' && isDiagnosticComplete(lastMessage.content)) {
+      hasConfettiedRef.current = true
+      celebrate()
+    }
+  }, [messages, celebrate])
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -233,6 +258,7 @@ export default function Chat() {
   const displayRemaining = currentRemaining
 
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background flex flex-col">
       <Sidebar />
 
@@ -269,9 +295,12 @@ export default function Chat() {
                   Premium
                 </Badge>
               ) : (
-                <Badge variant="secondary">
-                  {displayRemaining}/2 restants
-                </Badge>
+                <Tooltip content="Tu as 2 diagnostics gratuits par mois. Passe Premium pour illimité !">
+                  <Badge variant="secondary" className="cursor-help flex items-center gap-1">
+                    {displayRemaining}/2 restants
+                    <HelpCircle className="h-3 w-3" />
+                  </Badge>
+                </Tooltip>
               )}
             </div>
           </div>
@@ -414,17 +443,20 @@ export default function Chat() {
               onChange={handleImageSelect}
               className="hidden"
             />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION}
-              className="shrink-0"
-              title={photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Ajouter une photo'}
-            >
-              <Camera className="h-4 w-4" />
-            </Button>
+            <Tooltip content={photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Envoie une photo pour un diagnostic plus précis'}>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION}
+                  className="shrink-0"
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </motion.div>
+            </Tooltip>
 
             <Textarea
               ref={textareaRef}
@@ -436,18 +468,20 @@ export default function Chat() {
               rows={1}
               disabled={isLoading}
             />
-            <Button
-              type="submit"
-              size="icon"
-              disabled={(!input.trim() && !selectedImage) || isLoading}
-              className="shrink-0"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                type="submit"
+                size="icon"
+                disabled={(!input.trim() && !selectedImage) || isLoading}
+                className="shrink-0"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+            </motion.div>
           </form>
         </div>
       </div>
@@ -459,5 +493,6 @@ export default function Chat() {
         onVehicleConfirmed={handleVehicleConfirmed}
       />
     </div>
+    </PageTransition>
   )
 }

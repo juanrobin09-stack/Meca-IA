@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown'
+import { motion } from 'framer-motion'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { Wrench, User } from 'lucide-react'
@@ -13,7 +14,10 @@ export default function ChatMessage({ message, isStreaming }: ChatMessageProps) 
   const isUser = message.role === 'user'
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, x: isUser ? 20 : -20, y: 10 }}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       className={cn(
         'flex gap-3 mb-4',
         isUser ? 'flex-row-reverse' : 'flex-row'
@@ -91,6 +95,6 @@ export default function ChatMessage({ message, isStreaming }: ChatMessageProps) 
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   )
 }
