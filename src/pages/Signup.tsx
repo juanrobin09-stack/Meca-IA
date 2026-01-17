@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Wrench, Loader2 } from 'lucide-react'
+import Logo from '@/components/Logo'
+import PageTransition from '@/components/PageTransition'
+import { Loader2 } from 'lucide-react'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
@@ -32,13 +34,12 @@ export default function Signup() {
   }
 
   return (
+    <PageTransition>
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
-              <Wrench className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <Logo size="lg" showText={false} />
           </div>
           <CardTitle className="text-2xl">Créer un compte</CardTitle>
           <CardDescription>
@@ -104,5 +105,6 @@ export default function Signup() {
         </form>
       </Card>
     </div>
+    </PageTransition>
   )
 }

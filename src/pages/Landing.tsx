@@ -1,26 +1,27 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Wrench, Zap, MessageSquare, Euro, CheckCircle2 } from 'lucide-react'
+import Logo from '@/components/Logo'
+import PageTransition from '@/components/PageTransition'
+import { Zap, MessageSquare, Euro, CheckCircle2 } from 'lucide-react'
 
 export default function Landing() {
   return (
+    <PageTransition>
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-              <Wrench className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-xl">MecaIA</span>
-          </div>
+          <Logo size="md" />
           <div className="flex items-center gap-4">
             <Link to="/login">
               <Button variant="ghost">Connexion</Button>
             </Link>
             <Link to="/signup">
-              <Button>Commencer</Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button>Commencer</Button>
+              </motion.div>
             </Link>
           </div>
         </div>
@@ -249,17 +250,12 @@ export default function Landing() {
       <footer className="border-t py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                <Wrench className="h-3 w-3 text-primary-foreground" />
-              </div>
-              <span className="font-semibold">MecaIA</span>
-            </div>
+            <Logo size="sm" />
             <div className="flex gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground">Mentions légales</a>
-              <a href="#" className="hover:text-foreground">CGU</a>
-              <a href="#" className="hover:text-foreground">Confidentialité</a>
-              <a href="mailto:contact@mecaia.fr" className="hover:text-foreground">Contact</a>
+              <a href="#" className="hover:text-foreground transition-colors">Mentions légales</a>
+              <a href="#" className="hover:text-foreground transition-colors">CGU</a>
+              <a href="#" className="hover:text-foreground transition-colors">Confidentialité</a>
+              <a href="mailto:contact@mecaia.fr" className="hover:text-foreground transition-colors">Contact</a>
             </div>
             <p className="text-sm text-muted-foreground">
               © 2025 MecaIA
@@ -268,5 +264,6 @@ export default function Landing() {
         </div>
       </footer>
     </div>
+    </PageTransition>
   )
 }

@@ -7,13 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { DarkModeToggle } from '@/components/DarkModeToggle'
 import { Tooltip } from '@/components/ui/tooltip'
+import Logo from '@/components/Logo'
 import {
   Home,
   MessageSquarePlus,
   History,
   User,
   LogOut,
-  Wrench,
   Sparkles,
   FileText,
   MapPin,
@@ -49,17 +49,8 @@ export default function Sidebar() {
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r bg-card">
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b">
-            <div className="flex items-center gap-2">
-              <motion.div
-                className="h-8 w-8 rounded-full bg-primary flex items-center justify-center"
-                whileHover={{ rotate: 15 }}
-                transition={{ type: 'spring', stiffness: 300 }}
-              >
-                <Wrench className="h-4 w-4 text-primary-foreground" />
-              </motion.div>
-              <span className="font-semibold text-xl">MecaIA</span>
-            </div>
+          <div className="flex items-center justify-between h-16 px-4 border-b">
+            <Logo size="sm" linkTo="/app" />
             <DarkModeToggle />
           </div>
 
