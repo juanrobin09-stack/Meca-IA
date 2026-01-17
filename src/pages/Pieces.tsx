@@ -57,7 +57,7 @@ export default function Pieces() {
     if (site === 'oscaro') {
       return `https://www.oscaro.com/recherche?q=${encoded}`
     } else {
-      return `https://www.yakarouler.com/recherche?search=${encoded}`
+      return `https://www.yakarouler.com/recherche?q=${encoded}`
     }
   }
 
@@ -212,11 +212,6 @@ export default function Pieces() {
             </CardContent>
           </Card>
 
-          {/* Footer affilié */}
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            MecaIA peut recevoir une commission sur les achats effectués via ces liens,
-            sans surcoût pour toi.
-          </p>
         </div>
       </main>
     </div>
