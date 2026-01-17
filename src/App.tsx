@@ -21,6 +21,11 @@ import MentionsLegales from '@/pages/MentionsLegales'
 import CGU from '@/pages/CGU'
 import Confidentialite from '@/pages/Confidentialite'
 import NotFound from '@/pages/NotFound'
+import Pricing from '@/pages/Pricing'
+import Vehicles from '@/pages/Vehicles'
+import Reminders from '@/pages/Reminders'
+import CompareDevis from '@/pages/CompareDevis'
+import Reports from '@/pages/Reports'
 
 // Components
 import CookieBanner from '@/components/CookieBanner'
@@ -172,6 +177,41 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/app/vehicules"
+          element={
+            <ProtectedRoute>
+              <Vehicles />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/rappels"
+          element={
+            <ProtectedRoute>
+              <Reminders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/comparer-devis"
+          element={
+            <ProtectedRoute>
+              <CompareDevis />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/rapports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Public pages */}
+        <Route path="/pricing" element={<Pricing />} />
 
         {/* Legal pages */}
         <Route path="/mentions-legales" element={<MentionsLegales />} />

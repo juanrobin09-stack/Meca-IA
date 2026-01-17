@@ -18,16 +18,31 @@ import {
   FileText,
   MapPin,
   ShoppingCart,
-  HelpCircle
+  HelpCircle,
+  Car,
+  Bell,
+  Scale,
+  BarChart3
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const navItems = [
+interface NavItem {
+  href: string
+  icon: React.ComponentType<{ className?: string }>
+  label: string
+  tier?: 'premium' | 'pro'
+}
+
+const navItems: NavItem[] = [
   { href: '/app', icon: Home, label: 'Accueil' },
   { href: '/app/chat', icon: MessageSquarePlus, label: 'Nouveau diagnostic' },
   { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis' },
+  { href: '/app/comparer-devis', icon: Scale, label: 'Comparer des devis', tier: 'pro' },
+  { href: '/app/vehicules', icon: Car, label: 'Mes vehicules', tier: 'premium' },
+  { href: '/app/rappels', icon: Bell, label: 'Rappels entretien', tier: 'premium' },
+  { href: '/app/rapports', icon: BarChart3, label: 'Rapports', tier: 'pro' },
   { href: '/app/garages', icon: MapPin, label: 'Trouver un garage' },
-  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce' },
+  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une piece' },
   { href: '/app/history', icon: History, label: 'Historique' },
   { href: '/app/account', icon: User, label: 'Mon compte' },
 ]
@@ -74,9 +89,16 @@ export default function Sidebar() {
           <Separator />
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-1">
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href
+              // Determine if locked based on tier
+              // TODO: Get actual tier from user profile when available
+              const isFree = !isPremium
+              const isPro = false // Will be updated when Pro tier is available from profile
+              const isLocked = (item.tier === 'premium' && isFree) ||
+                              (item.tier === 'pro' && !isPro)
+
               return (
                 <motion.div
                   key={item.href}
@@ -84,16 +106,27 @@ export default function Sidebar() {
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                 >
                   <Link
-                    to={item.href}
+                    to={isLocked ? '/pricing' : item.href}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
                       isActive
                         ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      isLocked && 'opacity-60'
                     )}
                   >
                     <item.icon className="h-5 w-5" />
-                    {item.label}
+                    <span className="flex-1">{item.label}</span>
+                    {item.tier === 'pro' && (
+                      <Badge className="ml-auto bg-amber-500 text-black text-[10px] px-1.5 py-0">
+                        PRO
+                      </Badge>
+                    )}
+                    {item.tier === 'premium' && isFree && (
+                      <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
+                        Premium
+                      </Badge>
+                    )}
                   </Link>
                 </motion.div>
               )
