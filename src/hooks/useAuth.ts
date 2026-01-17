@@ -19,14 +19,31 @@ export function useAuth() {
   })
 
   useEffect(() => {
+    // Timeout pour éviter le loading infini si Supabase ne répond pas
+    const timeout = setTimeout(() => {
+      setState((prev) => {
+        if (prev.loading) {
+          console.warn('Auth timeout - setting loading to false')
+          return { ...prev, loading: false }
+        }
+        return prev
+      })
+    }, 5000) // 5 secondes max
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(timeout)
       setState((prev) => ({ ...prev, session, user: session?.user ?? null }))
       if (session?.user) {
         fetchProfile(session.user.id)
       } else {
         setState((prev) => ({ ...prev, loading: false }))
       }
+    }).catch((error) => {
+      clearTimeout(timeout)
+      console.error('Error getting session:', error)
+      // Si erreur Supabase, on arrête le loading pour permettre l'accès
+      setState((prev) => ({ ...prev, loading: false }))
     })
 
     // Listen for auth changes
@@ -41,7 +58,10 @@ export function useAuth() {
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   async function fetchProfile(userId: string) {
