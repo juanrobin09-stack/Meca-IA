@@ -52,15 +52,10 @@ export default function Pieces() {
 
   function buildSearchUrl(site: 'oscaro' | 'yakarouler') {
     const searchTerms = [piece, marque, modele].filter(Boolean).join(' ')
-    const encoded = encodeURIComponent(searchTerms)
 
-    if (site === 'oscaro') {
-      // Format Oscaro: https://www.oscaro.com/catalogue/recherche?q=plaquettes+frein
-      return `https://www.oscaro.com/catalogue/recherche?q=${encoded}`
-    } else {
-      // Format Yakarouler: https://www.yakarouler.com/recherche.html?searchText=plaquettes
-      return `https://www.yakarouler.com/recherche.html?searchText=${encoded}`
-    }
+    // Utilise Google avec filtre site: pour garantir que ça marche toujours
+    const googleQuery = encodeURIComponent(`site:${site === 'oscaro' ? 'oscaro.com' : 'yakarouler.com'} ${searchTerms}`)
+    return `https://www.google.com/search?q=${googleQuery}`
   }
 
   function handleSearch(site: 'oscaro' | 'yakarouler') {
