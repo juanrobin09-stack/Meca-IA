@@ -17,6 +17,13 @@ import Success from '@/pages/Success'
 import AnalyseDevis from '@/pages/AnalyseDevis'
 import Garages from '@/pages/Garages'
 import Pieces from '@/pages/Pieces'
+import MentionsLegales from '@/pages/MentionsLegales'
+import CGU from '@/pages/CGU'
+import Confidentialite from '@/pages/Confidentialite'
+import NotFound from '@/pages/NotFound'
+
+// Components
+import CookieBanner from '@/components/CookieBanner'
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -166,9 +173,15 @@ export default function App() {
           }
         />
 
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Legal pages */}
+        <Route path="/mentions-legales" element={<MentionsLegales />} />
+        <Route path="/cgu" element={<CGU />} />
+        <Route path="/confidentialite" element={<Confidentialite />} />
+
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      <CookieBanner />
       </OnboardingWrapper>
     </BrowserRouter>
   )

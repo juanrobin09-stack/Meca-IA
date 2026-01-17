@@ -251,16 +251,19 @@ export default function Landing() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <Logo size="sm" />
-            <div className="flex gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Mentions légales</a>
-              <a href="#" className="hover:text-foreground transition-colors">CGU</a>
-              <a href="#" className="hover:text-foreground transition-colors">Confidentialité</a>
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+              <Link to="/mentions-legales" className="hover:text-foreground transition-colors">Mentions légales</Link>
+              <Link to="/cgu" className="hover:text-foreground transition-colors">CGU</Link>
+              <Link to="/confidentialite" className="hover:text-foreground transition-colors">Confidentialité</Link>
               <a href="mailto:contact@mecaia.fr" className="hover:text-foreground transition-colors">Contact</a>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 MecaIA
+              © {new Date().getFullYear()} MecaIA
             </p>
           </div>
+          <p className="text-xs text-muted-foreground text-center mt-6">
+            MecaIA fournit des diagnostics à titre informatif uniquement et ne remplace pas l'avis d'un professionnel.
+          </p>
         </div>
       </footer>
     </div>
