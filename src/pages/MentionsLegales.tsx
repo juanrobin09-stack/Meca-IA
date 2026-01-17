@@ -33,9 +33,9 @@ export default function MentionsLegales() {
               <h2>2. Hébergement</h2>
               <p>
                 Ce site est hébergé par :<br />
-                <strong>Vercel Inc.</strong><br />
-                440 N Barranca Ave #4133<br />
-                Covina, CA 91723, États-Unis
+                <strong>Netlify, Inc.</strong><br />
+                44 Montgomery Street, Suite 300<br />
+                San Francisco, California 94104, États-Unis
               </p>
 
               <h2>3. Propriété intellectuelle</h2>
@@ -72,7 +72,7 @@ export default function MentionsLegales() {
               </p>
 
               <p className="text-muted-foreground text-sm mt-8">
-                Dernière mise à jour : Janvier 2025
+                Dernière mise à jour : Janvier 2026
               </p>
             </CardContent>
           </Card>
