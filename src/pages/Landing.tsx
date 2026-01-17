@@ -8,66 +8,77 @@ import PageTransition from '@/components/PageTransition'
 import { Zap, MessageSquare, Euro, CheckCircle2, X, AlertTriangle, Star, Car, Bell, MapPin, ShoppingCart, FileText, Sparkles, Gauge, Shield } from 'lucide-react'
 import { PLANS } from '@/config/plans'
 
-// Composant pour les orbes animées
-function AnimatedOrbs() {
+// Composant pour le fond blanc animé ultra moderne
+function AnimatedBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* Grille de fond */}
-      <div
-        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+      {/* Grille animée subtile */}
+      <motion.div
+        className="absolute inset-0"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
+          backgroundImage: `
+            linear-gradient(to right, rgba(59,130,246,0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(59,130,246,0.03) 1px, transparent 1px)
+          `,
+          backgroundSize: '60px 60px'
+        }}
+        animate={{
+          backgroundPosition: ['0px 0px', '60px 60px'],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: 'linear',
         }}
       />
 
-      {/* Orbes flottantes animées */}
+      {/* Gradient blobs animés */}
       <motion.div
-        className="absolute w-[500px] h-[500px] rounded-full"
+        className="absolute w-[600px] h-[600px] rounded-full blur-3xl"
         style={{
-          background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)',
-          top: '-10%',
-          right: '-10%',
+          background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, rgba(59,130,246,0.05) 40%, transparent 70%)',
+          top: '-20%',
+          right: '-15%',
         }}
         animate={{
-          x: [0, 30, 0],
-          y: [0, -20, 0],
-          scale: [1, 1.1, 1],
+          x: [0, 50, 0],
+          y: [0, -30, 0],
+          scale: [1, 1.2, 1],
         }}
         transition={{
-          duration: 8,
+          duration: 15,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
       />
       <motion.div
-        className="absolute w-[400px] h-[400px] rounded-full"
+        className="absolute w-[500px] h-[500px] rounded-full blur-3xl"
         style={{
-          background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)',
-          bottom: '10%',
-          left: '-5%',
+          background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, rgba(99,102,241,0.04) 40%, transparent 70%)',
+          bottom: '0%',
+          left: '-10%',
         }}
         animate={{
-          x: [0, -20, 0],
-          y: [0, 30, 0],
+          x: [0, -40, 0],
+          y: [0, 40, 0],
           scale: [1, 1.15, 1],
         }}
         transition={{
-          duration: 10,
+          duration: 18,
           repeat: Infinity,
           ease: 'easeInOut',
         }}
       />
       <motion.div
-        className="absolute w-[300px] h-[300px] rounded-full"
+        className="absolute w-[400px] h-[400px] rounded-full blur-3xl"
         style={{
-          background: 'radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)',
-          top: '40%',
-          left: '50%',
+          background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 60%)',
+          top: '30%',
+          left: '40%',
         }}
         animate={{
-          x: [0, 40, 0],
-          y: [0, -30, 0],
+          x: [0, 60, 0],
+          y: [0, -50, 0],
         }}
         transition={{
           duration: 12,
@@ -76,27 +87,82 @@ function AnimatedOrbs() {
         }}
       />
 
-      {/* Particules flottantes */}
-      {[...Array(6)].map((_, i) => (
+      {/* Lignes flottantes décoratives */}
+      <motion.div
+        className="absolute top-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-blue-200/50 to-transparent"
+        animate={{
+          opacity: [0.3, 0.6, 0.3],
+          scaleX: [0.8, 1, 0.8],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <motion.div
+        className="absolute top-2/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-indigo-200/40 to-transparent"
+        animate={{
+          opacity: [0.2, 0.5, 0.2],
+          scaleX: [0.9, 1, 0.9],
+        }}
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 2,
+        }}
+      />
+
+      {/* Points flottants */}
+      {[...Array(8)].map((_, i) => (
         <motion.div
           key={i}
-          className="absolute w-2 h-2 bg-blue-500/20 rounded-full"
+          className="absolute w-1.5 h-1.5 bg-blue-400/30 rounded-full"
           style={{
-            top: `${20 + i * 15}%`,
-            left: `${10 + i * 15}%`,
+            top: `${15 + i * 10}%`,
+            left: `${5 + i * 12}%`,
           }}
           animate={{
-            y: [0, -30, 0],
-            opacity: [0.3, 0.6, 0.3],
+            y: [0, -20, 0],
+            opacity: [0.2, 0.5, 0.2],
+            scale: [1, 1.2, 1],
           }}
           transition={{
-            duration: 4 + i,
+            duration: 5 + i * 0.5,
             repeat: Infinity,
             ease: 'easeInOut',
-            delay: i * 0.5,
+            delay: i * 0.3,
           }}
         />
       ))}
+
+      {/* Cercles décoratifs animés */}
+      <motion.div
+        className="absolute top-20 right-20 w-32 h-32 border border-blue-100 rounded-full"
+        animate={{
+          scale: [1, 1.1, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: 'easeInOut',
+        }}
+      />
+      <motion.div
+        className="absolute bottom-32 left-16 w-24 h-24 border border-indigo-100 rounded-full"
+        animate={{
+          scale: [1, 1.15, 1],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: 'easeInOut',
+          delay: 1,
+        }}
+      />
     </div>
   )
 }
@@ -122,7 +188,7 @@ export default function Landing() {
 
       {/* Hero - Ultra moderne */}
       <section className="relative min-h-[90vh] md:min-h-[85vh] flex items-center">
-        <AnimatedOrbs />
+        <AnimatedBackground />
 
         <div className="relative container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-4xl mx-auto text-center">
@@ -141,7 +207,6 @@ export default function Landing() {
                   <Sparkles className="h-4 w-4" />
                 </motion.span>
                 Diagnostic auto intelligent
-                <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-xs">Nouveau</span>
               </span>
             </motion.div>
 
