@@ -7,12 +7,22 @@ import { useChat } from '@/hooks/useChat'
 import Sidebar from '@/components/Sidebar'
 import ChatMessage from '@/components/ChatMessage'
 import PaywallModal from '@/components/PaywallModal'
+import PlateScanner from '@/components/PlateScanner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X, Car, CheckCircle2 } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
+
+interface VehicleInfo {
+  plate: string
+  brand: string
+  model: string
+  year: string
+  fuel: string
+}
 
 const MAX_PHOTOS_PER_CONVERSATION = 2
 
@@ -33,6 +43,8 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showPlateScanner, setShowPlateScanner] = useState(false)
+  const [scannedVehicle, setScannedVehicle] = useState<VehicleInfo | null>(null)
 
   // Count photos used in this conversation
   const photosUsed = messages.filter(m => m.image).length
@@ -209,6 +221,14 @@ export default function Chat() {
     }
   }
 
+  function handleVehicleConfirmed(vehicle: VehicleInfo) {
+    setScannedVehicle(vehicle)
+    // Pre-fill input with vehicle context
+    if (!input.trim()) {
+      setInput(`Ma ${vehicle.brand} ${vehicle.model} ${vehicle.year} (${vehicle.fuel}) a un problème: `)
+    }
+  }
+
   // Display remaining from fresh check if available, otherwise from profile
   const displayRemaining = currentRemaining
 
@@ -261,6 +281,37 @@ export default function Chat() {
         <div className="flex-1 overflow-y-auto p-4 pb-32">
           {messages.length === 0 && !streamingContent && (
             <div className="flex flex-col items-center justify-center h-full text-center py-8">
+              {/* Scanned vehicle card */}
+              {scannedVehicle ? (
+                <Card className="mb-6 w-full max-w-sm bg-green-50 border-green-200">
+                  <CardContent className="flex items-center gap-3 py-4">
+                    <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                    <div className="text-left">
+                      <p className="text-sm text-green-800">Véhicule identifié</p>
+                      <p className="font-semibold">{scannedVehicle.brand} {scannedVehicle.model} {scannedVehicle.year}</p>
+                      <p className="text-sm text-muted-foreground">{scannedVehicle.plate} • {scannedVehicle.fuel}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto"
+                      onClick={() => setScannedVehicle(null)}
+                    >
+                      Changer
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="mb-6"
+                  onClick={() => setShowPlateScanner(true)}
+                >
+                  <Car className="h-4 w-4 mr-2" />
+                  Scanner ma plaque (optionnel)
+                </Button>
+              )}
+
               <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                 <Wrench className="h-8 w-8 text-primary" />
               </div>
@@ -402,6 +453,11 @@ export default function Chat() {
       </div>
 
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
+      <PlateScanner
+        open={showPlateScanner}
+        onOpenChange={setShowPlateScanner}
+        onVehicleConfirmed={handleVehicleConfirmed}
+      />
     </div>
   )
 }

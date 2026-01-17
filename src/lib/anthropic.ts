@@ -46,8 +46,12 @@ Détails: [breakdown si pertinent]
 - **Faisable:** Oui/Non [explication courte]
 
 ## 📦 Pièces nécessaires
-- [Pièce 1]: ~[prix]€ → [lien Oscaro.com exact si possible]
-- [Pièce 2]: ~[prix]€ → [lien Oscaro.com exact si possible]
+Si des pièces sont nécessaires, liste-les avec les liens d'achat:
+- **[Nom pièce]**: ~[prix]€
+  - [Oscaro](https://www.oscaro.com/recherche?q=[piece]+[marque]+[modele])
+  - [Yakarouler](https://www.yakarouler.com/recherche?q=[piece])
+
+💡 *Astuce: Compare les prix et groupe tes commandes pour économiser sur la livraison !*
 
 ## ⚡ À faire maintenant
 [Liste 2-3 actions concrètes recommandées]
