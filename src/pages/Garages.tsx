@@ -1,50 +1,79 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import Sidebar from '@/components/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Phone, Navigation, Star, Search, Wrench } from 'lucide-react'
-import { GARAGES, SPECIALTIES, type Garage } from '@/data/garages'
+import { MapPin, Phone, Navigation, Star, Search, Wrench, Loader2, Clock } from 'lucide-react'
+import { searchGarages, getGarageDetails, type Garage } from '@/services/garages'
 
 export default function Garages() {
-  const [search, setSearch] = useState('')
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('Toutes marques')
+  const [query, setQuery] = useState('')
+  const [garages, setGarages] = useState<Garage[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [searched, setSearched] = useState(false)
 
-  const filteredGarages = useMemo(() => {
-    let result = GARAGES
+  async function handleSearch() {
+    if (!query.trim()) return
 
-    // Filter by search (city or postal code)
-    if (search.trim()) {
-      const searchLower = search.toLowerCase().trim()
-      result = result.filter(
-        (g) =>
-          g.city.toLowerCase().includes(searchLower) ||
-          g.postalCode.includes(searchLower) ||
-          g.name.toLowerCase().includes(searchLower)
-      )
+    setLoading(true)
+    setError('')
+    setSearched(true)
+
+    try {
+      const results = await searchGarages(query)
+      setGarages(results)
+    } catch (err) {
+      setError('Impossible de trouver des garages. Vérifie ta recherche.')
+      setGarages([])
+    } finally {
+      setLoading(false)
     }
+  }
 
-    // Filter by specialty
-    if (selectedSpecialty !== 'Toutes marques') {
-      result = result.filter((g) =>
-        g.specialties.includes(selectedSpecialty) || g.specialties.includes('Toutes marques')
-      )
+  async function handleCall(garage: Garage) {
+    if (garage.phone) {
+      window.location.href = `tel:${garage.phone.replace(/\s/g, '')}`
+    } else {
+      try {
+        const details = await getGarageDetails(garage.id)
+        if (details.phone) {
+          window.location.href = `tel:${details.phone.replace(/\s/g, '')}`
+        } else {
+          alert('Numéro non disponible')
+        }
+      } catch {
+        alert('Numéro non disponible')
+      }
     }
+  }
 
-    // Sort: recommended first, then by rating
-    result = [...result].sort((a, b) => {
-      if (a.recommended && !b.recommended) return -1
-      if (!a.recommended && b.recommended) return 1
-      return b.rating - a.rating
-    })
+  function handleDirections(garage: Garage) {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${garage.location.lat},${garage.location.lng}`
+    window.open(url, '_blank')
+  }
 
-    return result
-  }, [search, selectedSpecialty])
+  function renderStars(rating: number) {
+    return (
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`h-4 w-4 ${
+              star <= Math.round(rating)
+                ? 'fill-amber-400 text-amber-400'
+                : 'text-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+    )
+  }
 
-  function getGoogleMapsUrl(garage: Garage) {
-    const query = encodeURIComponent(`${garage.name} ${garage.address} ${garage.postalCode} ${garage.city}`)
-    return `https://www.google.com/maps/search/?api=1&query=${query}`
+  function renderPriceLevel(level?: number) {
+    if (!level) return null
+    return '€'.repeat(level)
   }
 
   return (
@@ -59,135 +88,137 @@ export default function Garages() {
               Trouve un garage de confiance
             </h1>
             <p className="text-muted-foreground">
-              Garages recommandés par la communauté MecaIA
+              Garages vérifiés avec avis Google près de chez toi
             </p>
           </div>
 
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-8">
+          {/* Search */}
+          <div className="flex gap-2 mb-8">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Ville ou code postal..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Ville ou code postal (ex: Bordeaux, 33000)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="pl-10"
               />
             </div>
-            <div className="flex gap-2 flex-wrap">
-              {SPECIALTIES.map((specialty) => (
-                <Button
-                  key={specialty}
-                  variant={selectedSpecialty === specialty ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedSpecialty(specialty)}
-                >
-                  {specialty}
-                </Button>
-              ))}
-            </div>
+            <Button onClick={handleSearch} disabled={loading}>
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              <span className="ml-2 hidden sm:inline">Rechercher</span>
+            </Button>
           </div>
 
+          {/* Error */}
+          {error && (
+            <div className="text-center text-red-500 mb-4 p-4 bg-red-50 rounded-lg">
+              {error}
+            </div>
+          )}
+
           {/* Results */}
-          {filteredGarages.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Recherche des garages...</p>
+            </div>
+          ) : garages.length > 0 ? (
+            <>
+              <p className="text-sm text-muted-foreground mb-4">
+                {garages.length} garage{garages.length > 1 ? 's' : ''} trouvé{garages.length > 1 ? 's' : ''}
+              </p>
+              <div className="grid gap-4">
+                {garages.map((garage) => (
+                  <Card key={garage.id}>
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <CardTitle className="text-lg">{garage.name}</CardTitle>
+                            {garage.openNow !== undefined && (
+                              <Badge variant={garage.openNow ? 'default' : 'secondary'}>
+                                <Clock className="h-3 w-3 mr-1" />
+                                {garage.openNow ? 'Ouvert' : 'Fermé'}
+                              </Badge>
+                            )}
+                          </div>
+                          <CardDescription className="flex items-center gap-1 mt-1">
+                            <MapPin className="h-3 w-3" />
+                            {garage.address}
+                          </CardDescription>
+                        </div>
+                        {garage.priceLevel && (
+                          <Badge variant="outline" className="shrink-0">
+                            {renderPriceLevel(garage.priceLevel)}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Rating */}
+                      <div className="flex items-center gap-2">
+                        {renderStars(garage.rating)}
+                        <span className="font-medium">{garage.rating.toFixed(1)}</span>
+                        <span className="text-sm text-muted-foreground">
+                          ({garage.reviewCount} avis)
+                        </span>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleCall(garage)}>
+                          <Phone className="h-4 w-4 mr-2" />
+                          Appeler
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleDirections(garage)}>
+                          <Navigation className="h-4 w-4 mr-2" />
+                          Itinéraire
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          ) : searched ? (
             <Card>
               <CardContent className="flex flex-col items-center py-12">
-                <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
+                <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Aucun garage trouvé</h3>
                 <p className="text-muted-foreground text-center max-w-sm">
-                  Essaie une autre ville ou un autre filtre.
+                  Essaie une autre ville ou code postal.
                 </p>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
-              {filteredGarages.map((garage) => (
-                <Card key={garage.id} className={garage.recommended ? 'border-primary/50' : ''}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <CardTitle className="text-lg">{garage.name}</CardTitle>
-                          {garage.recommended && (
-                            <Badge variant="premium" className="text-xs">
-                              <Star className="h-3 w-3 mr-1" />
-                              Recommandé
-                            </Badge>
-                          )}
-                        </div>
-                        <CardDescription className="flex items-center gap-1 mt-1">
-                          <MapPin className="h-3 w-3" />
-                          {garage.address}, {garage.postalCode} {garage.city}
-                        </CardDescription>
-                      </div>
-                      <Badge variant="outline" className="shrink-0">
-                        {garage.priceLevel}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Rating */}
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-4 w-4 ${
-                            star <= Math.round(garage.rating)
-                              ? 'fill-amber-400 text-amber-400'
-                              : 'text-gray-300'
-                          }`}
-                        />
-                      ))}
-                      <span className="ml-1 text-sm font-medium">{garage.rating}</span>
-                      <span className="text-sm text-muted-foreground">({garage.reviews} avis)</span>
-                    </div>
-
-                    {/* Specialties */}
-                    <div className="flex flex-wrap gap-2">
-                      {garage.specialties.map((specialty) => (
-                        <Badge key={specialty} variant="secondary" className="text-xs">
-                          {specialty}
-                        </Badge>
-                      ))}
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`tel:${garage.phone.replace(/\s/g, '')}`}>
-                          <Phone className="h-4 w-4 mr-2" />
-                          Appeler
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <a
-                          href={getGoogleMapsUrl(garage)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <Navigation className="h-4 w-4 mr-2" />
-                          Itinéraire
-                        </a>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardContent className="flex flex-col items-center py-12">
+                <Wrench className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Recherche un garage</h3>
+                <p className="text-muted-foreground text-center max-w-sm">
+                  Entre ta ville ou code postal pour trouver des garages automobiles près de chez toi.
+                </p>
+              </CardContent>
+            </Card>
           )}
 
           {/* Suggest garage */}
           <Card className="mt-8 bg-primary/5 border-primary/20">
             <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6">
               <div>
-                <h3 className="font-semibold">Tu connais un bon garage ?</h3>
+                <h3 className="font-semibold">Tu es garagiste ?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Aide la communauté en nous le suggérant !
+                  Deviens partenaire MecaIA et gagne en visibilité !
                 </p>
               </div>
               <Button variant="outline" asChild>
-                <a href="mailto:contact@mecaia.fr?subject=Suggestion de garage">
-                  Suggérer un garage
+                <a href="mailto:partenaires@mecaia.fr?subject=Partenariat garage">
+                  Devenir partenaire
                 </a>
               </Button>
             </CardContent>
