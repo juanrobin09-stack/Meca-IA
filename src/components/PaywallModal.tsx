@@ -25,7 +25,7 @@ interface PaywallModalProps {
 const defaultContent = {
   diagnostic: {
     title: 'Tes 2 diagnostics gratuits sont épuisés',
-    subtitle: 'Passe Premium pour comprendre ta voiture et prendre les bonnes décisions avant chaque visite au garage !',
+    subtitle: 'Passe Premium pour des diagnostics illimités et un suivi complet de ta voiture.',
     unitLabel: '1 diagnostic immédiat',
     unitButton: 'Acheter 1 diagnostic',
     unitPrice: '2.99€',
@@ -33,7 +33,7 @@ const defaultContent = {
   },
   devis: {
     title: 'Tu as utilisé ton analyse gratuite ce mois',
-    subtitle: 'Passe Premium pour analyser tous tes devis et ne plus te faire avoir !',
+    subtitle: 'Passe Premium pour analyser tous tes devis en illimité.',
     unitLabel: '1 analyse de devis',
     unitButton: 'Acheter 1 analyse',
     unitPrice: '1.99€',
@@ -71,52 +71,52 @@ export default function PaywallModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl">
+      <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-center text-lg sm:text-xl">
             {displayTitle}
           </DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogDescription className="text-center text-sm">
             {displaySubtitle}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 mt-4">
+        <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
           {/* Premium Option */}
           <Card className="border-primary ring-2 ring-primary">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-amber-500" />
-                <CardTitle className="text-lg">Premium</CardTitle>
-                <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full ml-auto">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
+                <CardTitle className="text-base sm:text-lg">Premium</CardTitle>
+                <span className="text-[10px] sm:text-xs bg-primary text-primary-foreground px-1.5 sm:px-2 py-0.5 rounded-full ml-auto">
                   Recommandé
                 </span>
               </div>
-              <div className="text-2xl font-bold">
-                9.99€<span className="text-sm font-normal text-muted-foreground">/mois</span>
+              <div className="text-xl sm:text-2xl font-bold">
+                9,99€<span className="text-xs sm:text-sm font-normal text-muted-foreground">/mois</span>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <ul className="space-y-2 text-sm">
+            <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
+              <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
                   Diagnostics illimités
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
                   Analyses de devis illimitées
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
                   Historique permanent
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
                   Support prioritaire
                 </li>
               </ul>
               <Button
-                className="w-full"
+                className="w-full text-sm sm:text-base"
                 onClick={() => handlePurchase(STRIPE_PRICES.PREMIUM_MONTHLY, true)}
                 disabled={loading !== null}
               >
@@ -125,7 +125,7 @@ export default function PaywallModal({
                 ) : null}
                 Passer Premium
               </Button>
-              <p className="text-xs text-center text-muted-foreground">
+              <p className="text-[10px] sm:text-xs text-center text-muted-foreground">
                 Ou{' '}
                 <button
                   className="text-primary hover:underline"
@@ -140,29 +140,29 @@ export default function PaywallModal({
 
           {/* Pay per use Option */}
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
               <div className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-muted-foreground" />
-                <CardTitle className="text-lg">À l'unité</CardTitle>
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                <CardTitle className="text-base sm:text-lg">À l'unité</CardTitle>
               </div>
-              <div className="text-2xl font-bold">
+              <div className="text-xl sm:text-2xl font-bold">
                 {content.unitPrice}
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <ul className="space-y-2 text-sm">
+            <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
+              <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
                   {content.unitLabel}
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
                   Pas d'abonnement
                 </li>
               </ul>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full text-sm sm:text-base"
                 onClick={() => handlePurchase(content.priceId, false)}
                 disabled={loading !== null}
               >
@@ -175,7 +175,7 @@ export default function PaywallModal({
           </Card>
 
           <button
-            className="text-sm text-muted-foreground hover:text-foreground w-full text-center"
+            className="text-xs sm:text-sm text-muted-foreground hover:text-foreground w-full text-center py-2"
             onClick={() => onOpenChange(false)}
           >
             Plus tard
