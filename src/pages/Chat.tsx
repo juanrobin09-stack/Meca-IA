@@ -1,0 +1,256 @@
+import { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
+import { useSubscription } from '@/hooks/useSubscription'
+import { useDiagnostics } from '@/hooks/useDiagnostics'
+import { useChat } from '@/hooks/useChat'
+import Sidebar from '@/components/Sidebar'
+import ChatMessage from '@/components/ChatMessage'
+import PaywallModal from '@/components/PaywallModal'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { ArrowLeft, Send, Loader2, Wrench, Sparkles } from 'lucide-react'
+import type { Message } from '@/types'
+
+export default function Chat() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const { user, profile, refreshProfile } = useAuth()
+  const { isPremium, diagnosticsRemaining, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
+  const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
+  const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages } = useChat()
+
+  const [input, setInput] = useState('')
+  const [showPaywall, setShowPaywall] = useState(false)
+  const [isNewConversation, setIsNewConversation] = useState(true)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Load existing diagnostic if ID provided
+  useEffect(() => {
+    if (id) {
+      loadDiagnostic(id).then((diag) => {
+        if (diag) {
+          loadMessages(diag.conversation as Message[])
+          setIsNewConversation(false)
+        }
+      }).catch(() => {
+        navigate('/app/chat')
+      })
+    } else {
+      clearMessages()
+      setCurrentDiagnostic(null)
+      setIsNewConversation(true)
+    }
+  }, [id])
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, streamingContent])
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+    }
+  }, [input])
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+
+    const messageContent = input.trim()
+    setInput('')
+
+    // Check limits for new conversations
+    if (isNewConversation) {
+      const limitStatus = await checkDiagnosticLimit()
+      if (!limitStatus.canDiagnose) {
+        setShowPaywall(true)
+        setInput(messageContent) // Restore input
+        return
+      }
+    }
+
+    try {
+      let diagnosticId = currentDiagnostic?.id
+
+      // Create new diagnostic if needed
+      if (!diagnosticId) {
+        const diag = await createDiagnostic(messageContent)
+        diagnosticId = diag.id
+        setIsNewConversation(false)
+
+        // Increment counter for free users after first message
+        if (!isPremium) {
+          await incrementDiagnosticCount()
+          refreshProfile?.()
+        }
+
+        // Update URL without triggering navigation
+        window.history.replaceState(null, '', `/app/chat/${diagnosticId}`)
+      }
+
+      // Send message and get response
+      const assistantMessage = await sendMessage(messageContent)
+
+      if (assistantMessage && diagnosticId) {
+        // Save user message
+        const userMessage: Message = {
+          role: 'user',
+          content: messageContent,
+          timestamp: new Date().toISOString(),
+        }
+        await addMessage(diagnosticId, userMessage)
+        await addMessage(diagnosticId, assistantMessage)
+      }
+    } catch (err) {
+      console.error('Error sending message:', err)
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSubmit(e)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <Sidebar />
+
+      <div className="md:pl-64 flex-1 flex flex-col">
+        {/* Header */}
+        <header className="sticky top-0 z-10 bg-background border-b">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/app')}
+                className="md:hidden"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Wrench className="h-4 w-4 text-primary" />
+                </div>
+                <span className="font-semibold">MecaIA</span>
+              </div>
+            </div>
+            <div>
+              {isPremium ? (
+                <Badge variant="premium">
+                  <Sparkles className="h-3 w-3 mr-1" />
+                  Premium
+                </Badge>
+              ) : (
+                <Badge variant="secondary">
+                  {diagnosticsRemaining}/2 restants
+                </Badge>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 pb-32">
+          {messages.length === 0 && !streamingContent && (
+            <div className="flex flex-col items-center justify-center h-full text-center py-8">
+              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <Wrench className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-semibold mb-2">Salut !</h2>
+              <p className="text-muted-foreground max-w-sm">
+                Décris-moi ton problème de voiture et je t'aide à diagnostiquer.
+              </p>
+              <div className="mt-6 space-y-2 text-sm text-muted-foreground">
+                <p>Exemples:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    'Ma 208 fait un bruit au freinage',
+                    "Voyant moteur allumé sur ma Clio",
+                    "Fuite d'huile sous ma voiture"
+                  ].map((example) => (
+                    <button
+                      key={example}
+                      className="px-3 py-1.5 bg-muted rounded-full hover:bg-muted/80 transition-colors"
+                      onClick={() => setInput(example)}
+                    >
+                      {example}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {messages.map((message, index) => (
+            <ChatMessage key={index} message={message} />
+          ))}
+
+          {streamingContent && (
+            <ChatMessage
+              message={{
+                role: 'assistant',
+                content: streamingContent,
+                timestamp: new Date().toISOString(),
+              }}
+              isStreaming
+            />
+          )}
+
+          {isLoading && !streamingContent && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">MecaIA réfléchit...</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+              {error}
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-background border-t p-4 pb-20 md:pb-4">
+          <form onSubmit={handleSubmit} className="flex gap-2 max-w-3xl mx-auto">
+            <Textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Décris ton problème..."
+              className="min-h-[44px] max-h-32 resize-none"
+              rows={1}
+              disabled={isLoading}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!input.trim() || isLoading}
+              className="shrink-0"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
+    </div>
+  )
+}
