@@ -55,9 +55,11 @@ export default function Pieces() {
     const encoded = encodeURIComponent(searchTerms)
 
     if (site === 'oscaro') {
-      return `https://www.oscaro.com/recherche?q=${encoded}`
+      // Format Oscaro: https://www.oscaro.com/catalogue/recherche?q=plaquettes+frein
+      return `https://www.oscaro.com/catalogue/recherche?q=${encoded}`
     } else {
-      return `https://www.yakarouler.com/recherche?q=${encoded}`
+      // Format Yakarouler: https://www.yakarouler.com/recherche.html?searchText=plaquettes
+      return `https://www.yakarouler.com/recherche.html?searchText=${encoded}`
     }
   }
 
