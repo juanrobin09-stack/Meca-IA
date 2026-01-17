@@ -18,6 +18,15 @@ PROCESSUS DIAGNOSTIC:
    - Entretien récent ou non
 3. Analyser et fournir diagnostic structuré
 
+ANALYSE DE PHOTOS:
+Si l'utilisateur envoie une photo:
+- Analyse l'image attentivement
+- Identifie les éléments visibles (voyant tableau de bord, pièce mécanique, liquide, état général, traces d'usure)
+- Utilise ces informations visuelles pour affiner ton diagnostic
+- Mentionne ce que tu vois dans la photo dans ta réponse
+- Si la photo montre un voyant, identifie-le et explique sa signification
+- Si la photo montre une pièce, évalue son état (usure, casse, corrosion)
+
 FORMAT RÉPONSE FINALE (à utiliser systématiquement après avoir obtenu assez d'infos):
 
 ## 🔧 Diagnostic probable
@@ -71,12 +80,53 @@ TONALITÉ RÉPONSES:
 
 Sois concis mais complet. Évite blabla inutile.`
 
-interface Message {
+export interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
+  image?: string // Base64 data (without data URL prefix) for images
 }
 
-export async function sendMessage(messages: Message[]): Promise<string> {
+type MessageContent =
+  | string
+  | Array<
+      | { type: 'text'; text: string }
+      | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
+    >
+
+function formatMessageContent(message: ChatMessage): MessageContent {
+  // If no image, just return the text content
+  if (!message.image) {
+    return message.content
+  }
+
+  // If there's an image, format as multimodal content
+  const content: Array<
+    | { type: 'text'; text: string }
+    | { type: 'image'; source: { type: 'base64'; media_type: string; data: string } }
+  > = []
+
+  // Add image first
+  content.push({
+    type: 'image',
+    source: {
+      type: 'base64',
+      media_type: 'image/jpeg',
+      data: message.image,
+    },
+  })
+
+  // Add text if present
+  if (message.content) {
+    content.push({
+      type: 'text',
+      text: message.content,
+    })
+  }
+
+  return content
+}
+
+export async function sendMessage(messages: ChatMessage[]): Promise<string> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
   if (!apiKey) {
@@ -97,7 +147,7 @@ export async function sendMessage(messages: Message[]): Promise<string> {
       system: SYSTEM_PROMPT,
       messages: messages.map((m) => ({
         role: m.role,
-        content: m.content,
+        content: formatMessageContent(m),
       })),
     }),
   })
@@ -112,7 +162,7 @@ export async function sendMessage(messages: Message[]): Promise<string> {
   return data.content[0].text
 }
 
-export async function* streamMessage(messages: Message[]): AsyncGenerator<string> {
+export async function* streamMessage(messages: ChatMessage[]): AsyncGenerator<string> {
   const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
 
   if (!apiKey) {
@@ -134,7 +184,7 @@ export async function* streamMessage(messages: Message[]): AsyncGenerator<string
       system: SYSTEM_PROMPT,
       messages: messages.map((m) => ({
         role: m.role,
-        content: m.content,
+        content: formatMessageContent(m),
       })),
     }),
   })

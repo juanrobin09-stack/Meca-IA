@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { streamMessage } from '@/lib/anthropic'
+import { streamMessage, type ChatMessage } from '@/lib/anthropic'
 import type { Message } from '@/types'
 
 export function useChat() {
@@ -9,7 +9,7 @@ export function useChat() {
   const [streamingContent, setStreamingContent] = useState('')
 
   const sendMessage = useCallback(
-    async (content: string): Promise<Message | null> => {
+    async (content: string, imageBase64?: string): Promise<Message | null> => {
       if (isLoading) return null
 
       setError(null)
@@ -20,6 +20,7 @@ export function useChat() {
         role: 'user',
         content,
         timestamp: new Date().toISOString(),
+        image: imageBase64 ? `data:image/jpeg;base64,${imageBase64}` : undefined,
       }
 
       setMessages((prev) => [...prev, userMessage])
@@ -27,7 +28,15 @@ export function useChat() {
       try {
         let fullResponse = ''
 
-        for await (const chunk of streamMessage([...messages, userMessage])) {
+        // Convert messages to ChatMessage format for API
+        const apiMessages: ChatMessage[] = [...messages, userMessage].map((m) => ({
+          role: m.role,
+          content: m.content,
+          // Extract base64 data from data URL if present
+          image: m.image?.startsWith('data:') ? m.image.split(',')[1] : m.image,
+        }))
+
+        for await (const chunk of streamMessage(apiMessages)) {
           fullResponse += chunk
           setStreamingContent(fullResponse)
         }

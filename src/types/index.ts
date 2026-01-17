@@ -16,6 +16,7 @@ export interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: string
+  image?: string // Base64 data URL for user messages with images
 }
 
 export interface Diagnostic {

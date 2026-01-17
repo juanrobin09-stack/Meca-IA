@@ -34,7 +34,16 @@ export default function ChatMessage({ message, isStreaming }: ChatMessageProps) 
         )}
       >
         {isUser ? (
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <div>
+            {message.image && (
+              <img
+                src={message.image}
+                alt="Photo du problème"
+                className="max-w-full rounded-lg mb-2 max-h-64 object-contain"
+              />
+            )}
+            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          </div>
         ) : (
           <div className={cn(
             'prose prose-sm max-w-none',

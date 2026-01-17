@@ -10,8 +10,11 @@ import PaywallModal from '@/components/PaywallModal'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Send, Loader2, Wrench, Sparkles } from 'lucide-react'
+import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X } from 'lucide-react'
+import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
+
+const MAX_PHOTOS_PER_CONVERSATION = 2
 
 export default function Chat() {
   const { id } = useParams<{ id: string }>()
@@ -25,8 +28,14 @@ export default function Chat() {
   const [showPaywall, setShowPaywall] = useState(false)
   const [isNewConversation, setIsNewConversation] = useState(true)
   const [currentRemaining, setCurrentRemaining] = useState<number>(diagnosticsRemaining)
+  const [selectedImage, setSelectedImage] = useState<{ dataUrl: string; base64: string } | null>(null)
+  const [imageError, setImageError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Count photos used in this conversation
+  const photosUsed = messages.filter(m => m.image).length
 
   // Check limit on page load for new conversations
   useEffect(() => {
@@ -84,12 +93,55 @@ export default function Chat() {
     }
   }, [input])
 
+  async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+
+    // Check if max photos reached
+    if (photosUsed >= MAX_PHOTOS_PER_CONVERSATION) {
+      setImageError(`Maximum ${MAX_PHOTOS_PER_CONVERSATION} photos par conversation`)
+      return
+    }
+
+    // Validate file
+    const validation = validateImageFile(file)
+    if (!validation.valid) {
+      setImageError(validation.error || 'Fichier invalide')
+      return
+    }
+
+    setImageError(null)
+
+    try {
+      const compressed = await compressImage(file)
+      setSelectedImage({
+        dataUrl: compressed.dataUrl,
+        base64: compressed.base64,
+      })
+    } catch (err) {
+      console.error('Error compressing image:', err)
+      setImageError('Erreur lors du traitement de l\'image')
+    }
+  }
+
+  function removeSelectedImage() {
+    setSelectedImage(null)
+    setImageError(null)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+    if ((!input.trim() && !selectedImage) || isLoading) return
 
-    const messageContent = input.trim()
+    const messageContent = input.trim() || (selectedImage ? 'Voici une photo de mon problème.' : '')
+    const imageBase64 = selectedImage?.base64
     setInput('')
+    setSelectedImage(null)
 
     // Check limits for new conversations (double-check before sending)
     if (isNewConversation) {
@@ -131,8 +183,8 @@ export default function Chat() {
         window.history.replaceState(null, '', `/app/chat/${diagnosticId}`)
       }
 
-      // Send message and get response
-      const assistantMessage = await sendMessage(messageContent)
+      // Send message and get response (with optional image)
+      const assistantMessage = await sendMessage(messageContent, imageBase64)
 
       if (assistantMessage && diagnosticId) {
         // Save user message
@@ -140,6 +192,7 @@ export default function Chat() {
           role: 'user',
           content: messageContent,
           timestamp: new Date().toISOString(),
+          image: imageBase64 ? `data:image/jpeg;base64,${imageBase64}` : undefined,
         }
         await addMessage(diagnosticId, userMessage)
         await addMessage(diagnosticId, assistantMessage)
@@ -183,7 +236,13 @@ export default function Chat() {
                 <span className="font-semibold">MecaIA</span>
               </div>
             </div>
-            <div>
+            <div className="flex items-center gap-2">
+              {photosUsed > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  <Camera className="h-3 w-3 mr-1" />
+                  {photosUsed}/{MAX_PHOTOS_PER_CONVERSATION}
+                </Badge>
+              )}
               {isPremium ? (
                 <Badge variant="premium">
                   <Sparkles className="h-3 w-3 mr-1" />
@@ -208,6 +267,10 @@ export default function Chat() {
               <h2 className="text-xl font-semibold mb-2">Salut !</h2>
               <p className="text-muted-foreground max-w-sm">
                 Décris-moi ton problème de voiture et je t'aide à diagnostiquer.
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                <Camera className="h-4 w-4 inline mr-1" />
+                Tu peux aussi envoyer une photo !
               </p>
               <div className="mt-6 space-y-2 text-sm text-muted-foreground">
                 <p>Exemples:</p>
@@ -263,7 +326,55 @@ export default function Chat() {
 
         {/* Input */}
         <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-background border-t p-4 pb-20 md:pb-4">
+          {/* Image preview */}
+          {selectedImage && (
+            <div className="max-w-3xl mx-auto mb-3">
+              <div className="relative inline-block">
+                <img
+                  src={selectedImage.dataUrl}
+                  alt="Preview"
+                  className="max-h-32 rounded-lg border"
+                />
+                <button
+                  type="button"
+                  onClick={removeSelectedImage}
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Image error */}
+          {imageError && (
+            <div className="max-w-3xl mx-auto mb-3">
+              <p className="text-sm text-red-600">{imageError}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex gap-2 max-w-3xl mx-auto">
+            {/* Photo upload button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION}
+              className="shrink-0"
+              title={photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Ajouter une photo'}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+
             <Textarea
               ref={textareaRef}
               value={input}
@@ -277,7 +388,7 @@ export default function Chat() {
             <Button
               type="submit"
               size="icon"
-              disabled={!input.trim() || isLoading}
+              disabled={(!input.trim() && !selectedImage) || isLoading}
               className="shrink-0"
             >
               {isLoading ? (
