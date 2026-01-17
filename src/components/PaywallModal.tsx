@@ -40,10 +40,10 @@ export default function PaywallModal({ open, onOpenChange }: PaywallModalProps) 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">
-            Tu as utilisé tes 2 diagnostics gratuits ce mois
+            Tes 2 diagnostics gratuits sont épuisés
           </DialogTitle>
           <DialogDescription className="text-center">
-            Un seul diagnostic peut t'économiser 200-500€ de réparations inutiles.
+            Passe Premium pour comprendre ta voiture et prendre les bonnes décisions avant chaque visite au garage !
           </DialogDescription>
         </DialogHeader>
 

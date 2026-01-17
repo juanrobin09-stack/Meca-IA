@@ -73,7 +73,7 @@ export default function Landing() {
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                   <MessageSquare className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle>Simple comme WhatsApp</CardTitle>
+                <CardTitle>Simple et intuitif</CardTitle>
                 <CardDescription>
                   Décris ton problème en français naturel
                 </CardDescription>
@@ -107,25 +107,25 @@ export default function Landing() {
               </div>
               <h3 className="font-semibold mb-2">Décris ton problème</h3>
               <p className="text-muted-foreground text-sm">
-                "Ma 208 fait un bruit bizarre au freinage"
+                "Ma voiture fait un bruit bizarre" ou "Voyant moteur allumé"
               </p>
             </div>
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mx-auto mb-4">
                 2
               </div>
-              <h3 className="font-semibold mb-2">L'IA diagnostique</h3>
+              <h3 className="font-semibold mb-2">L'IA analyse</h3>
               <p className="text-muted-foreground text-sm">
-                Questions ciblées puis analyse experte
+                Questions précises pour comprendre le contexte
               </p>
             </div>
             <div className="text-center">
               <div className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold mx-auto mb-4">
                 3
               </div>
-              <h3 className="font-semibold mb-2">Reçois ton diagnostic</h3>
+              <h3 className="font-semibold mb-2">Diagnostic complet</h3>
               <p className="text-muted-foreground text-sm">
-                Cause, prix, urgence, conseils DIY
+                Cause probable, urgence, prix estimé, faisable soi-même ?
               </p>
             </div>
           </div>
