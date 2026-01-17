@@ -52,18 +52,24 @@ function OnboardingWrapper({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (user) {
-      const done = localStorage.getItem('mecaia_onboarding_done')
-      if (!done) {
+      // N'afficher l'onboarding QUE si c'est une nouvelle inscription
+      const shouldShow = localStorage.getItem('mecaia_show_onboarding')
+      if (shouldShow === 'true') {
         setShowOnboarding(true)
       }
     }
   }, [user])
 
+  const handleComplete = () => {
+    localStorage.removeItem('mecaia_show_onboarding')
+    setShowOnboarding(false)
+  }
+
   return (
     <>
       <AnimatePresence>
         {showOnboarding && (
-          <Onboarding onComplete={() => setShowOnboarding(false)} />
+          <Onboarding onComplete={handleComplete} />
         )}
       </AnimatePresence>
       {children}

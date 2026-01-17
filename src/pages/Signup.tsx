@@ -25,6 +25,8 @@ export default function Signup() {
 
     try {
       await signUp(email, password, displayName || undefined)
+      // Marquer que c'est une nouvelle inscription pour afficher l'onboarding
+      localStorage.setItem('mecaia_show_onboarding', 'true')
       navigate('/app')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors de la création du compte')
