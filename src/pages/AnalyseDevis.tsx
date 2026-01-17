@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
+import { analyzeQuote as analyzeQuoteAPI } from '@/lib/anthropic'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
 import { Button } from '@/components/ui/button'
@@ -9,38 +10,6 @@ import { Badge } from '@/components/ui/badge'
 import { FileText, Upload, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import ReactMarkdown from 'react-markdown'
-
-const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile française. Analyse ce devis de garage.
-
-Pour chaque ligne identifiable sur le devis:
-- Identifie la pièce ou prestation
-- Compare au prix marché français (garage indépendant)
-- Donne un verdict: ✅ Prix correct / ⚠️ Négociable / ❌ Trop cher
-
-FORMAT DE RÉPONSE:
-
-## 📊 VERDICT GLOBAL
-[Correct ✅ / Négociable ⚠️ / Trop cher ❌]
-[Explication en 1-2 phrases]
-
-## 📋 ANALYSE DÉTAILLÉE
-
-| Élément | Prix devis | Prix marché | Verdict |
-|---------|-----------|-------------|---------|
-| [Élément 1] | [X]€ | [Y-Z]€ | ✅/⚠️/❌ |
-| [Élément 2] | [X]€ | [Y-Z]€ | ✅/⚠️/❌ |
-
-## 💰 ÉCONOMIE POTENTIELLE
-[X]€ à [Y]€ si tu négocies bien
-
-## 💬 SCRIPT DE NÉGOCIATION
-"[Phrase polie mais ferme à utiliser avec le garagiste]"
-
-## 💡 CONSEILS
-- [Conseil 1]
-- [Conseil 2]
-
-Si le devis n'est pas lisible ou n'est pas un devis auto, dis-le poliment.`
 
 export default function AnalyseDevis() {
   const { user, profile } = useAuth()
@@ -95,7 +64,7 @@ export default function AnalyseDevis() {
     }
   }
 
-  async function analyzeQuote() {
+  async function handleAnalyzeQuote() {
     if (!selectedFile || !user) return
 
     // Check limits for free users
@@ -111,46 +80,8 @@ export default function AnalyseDevis() {
     setError(null)
 
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-      if (!apiKey) throw new Error('API key not configured')
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2048,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: selectedFile.base64,
-                },
-              },
-              {
-                type: 'text',
-                text: QUOTE_ANALYSIS_PROMPT,
-              },
-            ],
-          }],
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Erreur API')
-      }
-
-      const data = await response.json()
-      setAnalysis(data.content[0].text)
+      const result = await analyzeQuoteAPI(selectedFile.base64)
+      setAnalysis(result)
 
       // Increment counter after successful analysis (for free users)
       if (!isPremium) {
@@ -245,7 +176,7 @@ export default function AnalyseDevis() {
                 <Button
                   className="w-full"
                   size="lg"
-                  onClick={analyzeQuote}
+                  onClick={handleAnalyzeQuote}
                   disabled={!selectedFile || isAnalyzing}
                 >
                   {isAnalyzing ? (

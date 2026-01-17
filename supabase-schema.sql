@@ -11,6 +11,7 @@ CREATE TABLE profiles (
   city TEXT,
   free_diagnostics_used INTEGER DEFAULT 0,
   free_diagnostics_reset_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  free_devis_used INTEGER DEFAULT 0,
   subscription_status TEXT DEFAULT 'free' CHECK (subscription_status IN ('free', 'premium')),
   stripe_customer_id TEXT UNIQUE,
   stripe_subscription_id TEXT UNIQUE,
