@@ -55,15 +55,16 @@ const BRANDS = [
 const FUEL_TYPES = ['Essence', 'Diesel', 'Électrique', 'Hybride', 'GPL']
 
 export default function Vehicles() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [showScanner, setShowScanner] = useState(false)
 
-  // For demo, assume premium tier - in real app, get from user profile
-  const tier = 'premium' as const
+  // Get tier from user profile subscription status
+  const isPremium = profile?.subscription_status === 'premium'
+  const tier = isPremium ? 'premium' : 'free'
   const plan = PLANS[tier]
   const maxVehicles = plan.maxVehicles
   const canAddVehicle = vehicles.length < maxVehicles
@@ -183,12 +184,14 @@ export default function Vehicles() {
                   <div className="flex-1">
                     <p className="font-medium text-amber-800 dark:text-amber-200">Limite atteinte</p>
                     <p className="text-sm text-amber-600 dark:text-amber-300">
-                      Passe en {tier === 'premium' ? 'Pro' : 'Premium'} pour ajouter plus de véhicules.
+                      {isPremium ? 'Tu as atteint la limite de 5 véhicules.' : 'Passe en Premium pour ajouter plus de véhicules.'}
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to="/pricing">Upgrade</Link>
-                  </Button>
+                  {!isPremium && (
+                    <Button size="sm" variant="outline" asChild>
+                      <Link to="/pricing">Upgrade</Link>
+                    </Button>
+                  )}
                 </div>
               </Card>
             )}

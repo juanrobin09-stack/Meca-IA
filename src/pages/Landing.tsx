@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import Logo from '@/components/Logo'
 import PageTransition from '@/components/PageTransition'
-import { Zap, MessageSquare, Euro, CheckCircle2 } from 'lucide-react'
+import { Zap, MessageSquare, Euro, CheckCircle2, X, AlertTriangle, Star, Car, Bell, History, MapPin, ShoppingCart, FileText } from 'lucide-react'
+import { PLANS } from '@/config/plans'
 
 export default function Landing() {
   return (
@@ -46,7 +48,7 @@ export default function Landing() {
             </Link>
           </div>
           <p className="text-sm text-muted-foreground mt-4">
-            2 diagnostics gratuits par mois
+            2 diagnostics gratuits par mois • Sans carte bancaire
           </p>
         </div>
       </section>
@@ -95,8 +97,46 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* All Features Grid */}
       <section className="py-20">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-4">
+            Toutes les fonctionnalités
+          </h2>
+          <p className="text-muted-foreground text-center mb-12 max-w-2xl mx-auto">
+            MecaIA t'accompagne dans tous tes besoins automobiles
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {[
+              { icon: MessageSquare, title: "Diagnostic IA", desc: "Analyse intelligente de tes problèmes auto" },
+              { icon: FileText, title: "Analyse de devis", desc: "Vérifie si ton devis garage est honnête" },
+              { icon: Car, title: "Gestion véhicules", desc: "Enregistre et suis tes voitures", premium: true },
+              { icon: Bell, title: "Rappels entretien", desc: "Ne rate plus tes révisions", premium: true },
+              { icon: MapPin, title: "Recherche garages", desc: "Trouve des garages de confiance près de toi" },
+              { icon: ShoppingCart, title: "Recherche pièces", desc: "Compare les prix sur Oscaro et Yakarouler" },
+              { icon: History, title: "Historique", desc: "Retrouve tous tes diagnostics passés" },
+            ].map((feature, i) => (
+              <div key={i} className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <feature.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{feature.title}</h3>
+                    {feature.premium && (
+                      <Badge variant="secondary" className="text-xs">Premium</Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="py-20 bg-muted/40">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
             Comment ça marche ?
@@ -134,64 +174,75 @@ export default function Landing() {
       </section>
 
       {/* Pricing */}
-      <section className="py-20 bg-muted/40">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Tarifs simples
+          <h2 className="text-3xl font-bold text-center mb-4">
+            Tarifs simples et transparents
           </h2>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <p className="text-muted-foreground text-center mb-12">
+            Commence gratuitement, upgrade quand tu veux
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Free */}
-            <Card>
+            <Card className="relative">
               <CardHeader>
+                <div className="h-12 w-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                </div>
                 <CardTitle>Gratuit</CardTitle>
-                <div className="text-3xl font-bold">0€</div>
-                <CardDescription>Pour tester</CardDescription>
+                <div className="text-3xl font-bold">0€<span className="text-base font-normal text-muted-foreground">/mois</span></div>
+                <CardDescription>Pour découvrir MecaIA</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">2 diagnostics/mois</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Historique 30 jours</span>
-                  </li>
+                <ul className="space-y-3">
+                  {PLANS.free.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                  {PLANS.free.notIncluded.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-muted-foreground">
+                      <X className="h-4 w-4 shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
                 </ul>
                 <Link to="/signup">
                   <Button variant="outline" className="w-full mt-6">
-                    Essayer
+                    Commencer gratuitement
                   </Button>
                 </Link>
               </CardContent>
             </Card>
 
             {/* Premium */}
-            <Card className="border-primary ring-2 ring-primary">
+            <Card className="relative border-2 border-primary shadow-lg">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+                <Star className="h-3 w-3 mr-1" />
+                RECOMMANDÉ
+              </Badge>
               <CardHeader>
-                <div className="text-xs font-semibold text-primary mb-2">POPULAIRE</div>
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Star className="h-6 w-6 text-primary" />
+                </div>
                 <CardTitle>Premium</CardTitle>
-                <div className="text-3xl font-bold">9.99€<span className="text-base font-normal text-muted-foreground">/mois</span></div>
-                <CardDescription>Pour les passionnés</CardDescription>
+                <div className="text-3xl font-bold">9,99€<span className="text-base font-normal text-muted-foreground">/mois</span></div>
+                <CardDescription>Pour les passionnés d'auto</CardDescription>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Diagnostics illimités</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Historique permanent</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Support prioritaire</span>
-                  </li>
+                <ul className="space-y-3">
+                  {PLANS.premium.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
                 </ul>
                 <Link to="/signup">
                   <Button className="w-full mt-6">
-                    Commencer
+                    Passer Premium
                   </Button>
                 </Link>
                 <p className="text-xs text-muted-foreground text-center mt-2">
@@ -199,32 +250,26 @@ export default function Landing() {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </section>
 
-            {/* Pay per use */}
-            <Card>
-              <CardHeader>
-                <CardTitle>À l'unité</CardTitle>
-                <div className="text-3xl font-bold">2.99€</div>
-                <CardDescription>Paiement unique</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">1 diagnostic</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm">Pas d'abonnement</span>
-                  </li>
-                </ul>
-                <Link to="/signup">
-                  <Button variant="outline" className="w-full mt-6">
-                    Acheter
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+      {/* Disclaimer */}
+      <section className="py-12 bg-amber-50 dark:bg-amber-900/20 border-y border-amber-200 dark:border-amber-800">
+        <div className="container mx-auto px-4">
+          <div className="flex items-start gap-4 max-w-3xl mx-auto">
+            <AlertTriangle className="h-6 w-6 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">
+                Avertissement important
+              </h3>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                MecaIA est un outil d'aide au diagnostic utilisant l'intelligence artificielle.
+                Les informations fournies sont données <strong>à titre indicatif uniquement</strong> et
+                ne remplacent en aucun cas l'avis d'un mécanicien professionnel qualifié.
+                En cas de doute ou de problème grave, consultez toujours un garage.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -247,7 +292,7 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8">
+      <footer className="border-t py-8 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <Logo size="sm" />
