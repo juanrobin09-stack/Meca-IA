@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Car, Pencil, Trash2, AlertCircle } from 'lucide-react'
+import { Plus, Car, Pencil, Trash2, AlertCircle, Camera } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,6 +21,7 @@ import { supabase } from '@/lib/supabase'
 import { PLANS } from '@/config/plans'
 import PageTransition from '@/components/PageTransition'
 import Sidebar from '@/components/Sidebar'
+import PlateScanner from '@/components/PlateScanner'
 import { Link } from 'react-router-dom'
 
 interface Vehicle {
@@ -37,7 +38,7 @@ interface Vehicle {
 const BRANDS = [
   'Peugeot',
   'Renault',
-  'Citroen',
+  'Citroën',
   'Dacia',
   'Volkswagen',
   'Toyota',
@@ -51,7 +52,7 @@ const BRANDS = [
   'Hyundai',
   'Kia',
 ]
-const FUEL_TYPES = ['Essence', 'Diesel', 'Electrique', 'Hybride', 'GPL']
+const FUEL_TYPES = ['Essence', 'Diesel', 'Électrique', 'Hybride', 'GPL']
 
 export default function Vehicles() {
   const { user } = useAuth()
@@ -59,6 +60,7 @@ export default function Vehicles() {
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
+  const [showScanner, setShowScanner] = useState(false)
 
   // For demo, assume premium tier - in real app, get from user profile
   const tier = 'premium' as const
@@ -111,7 +113,7 @@ export default function Vehicles() {
   }
 
   const handleDeleteVehicle = async (id: string) => {
-    if (!confirm('Supprimer ce vehicule ?')) return
+    if (!confirm('Supprimer ce véhicule ?')) return
 
     try {
       await supabase.from('vehicles').delete().eq('id', id)
@@ -121,69 +123,99 @@ export default function Vehicles() {
     }
   }
 
+  const handleScanComplete = (scannedVehicle: { plate: string; brand: string; model: string; year: string; fuel: string }) => {
+    // Save vehicle from scanner
+    handleSaveVehicle({
+      name: `${scannedVehicle.brand} ${scannedVehicle.model}`,
+      brand: scannedVehicle.brand,
+      model: scannedVehicle.model,
+      year: parseInt(scannedVehicle.year) || new Date().getFullYear(),
+      fuel_type: scannedVehicle.fuel,
+      plate: scannedVehicle.plate,
+      mileage: 0,
+    })
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 p-6 md:ml-64">
+      <main className="flex-1 p-4 md:p-6 md:ml-64 pb-24 md:pb-6">
         <PageTransition>
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                  <Car className="h-8 w-8 text-blue-600" />
-                  Mes vehicules
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                  <Car className="h-7 w-7 md:h-8 md:w-8 text-blue-600" />
+                  Mes véhicules
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  {vehicles.length}/{maxVehicles === Infinity ? 'illimite' : maxVehicles} vehicules
+                  {vehicles.length}/{maxVehicles === Infinity ? 'illimité' : maxVehicles} véhicules
                 </p>
               </div>
 
-              <Button onClick={() => setShowAddModal(true)} disabled={!canAddVehicle}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter un vehicule
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowScanner(true)}
+                  disabled={!canAddVehicle}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Scanner plaque</span>
+                  <span className="sm:hidden">Scanner</span>
+                </Button>
+                <Button
+                  onClick={() => setShowAddModal(true)}
+                  disabled={!canAddVehicle}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Ajouter</span>
+                  <span className="sm:hidden">Ajouter</span>
+                </Button>
+              </div>
             </div>
 
             {!canAddVehicle && (
               <Card className="p-4 mb-6 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="h-5 w-5 text-amber-600" />
-                  <div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
+                  <div className="flex-1">
                     <p className="font-medium text-amber-800 dark:text-amber-200">Limite atteinte</p>
                     <p className="text-sm text-amber-600 dark:text-amber-300">
-                      Passe en {tier === 'premium' ? 'Pro' : 'Premium'} pour ajouter plus de vehicules.
+                      Passe en {tier === 'premium' ? 'Pro' : 'Premium'} pour ajouter plus de véhicules.
                     </p>
                   </div>
-                  <Button size="sm" variant="outline" className="ml-auto" asChild>
+                  <Button size="sm" variant="outline" asChild>
                     <Link to="/pricing">Upgrade</Link>
                   </Button>
                 </div>
               </Card>
             )}
 
-            {/* Liste des vehicules */}
+            {/* Liste des véhicules */}
             <div className="grid gap-4">
               {vehicles.map((vehicle) => (
-                <Card key={vehicle.id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                        <Car className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <Card key={vehicle.id} className="p-4 md:p-6">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center shrink-0">
+                        <Car className="h-5 w-5 md:h-6 md:w-6 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{vehicle.name}</h3>
-                        <p className="text-muted-foreground">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-base md:text-lg truncate">{vehicle.name}</h3>
+                        <p className="text-sm text-muted-foreground truncate">
                           {vehicle.brand} {vehicle.model} - {vehicle.year} - {vehicle.fuel_type}
                         </p>
                         {vehicle.plate && (
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-xs md:text-sm text-muted-foreground mt-1">
                             {vehicle.plate} - {vehicle.mileage?.toLocaleString()} km
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 md:gap-2 shrink-0">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -208,14 +240,20 @@ export default function Vehicles() {
               ))}
 
               {vehicles.length === 0 && !loading && (
-                <Card className="p-12 text-center">
+                <Card className="p-8 md:p-12 text-center">
                   <Car className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-                  <h3 className="font-medium text-lg mb-2">Aucun vehicule</h3>
-                  <p className="text-muted-foreground mb-4">Ajoute ton premier vehicule pour commencer</p>
-                  <Button onClick={() => setShowAddModal(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un vehicule
-                  </Button>
+                  <h3 className="font-medium text-lg mb-2">Aucun véhicule</h3>
+                  <p className="text-muted-foreground mb-4">Ajoute ton premier véhicule pour commencer</p>
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                    <Button variant="outline" onClick={() => setShowScanner(true)}>
+                      <Camera className="h-4 w-4 mr-2" />
+                      Scanner ma plaque
+                    </Button>
+                    <Button onClick={() => setShowAddModal(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter manuellement
+                    </Button>
+                  </div>
                 </Card>
               )}
             </div>
@@ -229,6 +267,17 @@ export default function Vehicles() {
               }}
               onSave={handleSaveVehicle}
               vehicle={editingVehicle}
+              onOpenScanner={() => {
+                setShowAddModal(false)
+                setShowScanner(true)
+              }}
+            />
+
+            {/* Plate Scanner Modal */}
+            <PlateScanner
+              open={showScanner}
+              onOpenChange={setShowScanner}
+              onVehicleConfirmed={handleScanComplete}
             />
           </div>
         </PageTransition>
@@ -242,11 +291,13 @@ function VehicleModal({
   onClose,
   onSave,
   vehicle,
+  onOpenScanner,
 }: {
   open: boolean
   onClose: () => void
   onSave: (data: Partial<Vehicle>) => void
   vehicle: Vehicle | null
+  onOpenScanner: () => void
 }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -289,14 +340,21 @@ function VehicleModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{vehicle ? 'Modifier le vehicule' : 'Ajouter un vehicule'}</DialogTitle>
+          <DialogTitle>{vehicle ? 'Modifier le véhicule' : 'Ajouter un véhicule'}</DialogTitle>
         </DialogHeader>
+
+        {!vehicle && (
+          <Button variant="outline" className="w-full mb-4" onClick={onOpenScanner}>
+            <Camera className="h-4 w-4 mr-2" />
+            Scanner ma plaque d'immatriculation
+          </Button>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nom du vehicule</label>
+            <label className="block text-sm font-medium mb-1">Nom du véhicule</label>
             <Input
               placeholder="Ex: Ma 208, Voiture de Marie..."
               value={formData.name}
@@ -325,7 +383,7 @@ function VehicleModal({
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Modele</label>
+              <label className="block text-sm font-medium mb-1">Modèle</label>
               <Input
                 placeholder="208, Clio, C3..."
                 value={formData.model}
@@ -336,7 +394,7 @@ function VehicleModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Annee</label>
+              <label className="block text-sm font-medium mb-1">Année</label>
               <Input
                 type="number"
                 min={1990}
@@ -367,7 +425,7 @@ function VehicleModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Kilometrage</label>
+              <label className="block text-sm font-medium mb-1">Kilométrage</label>
               <Input
                 type="number"
                 placeholder="80000"

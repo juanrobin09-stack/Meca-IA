@@ -28,20 +28,25 @@ interface NavItem {
   href: string
   icon: React.ComponentType<{ className?: string }>
   label: string
+  shortLabel?: string
   tier?: 'premium'
+  mobileShow?: boolean
 }
 
 const navItems: NavItem[] = [
-  { href: '/app', icon: Home, label: 'Accueil' },
-  { href: '/app/chat', icon: MessageSquarePlus, label: 'Nouveau diagnostic' },
-  { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis' },
-  { href: '/app/vehicules', icon: Car, label: 'Mes vehicules', tier: 'premium' },
-  { href: '/app/rappels', icon: Bell, label: 'Rappels entretien', tier: 'premium' },
-  { href: '/app/garages', icon: MapPin, label: 'Trouver un garage' },
-  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une piece' },
-  { href: '/app/history', icon: History, label: 'Historique' },
-  { href: '/app/account', icon: User, label: 'Mon compte' },
+  { href: '/app', icon: Home, label: 'Accueil', shortLabel: 'Accueil', mobileShow: true },
+  { href: '/app/chat', icon: MessageSquarePlus, label: 'Nouveau diagnostic', shortLabel: 'Diagnostic', mobileShow: true },
+  { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis' },
+  { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules', tier: 'premium' },
+  { href: '/app/rappels', icon: Bell, label: 'Rappels entretien', shortLabel: 'Rappels', tier: 'premium' },
+  { href: '/app/garages', icon: MapPin, label: 'Trouver un garage', shortLabel: 'Garages' },
+  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce', shortLabel: 'Pièces', mobileShow: true },
+  { href: '/app/history', icon: History, label: 'Historique', shortLabel: 'Historique', mobileShow: true },
+  { href: '/app/account', icon: User, label: 'Mon compte', shortLabel: 'Compte', mobileShow: true },
 ]
+
+// Items shown in mobile bottom nav (limited to 5)
+const mobileNavItems = navItems.filter(item => item.mobileShow)
 
 export default function Sidebar() {
   const location = useLocation()
@@ -133,22 +138,24 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t z-50">
-        <div className="flex justify-around py-2">
-          {navItems.map((item) => {
+      {/* Mobile Bottom Nav - Limited to 5 items */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t z-50 safe-area-pb">
+        <div className="grid grid-cols-5 py-1">
+          {mobileNavItems.map((item) => {
             const isActive = location.pathname === item.href
             return (
               <Link
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  'flex flex-col items-center gap-1 px-3 py-2 text-xs',
+                  'flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px]',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
                 <item.icon className="h-5 w-5" />
-                <span>{item.label}</span>
+                <span className="text-[10px] leading-tight text-center px-1 truncate max-w-full">
+                  {item.shortLabel}
+                </span>
               </Link>
             )
           })}

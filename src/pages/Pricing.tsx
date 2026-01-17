@@ -64,11 +64,11 @@ export default function Pricing() {
                   <Zap className="h-6 w-6 text-gray-600 dark:text-gray-300" />
                 </div>
                 <h3 className="text-xl font-bold dark:text-white">Gratuit</h3>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Pour decouvrir</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Pour découvrir</p>
               </div>
 
               <div className="text-center mb-6">
-                <span className="text-4xl font-bold dark:text-white">0EUR</span>
+                <span className="text-4xl font-bold dark:text-white">0€</span>
                 <span className="text-gray-500 dark:text-gray-400">/mois</span>
               </div>
 
@@ -95,7 +95,7 @@ export default function Pricing() {
             {/* PREMIUM */}
             <Card className="p-8 relative border-2 border-blue-500 shadow-lg dark:bg-gray-800">
               <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500">
-                RECOMMANDE
+                RECOMMANDÉ
               </Badge>
 
               <div className="text-center mb-6">
@@ -103,12 +103,12 @@ export default function Pricing() {
                   <Star className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <h3 className="text-xl font-bold dark:text-white">Premium</h3>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">Diagnostics illimites</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Diagnostics illimités</p>
               </div>
 
               <div className="text-center mb-6">
                 <span className="text-4xl font-bold dark:text-white">
-                  {yearly ? '89EUR' : '9.99EUR'}
+                  {yearly ? '89€' : '9,99€'}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">/{yearly ? 'an' : 'mois'}</span>
                 {yearly && (
@@ -139,7 +139,7 @@ export default function Pricing() {
           {/* FAQ / Trust */}
           <div className="mt-16 text-center">
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              Sans engagement - Annulation en 1 clic - Paiement securise Stripe
+              Sans engagement - Annulation en 1 clic - Paiement sécurisé Stripe
             </p>
             <p className="text-sm text-gray-400">
               Une question ?{' '}
