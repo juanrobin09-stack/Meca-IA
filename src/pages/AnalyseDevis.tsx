@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { FileText, Upload, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import ReactMarkdown from 'react-markdown'
@@ -43,14 +44,29 @@ Si le devis n'est pas lisible ou n'est pas un devis auto, dis-le poliment.`
 
 export default function AnalyseDevis() {
   const { user, profile } = useAuth()
-  const { isPremium, checkDiagnosticLimit } = useSubscription(profile)
+  const { isPremium, devisRemaining, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
 
   const [selectedFile, setSelectedFile] = useState<{ dataUrl: string; base64: string } | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
+  const [currentRemaining, setCurrentRemaining] = useState<number>(devisRemaining as number)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Check limit on page load
+  useEffect(() => {
+    async function checkLimit() {
+      if (!isPremium) {
+        const status = await checkDevisLimit()
+        if (!status.canAnalyze) {
+          setShowPaywall(true)
+        }
+        setCurrentRemaining(status.remaining as number)
+      }
+    }
+    checkLimit()
+  }, [isPremium, checkDevisLimit])
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -84,8 +100,8 @@ export default function AnalyseDevis() {
 
     // Check limits for free users
     if (!isPremium) {
-      const limitStatus = await checkDiagnosticLimit()
-      if (!limitStatus.canDiagnose) {
+      const limitStatus = await checkDevisLimit()
+      if (!limitStatus.canAnalyze) {
         setShowPaywall(true)
         return
       }
@@ -135,6 +151,12 @@ export default function AnalyseDevis() {
 
       const data = await response.json()
       setAnalysis(data.content[0].text)
+
+      // Increment counter after successful analysis (for free users)
+      if (!isPremium) {
+        await incrementDevisCount()
+        setCurrentRemaining(prev => Math.max(0, prev - 1))
+      }
     } catch (err) {
       console.error('Analysis error:', err)
       setError("Erreur lors de l'analyse. Réessaie.")
@@ -149,6 +171,9 @@ export default function AnalyseDevis() {
     setError(null)
   }
 
+  // Display remaining from fresh check if available
+  const displayRemaining = currentRemaining
+
   return (
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
@@ -156,11 +181,18 @@ export default function AnalyseDevis() {
       <main className="md:pl-64 pb-20 md:pb-0">
         <div className="container mx-auto px-4 py-8 max-w-3xl">
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-2">
-              <FileText className="h-8 w-8 text-primary" />
-              Analyse ton devis garage
-            </h1>
-            <p className="text-muted-foreground">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+                <FileText className="h-8 w-8 text-primary" />
+                Analyse ton devis garage
+              </h1>
+              {!isPremium && (
+                <Badge variant="secondary" className="text-sm">
+                  {displayRemaining}/1 analyse gratuite
+                </Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground mt-2">
               Upload ton devis, l'IA te dit si c'est le bon prix et comment négocier.
             </p>
           </div>
@@ -228,12 +260,6 @@ export default function AnalyseDevis() {
                     </>
                   )}
                 </Button>
-
-                {!isPremium && (
-                  <p className="text-xs text-center text-muted-foreground">
-                    L'analyse de devis utilise 1 de tes diagnostics gratuits
-                  </p>
-                )}
               </CardContent>
             </Card>
           ) : (
@@ -336,7 +362,7 @@ export default function AnalyseDevis() {
         </div>
       </main>
 
-      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
+      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} mode="devis" />
     </div>
   )
 }

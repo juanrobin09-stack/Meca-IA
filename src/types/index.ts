@@ -5,6 +5,7 @@ export interface User {
   city?: string
   free_diagnostics_used: number
   free_diagnostics_reset_at: string
+  free_devis_used: number
   subscription_status: 'free' | 'premium'
   stripe_customer_id?: string
   stripe_subscription_id?: string

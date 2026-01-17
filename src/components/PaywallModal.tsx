@@ -12,14 +12,48 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles, CheckCircle2, CreditCard } from 'lucide-react'
 
+type PaywallMode = 'diagnostic' | 'devis'
+
 interface PaywallModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  mode?: PaywallMode
+  title?: string
+  subtitle?: string
 }
 
-export default function PaywallModal({ open, onOpenChange }: PaywallModalProps) {
+const defaultContent = {
+  diagnostic: {
+    title: 'Tes 2 diagnostics gratuits sont épuisés',
+    subtitle: 'Passe Premium pour comprendre ta voiture et prendre les bonnes décisions avant chaque visite au garage !',
+    unitLabel: '1 diagnostic immédiat',
+    unitButton: 'Acheter 1 diagnostic',
+    unitPrice: '2.99€',
+    priceId: STRIPE_PRICES.PAY_PER_USE,
+  },
+  devis: {
+    title: 'Tu as utilisé ton analyse gratuite ce mois',
+    subtitle: 'Passe Premium pour analyser tous tes devis et ne plus te faire avoir !',
+    unitLabel: '1 analyse de devis',
+    unitButton: 'Acheter 1 analyse',
+    unitPrice: '1.99€',
+    priceId: STRIPE_PRICES.PAY_PER_DEVIS,
+  },
+}
+
+export default function PaywallModal({
+  open,
+  onOpenChange,
+  mode = 'diagnostic',
+  title,
+  subtitle,
+}: PaywallModalProps) {
   const { user } = useAuth()
   const [loading, setLoading] = useState<string | null>(null)
+
+  const content = defaultContent[mode]
+  const displayTitle = title || content.title
+  const displaySubtitle = subtitle || content.subtitle
 
   async function handlePurchase(priceId: string, isSubscription: boolean) {
     if (!user) return
@@ -40,10 +74,10 @@ export default function PaywallModal({ open, onOpenChange }: PaywallModalProps) 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">
-            Tes 2 diagnostics gratuits sont épuisés
+            {displayTitle}
           </DialogTitle>
           <DialogDescription className="text-center">
-            Passe Premium pour comprendre ta voiture et prendre les bonnes décisions avant chaque visite au garage !
+            {displaySubtitle}
           </DialogDescription>
         </DialogHeader>
 
@@ -67,6 +101,10 @@ export default function PaywallModal({ open, onOpenChange }: PaywallModalProps) 
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
                   Diagnostics illimités
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  Analyses de devis illimitées
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -108,14 +146,14 @@ export default function PaywallModal({ open, onOpenChange }: PaywallModalProps) 
                 <CardTitle className="text-lg">À l'unité</CardTitle>
               </div>
               <div className="text-2xl font-bold">
-                2.99€
+                {content.unitPrice}
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  1 diagnostic immédiat
+                  {content.unitLabel}
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -125,13 +163,13 @@ export default function PaywallModal({ open, onOpenChange }: PaywallModalProps) 
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => handlePurchase(STRIPE_PRICES.PAY_PER_USE, false)}
+                onClick={() => handlePurchase(content.priceId, false)}
                 disabled={loading !== null}
               >
-                {loading === STRIPE_PRICES.PAY_PER_USE ? (
+                {loading === content.priceId ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
-                Acheter 1 diagnostic
+                {content.unitButton}
               </Button>
             </CardContent>
           </Card>
