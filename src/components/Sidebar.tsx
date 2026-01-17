@@ -13,7 +13,8 @@ import {
   Wrench,
   Sparkles,
   FileText,
-  MapPin
+  MapPin,
+  ShoppingCart
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +23,7 @@ const navItems = [
   { href: '/app/chat', icon: MessageSquarePlus, label: 'Nouveau diagnostic' },
   { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis' },
   { href: '/app/garages', icon: MapPin, label: 'Trouver un garage' },
+  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce' },
   { href: '/app/history', icon: History, label: 'Historique' },
   { href: '/app/account', icon: User, label: 'Mon compte' },
 ]

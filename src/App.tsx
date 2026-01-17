@@ -13,6 +13,7 @@ import Account from '@/pages/Account'
 import Success from '@/pages/Success'
 import AnalyseDevis from '@/pages/AnalyseDevis'
 import Garages from '@/pages/Garages'
+import Pieces from '@/pages/Pieces'
 
 function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -100,6 +101,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Garages />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/app/pieces"
+          element={
+            <ProtectedRoute>
+              <Pieces />
             </ProtectedRoute>
           }
         />
