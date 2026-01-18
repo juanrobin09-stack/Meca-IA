@@ -29,8 +29,8 @@ interface VehicleContext {
     mileage: number
   }
   recent_diagnostics?: Array<{
-    problem: string
-    solution: string
+    problem_description: string
+    diagnosis_summary: string
     created_at: string
   }>
   forecast?: unknown
@@ -54,7 +54,7 @@ async function buildContext(userId: string, vehicleId?: string): Promise<Vehicle
     // Derniers diagnostics
     const { data: diagnostics } = await supabase
       .from('diagnostics')
-      .select('problem, solution, created_at')
+      .select('problem_description, diagnosis_summary, created_at')
       .eq('vehicle_id', vehicleId)
       .order('created_at', { ascending: false })
       .limit(3)
@@ -169,7 +169,7 @@ VÉHICULE DE L'UTILISATEUR :
 
 ${context.recent_diagnostics && context.recent_diagnostics.length > 0 ? `
 HISTORIQUE RÉCENT :
-${context.recent_diagnostics.map(d => `- ${d.problem} (${new Date(d.created_at).toLocaleDateString('fr-FR')})`).join('\n')}
+${context.recent_diagnostics.map(d => `- ${d.problem_description} (${new Date(d.created_at).toLocaleDateString('fr-FR')})`).join('\n')}
 ` : ''}
 
 TON RÔLE :
