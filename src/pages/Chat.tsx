@@ -42,7 +42,7 @@ export default function Chat() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { user, profile, refreshProfile } = useAuth()
-  const { isPremium, diagnosticsRemaining, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
+  const { isPremium, diagnosticsRemaining, purchasedDiagnosticCredits, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
   const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
   const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages } = useChat()
   const { celebrate } = useConfetti()
@@ -52,6 +52,7 @@ export default function Chat() {
   const [showPaywall, setShowPaywall] = useState(false)
   const [isNewConversation, setIsNewConversation] = useState(true)
   const [currentRemaining, setCurrentRemaining] = useState<number>(diagnosticsRemaining)
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(purchasedDiagnosticCredits)
   const [selectedImage, setSelectedImage] = useState<{ dataUrl: string; base64: string } | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -76,6 +77,7 @@ export default function Chat() {
       console.log('[Chat] Limit status:', limitStatus)
 
       setCurrentRemaining(limitStatus.remaining)
+      setCurrentPurchasedCredits(limitStatus.purchasedCredits || 0)
 
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
         console.log('[Chat] User has no remaining diagnostics, showing paywall')
@@ -295,12 +297,19 @@ export default function Chat() {
                   Premium
                 </Badge>
               ) : (
-                <Tooltip content="Tu as 2 diagnostics gratuits par mois. Passe Premium pour illimité !">
-                  <Badge variant="secondary" className="cursor-help flex items-center gap-1">
-                    {displayRemaining}/2 restants
-                    <HelpCircle className="h-3 w-3" />
-                  </Badge>
-                </Tooltip>
+                <div className="flex items-center gap-1.5">
+                  <Tooltip content="Tu as 2 diagnostics gratuits par mois. Passe Premium pour illimité !">
+                    <Badge variant="secondary" className="cursor-help flex items-center gap-1">
+                      {displayRemaining}/2 restants
+                      <HelpCircle className="h-3 w-3" />
+                    </Badge>
+                  </Tooltip>
+                  {currentPurchasedCredits > 0 && (
+                    <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                      +{currentPurchasedCredits} crédit{currentPurchasedCredits > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                </div>
               )}
             </div>
           </div>

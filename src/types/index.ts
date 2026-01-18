@@ -6,6 +6,13 @@ export interface User {
   free_diagnostics_used: number
   free_diagnostics_reset_at: string
   free_devis_used: number
+  free_chat_messages_today?: number
+  free_chat_reset_at?: string
+  // Purchased credits
+  purchased_diagnostic_credits?: number
+  purchased_devis_credits?: number
+  purchased_chat_credits?: number
+  // Subscription
   subscription_status: 'free' | 'premium'
   stripe_customer_id?: string
   stripe_subscription_id?: string
