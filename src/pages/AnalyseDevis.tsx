@@ -21,10 +21,8 @@ import {
   TrendingDown,
   MessageSquare,
   Lightbulb,
-  Shield,
   XCircle,
   ChevronRight,
-  Euro,
   Target
 } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
