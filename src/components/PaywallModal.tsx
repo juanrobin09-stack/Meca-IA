@@ -93,8 +93,8 @@ const defaultContent: Record<PaywallMode, {
     ],
   },
   chat: {
-    title: '💬 Limite de messages atteinte',
-    subtitle: 'Tu as utilisé tes 10 messages gratuits ce mois-ci. Passe Premium pour un accès illimité !',
+    title: '💬 Limite quotidienne atteinte',
+    subtitle: 'Tu as utilisé tes 10 messages gratuits aujourd\'hui. Reviens demain ou passe Premium pour un accès illimité 24/7 !',
     unitLabel: '10 messages supplémentaires',
     unitButton: 'Acheter 10 messages',
     unitPrice: '2.99€',
@@ -104,7 +104,7 @@ const defaultContent: Record<PaywallMode, {
       'Contexte véhicule automatique',
       'Diagnostics IA illimités',
       'Diagnostic vidéo IA',
-      'Sans limite mensuelle',
+      'Sans limite quotidienne',
     ],
   },
   vehicle: {

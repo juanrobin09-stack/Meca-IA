@@ -43,16 +43,22 @@ const navItems: NavItem[] = [
   { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis' },
   { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic vidéo', shortLabel: 'Vidéo', tier: 'premium' },
   { href: '/app/prevision-pannes', icon: TrendingUp, label: 'Prévision pannes', shortLabel: 'Prévision', tier: 'premium' },
-  { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules' },
+  { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules', mobileShow: true },
   { href: '/app/garages', icon: MapPin, label: 'Trouver un garage', shortLabel: 'Garages' },
   { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce', shortLabel: 'Pièces', mobileShow: true },
   { href: '/app/history', icon: History, label: 'Historique', shortLabel: 'Historique', mobileShow: true },
   { href: '/app/settings', icon: Settings, label: 'Paramètres', shortLabel: 'Paramètres' },
-  { href: '/app/account', icon: User, label: 'Mon compte', shortLabel: 'Compte', mobileShow: true },
+  { href: '/app/account', icon: User, label: 'Mon compte', shortLabel: 'Compte' },
 ]
 
-// Items shown in mobile bottom nav (limited to 5)
-const mobileNavItems = navItems.filter(item => item.mobileShow)
+// Items shown in mobile bottom nav (limited to 5) - custom order
+const mobileNavItems = [
+  navItems.find(item => item.href === '/app')!,
+  navItems.find(item => item.href === '/app/chat')!,
+  navItems.find(item => item.href === '/app/pieces')!,
+  navItems.find(item => item.href === '/app/vehicules')!,
+  navItems.find(item => item.href === '/app/history')!,
+]
 
 export default function Sidebar() {
   const location = useLocation()

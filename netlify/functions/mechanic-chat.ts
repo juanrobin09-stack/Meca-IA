@@ -11,7 +11,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!
 })
 
-const FREE_MESSAGES_LIMIT = 10
+const FREE_MESSAGES_LIMIT_PER_DAY = 10
 
 interface RequestBody {
   userId: string
@@ -115,29 +115,28 @@ export const handler: Handler = async (event) => {
 
     const isPremium = profile?.subscription_status === 'premium'
 
-    // 2. Check message limit for free users
-    let messagesUsedThisMonth = 0
+    // 2. Check daily message limit for free users
+    let messagesUsedToday = 0
     if (!isPremium) {
-      const startOfMonth = new Date()
-      startOfMonth.setDate(1)
-      startOfMonth.setHours(0, 0, 0, 0)
+      const startOfDay = new Date()
+      startOfDay.setHours(0, 0, 0, 0)
 
       const { count } = await supabase
         .from('chat_messages')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', userId)
         .eq('sender', 'user')
-        .gte('created_at', startOfMonth.toISOString())
+        .gte('created_at', startOfDay.toISOString())
 
-      messagesUsedThisMonth = count || 0
+      messagesUsedToday = count || 0
 
-      if (messagesUsedThisMonth >= FREE_MESSAGES_LIMIT) {
+      if (messagesUsedToday >= FREE_MESSAGES_LIMIT_PER_DAY) {
         return {
           statusCode: 403,
           headers,
           body: JSON.stringify({
             error: 'LIMIT_REACHED',
-            message: 'Vous avez atteint la limite de 10 messages gratuits ce mois-ci.',
+            message: 'Tu as utilisé tes 10 messages gratuits aujourd\'hui. Reviens demain ou passe à Premium pour un accès illimité 24/7 !',
             upgradeUrl: '/pricing'
           }),
         }
@@ -252,8 +251,8 @@ TONALITÉ :
       })
       .eq('id', conversationId)
 
-    // 10. Calculate remaining messages
-    const messagesRemaining = isPremium ? null : (FREE_MESSAGES_LIMIT - messagesUsedThisMonth - 1)
+    // 10. Calculate remaining messages for today
+    const messagesRemaining = isPremium ? null : (FREE_MESSAGES_LIMIT_PER_DAY - messagesUsedToday - 1)
 
     return {
       statusCode: 200,

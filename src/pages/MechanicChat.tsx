@@ -397,16 +397,16 @@ export default function MechanicChat() {
                     </SelectContent>
                   </Select>
 
-                  {/* Messages remaining for free users */}
+                  {/* Messages remaining for free users - daily limit */}
                   {!isPremium && messagesRemaining !== null && (
                     <div className="text-xs sm:text-sm text-muted-foreground">
                       {messagesRemaining > 0 ? (
                         <span className={messagesRemaining <= 3 ? 'text-amber-600 font-medium' : ''}>
-                          {messagesRemaining} message{messagesRemaining > 1 ? 's' : ''} gratuit{messagesRemaining > 1 ? 's' : ''} restant{messagesRemaining > 1 ? 's' : ''}
+                          {messagesRemaining}/10 message{messagesRemaining > 1 ? 's' : ''} restant{messagesRemaining > 1 ? 's' : ''} aujourd'hui
                         </span>
                       ) : (
                         <span className="text-red-600 font-medium">
-                          Limite atteinte - Passez Premium
+                          Limite du jour atteinte - Reviens demain ou passe Premium
                         </span>
                       )}
                     </div>
