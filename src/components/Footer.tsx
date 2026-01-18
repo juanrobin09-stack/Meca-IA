@@ -29,18 +29,18 @@ export default function Footer() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © {currentYear} MecaIA - Juan Robin - SIREN 994 221 653
+            © {currentYear} MECAI - Juan Robin - SIREN 994 221 653
           </p>
         </div>
 
         <div className="text-xs text-muted-foreground text-center mt-6 space-y-2">
           <p>
-            MecaIA - Votre copilote mécanique 🚗
+            MECAI - Votre copilote mécanique 🚗
           </p>
           <p className="max-w-3xl mx-auto">
             ⚠️ Les diagnostics IA sont fournis à titre indicatif.
             Pour toute intervention mécanique, consultez un professionnel certifié.
-            MecaIA ne saurait être tenu responsable des décisions prises suite à l'utilisation du service.
+            MECAI ne saurait être tenu responsable des décisions prises suite à l'utilisation du service.
           </p>
         </div>
       </div>

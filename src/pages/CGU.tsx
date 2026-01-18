@@ -13,7 +13,7 @@ export default function CGU() {
       title: "Acceptation des conditions",
       content: (
         <p className="text-muted-foreground">
-          En utilisant MecaIA, vous acceptez sans réserve les présentes
+          En utilisant MECAI, vous acceptez sans réserve les présentes
           conditions générales d'utilisation. Si vous n'acceptez pas ces
           conditions, veuillez ne pas utiliser notre service.
         </p>
@@ -25,7 +25,7 @@ export default function CGU() {
       content: (
         <div className="space-y-2">
           <p className="text-muted-foreground">
-            MecaIA est un service en ligne proposant des diagnostics automobiles
+            MECAI est un service en ligne proposant des diagnostics automobiles
             assistés par intelligence artificielle.
           </p>
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
@@ -77,9 +77,9 @@ export default function CGU() {
       content: (
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
           <p className="text-amber-800 dark:text-amber-200">
-            MecaIA fournit des diagnostics à titre informatif uniquement. Ces diagnostics
+            MECAI fournit des diagnostics à titre informatif uniquement. Ces diagnostics
             ne remplacent en aucun cas l'expertise d'un mécanicien professionnel.
-            MecaIA décline toute responsabilité pour les dommages résultant de
+            MECAI décline toute responsabilité pour les dommages résultant de
             l'utilisation des diagnostics fournis.
           </p>
         </div>
@@ -124,7 +124,7 @@ export default function CGU() {
       title: "Modification des CGU",
       content: (
         <p className="text-muted-foreground">
-          MecaIA se réserve le droit de modifier les présentes conditions à
+          MECAI se réserve le droit de modifier les présentes conditions à
           tout moment. Les utilisateurs seront informés des modifications
           significatives par email.
         </p>
@@ -173,7 +173,7 @@ export default function CGU() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold">Conditions Générales d'Utilisation</h1>
-                <p className="text-muted-foreground">Les règles d'utilisation de MecaIA</p>
+                <p className="text-muted-foreground">Les règles d'utilisation de MECAI</p>
               </div>
             </div>
           </div>

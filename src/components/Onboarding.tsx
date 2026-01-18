@@ -11,7 +11,7 @@ interface OnboardingProps {
 const steps = [
   {
     icon: MessageSquare,
-    title: 'Bienvenue sur MecaIA !',
+    title: 'Bienvenue sur MECAI !',
     description: 'Ton assistant mécanique personnel. Décris ton problème de voiture et obtiens un diagnostic instantané.',
     color: 'bg-blue-500'
   },

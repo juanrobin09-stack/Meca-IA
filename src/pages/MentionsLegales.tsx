@@ -12,7 +12,7 @@ export default function MentionsLegales() {
       title: "Éditeur du site",
       content: (
         <div className="space-y-1">
-          <p className="font-semibold text-lg">MecaIA</p>
+          <p className="font-semibold text-lg">MECAI</p>
           <p className="text-muted-foreground">Entreprise individuelle</p>
           <p><span className="text-muted-foreground">SIREN :</span> 994 221 653</p>
           <p><span className="text-muted-foreground">Propriétaire :</span> Juan Robin</p>
@@ -39,11 +39,11 @@ export default function MentionsLegales() {
       title: "Propriété intellectuelle",
       content: (
         <p className="text-muted-foreground">
-          L'ensemble des contenus présents sur MecaIA (textes, images, logos,
+          L'ensemble des contenus présents sur MECAI (textes, images, logos,
           interface utilisateur) sont protégés par le droit d'auteur. Toute
           reproduction, représentation ou diffusion, totale ou partielle, du
           contenu de ce site par quelque procédé que ce soit, sans autorisation
-          expresse de MecaIA, est interdite.
+          expresse de MECAI, est interdite.
         </p>
       )
     },
@@ -53,13 +53,13 @@ export default function MentionsLegales() {
       content: (
         <div className="space-y-2">
           <p className="text-muted-foreground">
-            MecaIA est un service d'aide au diagnostic automobile utilisant
+            MECAI est un service d'aide au diagnostic automobile utilisant
             l'intelligence artificielle.
           </p>
           <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
             <p className="text-amber-800 dark:text-amber-200 text-sm">
               Les informations fournies sont données à titre indicatif et ne remplacent pas
-              l'avis d'un professionnel qualifié. MecaIA ne peut être tenu responsable des
+              l'avis d'un professionnel qualifié. MECAI ne peut être tenu responsable des
               décisions prises sur la base des diagnostics fournis.
             </p>
           </div>
@@ -114,7 +114,7 @@ export default function MentionsLegales() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold">Mentions Légales</h1>
-                <p className="text-muted-foreground">Informations légales sur MecaIA</p>
+                <p className="text-muted-foreground">Informations légales sur MECAI</p>
               </div>
             </div>
           </div>

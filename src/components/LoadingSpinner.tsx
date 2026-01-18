@@ -22,7 +22,7 @@ export function LoadingSpinner({ size = 'md', text, className }: LoadingSpinnerP
   )
 }
 
-export function FullPageLoader({ message = 'Chargement de MecaIA...' }: { message?: string }) {
+export function FullPageLoader({ message = 'Chargement de MECAI...' }: { message?: string }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-gray-50 dark:bg-gray-900">
       <Loader2 className="h-12 w-12 animate-spin text-blue-600" />

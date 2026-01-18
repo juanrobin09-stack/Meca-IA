@@ -279,7 +279,7 @@ export default function Chat() {
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <Wrench className="h-4 w-4 text-primary" />
                 </div>
-                <span className="font-semibold">MecaIA</span>
+                <span className="font-semibold">MECAI</span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -398,7 +398,7 @@ export default function Chat() {
           {isLoading && !streamingContent && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">MecaIA réfléchit...</span>
+              <span className="text-sm">MECAI réfléchit...</span>
             </div>
           )}
 

@@ -53,7 +53,7 @@ export default function CookieBanner() {
                   <div>
                     <h3 className="font-semibold mb-1">Nous utilisons des cookies</h3>
                     <p className="text-sm text-muted-foreground">
-                      MecaIA utilise des cookies pour assurer le bon fonctionnement du site
+                      MECAI utilise des cookies pour assurer le bon fonctionnement du site
                       et améliorer votre expérience. En savoir plus dans notre{' '}
                       <Link to="/confidentialite" className="text-primary hover:underline">
                         politique de confidentialité

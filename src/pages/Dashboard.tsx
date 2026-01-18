@@ -88,7 +88,7 @@ export default function Dashboard() {
               Salut {displayName} !
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Bienvenue sur MecaIA, ton assistant diagnostic auto.
+              Bienvenue sur MECAI, ton assistant diagnostic auto.
             </p>
           </motion.div>
 

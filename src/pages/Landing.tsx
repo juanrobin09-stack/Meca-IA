@@ -305,7 +305,7 @@ export default function Landing() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-50 dark:from-gray-900 to-transparent pointer-events-none" />
       </section>
 
-      {/* Pourquoi MecaIA */}
+      {/* Pourquoi MECAI */}
       <section className="py-16 sm:py-20 bg-gray-50 dark:bg-gray-900">
         <div className="container mx-auto px-4">
           <motion.div
@@ -315,7 +315,7 @@ export default function Landing() {
             viewport={{ once: true }}
           >
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-              Pourquoi MecaIA ?
+              Pourquoi MECAI ?
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               L'IA au service de ta tranquillité automobile
@@ -542,7 +542,7 @@ export default function Landing() {
                 Avertissement
               </h3>
               <p className="text-xs text-amber-700 dark:text-amber-300">
-                MecaIA fournit des diagnostics à titre informatif. Les résultats ne remplacent pas
+                MECAI fournit des diagnostics à titre informatif. Les résultats ne remplacent pas
                 l'avis d'un mécanicien professionnel. En cas de doute, consultez un garage.
               </p>
             </div>
@@ -561,7 +561,7 @@ export default function Landing() {
               <Link to="/confidentialite" className="hover:text-gray-900 dark:hover:text-white transition-colors">Confidentialité</Link>
             </div>
             <p className="text-xs sm:text-sm text-gray-400">
-              © {new Date().getFullYear()} MecaIA
+              © {new Date().getFullYear()} MECAI
             </p>
           </div>
         </div>

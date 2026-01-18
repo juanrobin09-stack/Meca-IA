@@ -13,7 +13,7 @@ export default function Confidentialite() {
       title: "Responsable du traitement",
       content: (
         <div className="space-y-1">
-          <p className="font-semibold text-lg">MecaIA</p>
+          <p className="font-semibold text-lg">MECAI</p>
           <p><span className="text-muted-foreground">SIREN :</span> 994 221 653</p>
           <p><span className="text-muted-foreground">Responsable :</span> Juan Robin</p>
           <p><span className="text-muted-foreground">Email :</span> contact@mymecai.com</p>
@@ -127,7 +127,7 @@ export default function Confidentialite() {
       content: (
         <div className="space-y-3">
           <p className="text-muted-foreground text-sm">
-            MecaIA utilise des cookies pour le fonctionnement du site.
+            MECAI utilise des cookies pour le fonctionnement du site.
             Gérez vos préférences via le bandeau cookies.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">

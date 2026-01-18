@@ -230,7 +230,7 @@ export default function Garages() {
               <div>
                 <h3 className="font-semibold">Tu es garagiste ?</h3>
                 <p className="text-sm text-muted-foreground">
-                  Deviens partenaire MecaIA et gagne en visibilité !
+                  Deviens partenaire MECAI et gagne en visibilité !
                 </p>
               </div>
               <Button variant="outline" asChild>

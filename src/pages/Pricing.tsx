@@ -57,7 +57,7 @@ export default function Pricing() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold mb-4 dark:text-white">
-              Choisis ton plan MecaIA
+              Choisis ton plan MECAI
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
               Commence gratuitement, upgrade quand tu veux

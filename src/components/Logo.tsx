@@ -102,7 +102,7 @@ export default function Logo({ size = 'md', showText = true, linkTo, className =
       {showText && (
         <div className="flex flex-col leading-none">
           <span className={`${s.text} font-bold tracking-tight`}>
-            <span className="text-gray-800 dark:text-white">MECA</span><span className="text-blue-500">IA</span>
+            <span className="text-gray-800 dark:text-white">MEC</span><span className="text-blue-500">AI</span>
           </span>
           {size === 'lg' && (
             <span className="text-[10px] text-blue-600 dark:text-blue-400 tracking-widest mt-0.5">

@@ -345,7 +345,7 @@ export default function MechanicChat() {
                     </div>
                     <div className="min-w-0">
                       <h1 className="font-bold text-base sm:text-lg flex items-center gap-2 truncate">
-                        <span className="truncate">MecaIA</span>
+                        <span className="truncate">MECAI</span>
                         {isPremium && (
                           <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-[10px] sm:text-xs shrink-0">
                             Premium

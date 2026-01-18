@@ -1,6 +1,6 @@
 {
-  "name": "MecaIA - Diagnostic Auto par IA",
-  "short_name": "MecaIA",
+  "name": "MECAI - Diagnostic Auto par IA",
+  "short_name": "MECAI",
   "description": "Ton mécanicien de poche. Diagnostic auto par IA en 2 minutes.",
   "start_url": "/",
   "display": "standalone",

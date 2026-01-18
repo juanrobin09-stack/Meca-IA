@@ -42,7 +42,7 @@ export default function Login() {
           </Link>
           <CardTitle className="text-2xl">Connexion</CardTitle>
           <CardDescription>
-            Entre tes identifiants pour accéder à MecaIA
+            Entre tes identifiants pour accéder à MECAI
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
