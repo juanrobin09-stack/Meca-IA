@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip } from '@/components/ui/tooltip'
-import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X, Car, CheckCircle2, HelpCircle } from 'lucide-react'
+import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X, Car, CheckCircle2, HelpCircle, AlertTriangle } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
 
@@ -29,6 +29,7 @@ interface VehicleInfo {
 }
 
 const MAX_PHOTOS_PER_CONVERSATION = 2
+const MAX_MESSAGES_PER_DIAGNOSTIC = 15 // Limit per diagnostic session (for non-premium users)
 
 // Detect if diagnostic is complete (has all key sections)
 function isDiagnosticComplete(content: string): boolean {
@@ -63,6 +64,11 @@ export default function Chat() {
 
   // Count photos used in this conversation
   const photosUsed = messages.filter(m => m.image).length
+
+  // Count user messages in this conversation
+  const userMessagesCount = messages.filter(m => m.role === 'user').length
+  const messagesRemaining = MAX_MESSAGES_PER_DIAGNOSTIC - userMessagesCount
+  const isAtMessageLimit = !isPremium && userMessagesCount >= MAX_MESSAGES_PER_DIAGNOSTIC && !isNewConversation
 
   // Check limit on page load for new conversations
   useEffect(() => {
@@ -176,6 +182,12 @@ export default function Chat() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if ((!input.trim() && !selectedImage) || isLoading) return
+
+    // Check message limit for existing conversations (non-premium only)
+    if (isAtMessageLimit) {
+      setShowPaywall(true)
+      return
+    }
 
     const messageContent = input.trim() || (selectedImage ? 'Voici une photo de mon problème.' : '')
     const imageBase64 = selectedImage?.base64
@@ -298,12 +310,26 @@ export default function Chat() {
                 </Badge>
               ) : (
                 <div className="flex items-center gap-1.5">
-                  <Tooltip content="Tu as 2 diagnostics gratuits par mois. Passe Premium pour illimité !">
-                    <Badge variant="secondary" className="cursor-help flex items-center gap-1">
-                      {displayRemaining}/2 restants
-                      <HelpCircle className="h-3 w-3" />
-                    </Badge>
-                  </Tooltip>
+                  {/* Show messages remaining during active diagnostic */}
+                  {!isNewConversation && (
+                    <Tooltip content={`${messagesRemaining} messages restants pour ce diagnostic`}>
+                      <Badge
+                        variant={messagesRemaining <= 3 ? "destructive" : "outline"}
+                        className={`cursor-help text-xs ${messagesRemaining <= 3 ? '' : 'border-amber-500 text-amber-600'}`}
+                      >
+                        {messagesRemaining <= 3 && <AlertTriangle className="h-3 w-3 mr-1" />}
+                        {messagesRemaining}/{MAX_MESSAGES_PER_DIAGNOSTIC} msg
+                      </Badge>
+                    </Tooltip>
+                  )}
+                  {isNewConversation && (
+                    <Tooltip content="Tu as 2 diagnostics gratuits par mois. Passe Premium pour illimité !">
+                      <Badge variant="secondary" className="cursor-help flex items-center gap-1">
+                        {displayRemaining}/2 restants
+                        <HelpCircle className="h-3 w-3" />
+                      </Badge>
+                    </Tooltip>
+                  )}
                   {currentPurchasedCredits > 0 && (
                     <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
                       +{currentPurchasedCredits} crédit{currentPurchasedCredits > 1 ? 's' : ''}
@@ -422,6 +448,32 @@ export default function Chat() {
 
         {/* Input */}
         <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-background border-t p-4 pb-20 md:pb-4">
+          {/* Message limit reached warning */}
+          {isAtMessageLimit && (
+            <div className="max-w-3xl mx-auto mb-3 p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm font-medium">Limite de messages atteinte</span>
+              </div>
+              <p className="text-xs text-amber-600 dark:text-amber-500 mt-1">
+                Tu as atteint les {MAX_MESSAGES_PER_DIAGNOSTIC} messages pour ce diagnostic.{' '}
+                <button
+                  className="underline font-medium"
+                  onClick={() => setShowPaywall(true)}
+                >
+                  Passe Premium
+                </button>{' '}
+                ou{' '}
+                <button
+                  className="underline font-medium"
+                  onClick={() => navigate('/app/chat')}
+                >
+                  commence un nouveau diagnostic
+                </button>
+                .
+              </p>
+            </div>
+          )}
           {/* Image preview */}
           {selectedImage && (
             <div className="max-w-3xl mx-auto mb-3">
@@ -459,14 +511,14 @@ export default function Chat() {
               onChange={handleImageSelect}
               className="hidden"
             />
-            <Tooltip content={photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Envoie une photo pour un diagnostic plus précis'}>
+            <Tooltip content={isAtMessageLimit ? 'Limite de messages atteinte' : (photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Envoie une photo pour un diagnostic plus précis')}>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION}
+                  disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
                   className="shrink-0"
                 >
                   <Camera className="h-4 w-4" />
@@ -479,16 +531,16 @@ export default function Chat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Décris ton problème..."
+              placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
               className="min-h-[44px] max-h-32 resize-none"
               rows={1}
-              disabled={isLoading}
+              disabled={isLoading || isAtMessageLimit}
             />
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 type="submit"
                 size="icon"
-                disabled={(!input.trim() && !selectedImage) || isLoading}
+                disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
                 className="shrink-0"
               >
                 {isLoading ? (
