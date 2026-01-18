@@ -2,14 +2,19 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import type { Handler } from '@netlify/functions'
 
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Validate environment variables
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!
-})
+// Only create clients if env vars exist
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null
+
+const anthropic = ANTHROPIC_KEY
+  ? new Anthropic({ apiKey: ANTHROPIC_KEY })
+  : null
 
 const FREE_MESSAGES_LIMIT_PER_DAY = 10
 
@@ -96,6 +101,23 @@ export const handler: Handler = async (event) => {
   }
 
   try {
+    // Check if clients are initialized
+    if (!supabase || !anthropic) {
+      console.error('Missing env vars:', {
+        hasSupabaseUrl: !!SUPABASE_URL,
+        hasSupabaseKey: !!SUPABASE_SERVICE_KEY,
+        hasAnthropicKey: !!ANTHROPIC_KEY
+      })
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server configuration error',
+          details: 'Missing required environment variables'
+        }),
+      }
+    }
+
     const { userId, conversationId, message, vehicleId } = JSON.parse(event.body) as RequestBody
 
     if (!userId || !conversationId || !message) {
@@ -107,11 +129,15 @@ export const handler: Handler = async (event) => {
     }
 
     // 1. Check premium status
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('subscription_status')
       .eq('id', userId)
       .single()
+
+    if (profileError) {
+      console.error('Profile fetch error:', profileError)
+    }
 
     const isPremium = profile?.subscription_status === 'premium'
 
