@@ -30,6 +30,7 @@ const defaultContent: Record<PaywallMode, {
   unitPrice: string
   priceId: string
   productType: ProductType
+  hideUnitPurchase?: boolean
   features: string[]
 }> = {
   diagnostic: {
@@ -100,11 +101,12 @@ const defaultContent: Record<PaywallMode, {
   chat: {
     title: '💬 Limite quotidienne atteinte',
     subtitle: 'Tu as utilisé tes 10 messages gratuits aujourd\'hui. Reviens demain ou passe Premium pour un accès illimité 24/7 !',
-    unitLabel: '10 messages supplémentaires',
-    unitButton: 'Acheter 10 messages',
-    unitPrice: '2.99€',
-    priceId: STRIPE_PRICES.PAY_PER_USE,
+    unitLabel: '',
+    unitButton: '',
+    unitPrice: '',
+    priceId: '',
     productType: 'chat',
+    hideUnitPurchase: true,
     features: [
       'Chat mécanicien 24/7 illimité',
       'Contexte véhicule automatique',
@@ -220,41 +222,43 @@ export default function PaywallModal({
             </CardContent>
           </Card>
 
-          {/* Pay per use Option */}
-          <Card>
-            <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-                <CardTitle className="text-base sm:text-lg">À l'unité</CardTitle>
-              </div>
-              <div className="text-xl sm:text-2xl font-bold">
-                {content.unitPrice}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
-              <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
-                  {content.unitLabel}
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
-                  Pas d'abonnement
-                </li>
-              </ul>
-              <Button
-                variant="outline"
-                className="w-full text-sm sm:text-base"
-                onClick={() => handlePurchase(content.priceId, false, content.productType)}
-                disabled={loading !== null}
-              >
-                {loading === content.priceId ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : null}
-                {content.unitButton}
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Pay per use Option - Only show if not hidden */}
+          {!content.hideUnitPurchase && (
+            <Card>
+              <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
+                  <CardTitle className="text-base sm:text-lg">À l'unité</CardTitle>
+                </div>
+                <div className="text-xl sm:text-2xl font-bold">
+                  {content.unitPrice}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
+                <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
+                    {content.unitLabel}
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
+                    Pas d'abonnement
+                  </li>
+                </ul>
+                <Button
+                  variant="outline"
+                  className="w-full text-sm sm:text-base"
+                  onClick={() => handlePurchase(content.priceId, false, content.productType)}
+                  disabled={loading !== null}
+                >
+                  {loading === content.priceId ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  {content.unitButton}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           <button
             className="text-xs sm:text-sm text-muted-foreground hover:text-foreground w-full text-center py-2"
