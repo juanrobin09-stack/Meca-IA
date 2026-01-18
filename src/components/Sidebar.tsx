@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { Button } from '@/components/ui/button'
@@ -24,6 +25,9 @@ import {
   TrendingUp,
   MessageCircle,
   Settings,
+  Menu,
+  X,
+  Crown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -44,20 +48,19 @@ const navItems: NavItem[] = [
   { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic vidéo', shortLabel: 'Vidéo', tier: 'premium' },
   { href: '/app/prevision-pannes', icon: TrendingUp, label: 'Prévision pannes', shortLabel: 'Prévision', tier: 'premium' },
   { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules', mobileShow: true },
-  { href: '/app/garages', icon: MapPin, label: 'Trouver un garage', shortLabel: 'Garages' },
-  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce', shortLabel: 'Pièces', mobileShow: true },
-  { href: '/app/history', icon: History, label: 'Historique', shortLabel: 'Historique', mobileShow: true },
+  { href: '/app/garages', icon: MapPin, label: 'Trouver un garage', shortLabel: 'Garages', mobileShow: true },
+  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce', shortLabel: 'Pièces' },
+  { href: '/app/history', icon: History, label: 'Historique', shortLabel: 'Historique' },
   { href: '/app/settings', icon: Settings, label: 'Paramètres', shortLabel: 'Paramètres' },
   { href: '/app/account', icon: User, label: 'Mon compte', shortLabel: 'Compte' },
 ]
 
-// Items shown in mobile bottom nav (limited to 5) - custom order
+// Items shown in mobile bottom nav (4 items + menu button)
 const mobileNavItems = [
   navItems.find(item => item.href === '/app')!,
   navItems.find(item => item.href === '/app/chat')!,
   navItems.find(item => item.href === '/app/garages')!,
   navItems.find(item => item.href === '/app/vehicules')!,
-  navItems.find(item => item.href === '/app/pieces')!,
 ]
 
 export default function Sidebar() {
@@ -65,10 +68,21 @@ export default function Sidebar() {
   const navigate = useNavigate()
   const { profile, signOut } = useAuth()
   const { isPremium, diagnosticsRemaining } = useSubscription(profile)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   async function handleSignOut() {
+    setMobileMenuOpen(false)
     await signOut()
     navigate('/')
+  }
+
+  function handleNavClick(href: string, isLocked: boolean) {
+    setMobileMenuOpen(false)
+    if (isLocked) {
+      navigate('/pricing')
+    } else {
+      navigate(href)
+    }
   }
 
   return (
@@ -136,6 +150,18 @@ export default function Sidebar() {
             })}
           </nav>
 
+          {/* Upgrade CTA for free users */}
+          {!isPremium && (
+            <div className="px-3 pb-2">
+              <Link to="/pricing">
+                <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                  <Crown className="h-4 w-4 mr-2" />
+                  Passer Premium
+                </Button>
+              </Link>
+            </div>
+          )}
+
           {/* Logout */}
           <div className="p-3 border-t">
             <Button
@@ -150,7 +176,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      {/* Mobile Bottom Nav - Limited to 5 items */}
+      {/* Mobile Bottom Nav - 4 items + Menu button */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t z-50 pb-safe">
         <div className="grid grid-cols-5">
           {mobileNavItems.map((item) => {
@@ -177,8 +203,131 @@ export default function Sidebar() {
               </Link>
             )
           })}
+
+          {/* Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className={cn(
+              'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-muted/50 transition-colors',
+              mobileMenuOpen ? 'text-primary' : 'text-muted-foreground'
+            )}
+          >
+            <Menu className="h-6 w-6" />
+            <span className="text-[11px] font-medium leading-tight text-center">
+              Menu
+            </span>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Full Screen Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed inset-0 bg-black/50 z-[60]"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+
+            {/* Slide-over Menu */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="md:hidden fixed inset-y-0 right-0 w-[85%] max-w-sm bg-card z-[70] shadow-2xl flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b">
+                <Logo size="sm" />
+                <div className="flex items-center gap-2">
+                  <DarkModeToggle />
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-full hover:bg-muted"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Status Badge */}
+              <div className="px-4 py-4">
+                {isPremium ? (
+                  <Badge variant="premium" className="w-full justify-center py-2 text-sm">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Premium Actif
+                  </Badge>
+                ) : (
+                  <div className="space-y-2">
+                    <Badge variant="secondary" className="w-full justify-center py-2 text-sm">
+                      Gratuit: {diagnosticsRemaining}/2 restants
+                    </Badge>
+                    <Button
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600"
+                      onClick={() => handleNavClick('/pricing', false)}
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      Passer Premium - 9,99€/mois
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              {/* Navigation - Scrollable */}
+              <nav className="flex-1 overflow-y-auto py-2">
+                {navItems.map((item) => {
+                  const isActive = location.pathname === item.href
+                  const isLocked = item.tier === 'premium' && !isPremium
+
+                  return (
+                    <button
+                      key={item.href}
+                      onClick={() => handleNavClick(item.href, isLocked)}
+                      className={cn(
+                        'flex items-center gap-4 px-4 py-3.5 w-full text-left transition-colors min-h-[56px]',
+                        isActive
+                          ? 'bg-primary/10 text-primary border-r-4 border-primary'
+                          : 'text-foreground hover:bg-muted',
+                        isLocked && 'opacity-60'
+                      )}
+                    >
+                      <item.icon className={cn(
+                        'h-6 w-6 shrink-0',
+                        isActive && 'text-primary'
+                      )} />
+                      <span className="flex-1 font-medium">{item.label}</span>
+                      {item.tier === 'premium' && !isPremium && (
+                        <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] px-2">
+                          Premium
+                        </Badge>
+                      )}
+                    </button>
+                  )
+                })}
+              </nav>
+
+              {/* Footer - Logout */}
+              <div className="border-t p-4 pb-safe">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-muted-foreground h-12"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="h-5 w-5 mr-3" />
+                  Déconnexion
+                </Button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   )
 }
