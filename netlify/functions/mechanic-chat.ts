@@ -109,12 +109,11 @@ export const handler: Handler = async (event) => {
     // 1. Check premium status
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_status, subscription_plan')
+      .select('subscription_status')
       .eq('id', userId)
       .single()
 
-    const isPremium = profile?.subscription_status === 'active' &&
-                     (profile?.subscription_plan === 'premium' || profile?.subscription_plan === 'yearly')
+    const isPremium = profile?.subscription_status === 'premium'
 
     // 2. Check message limit for free users
     let messagesUsedThisMonth = 0

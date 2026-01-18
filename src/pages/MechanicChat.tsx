@@ -649,9 +649,7 @@ export default function MechanicChat() {
         <PaywallModal
           open={showPaywall}
           onOpenChange={setShowPaywall}
-          mode="diagnostic"
-          title="Limite de messages atteinte"
-          subtitle="Tu as utilisé tes 10 messages gratuits ce mois-ci. Passe Premium pour un accès illimité !"
+          mode="chat"
         />
       </div>
     </PageTransition>

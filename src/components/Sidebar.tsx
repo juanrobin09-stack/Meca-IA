@@ -39,8 +39,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/app', icon: Home, label: 'Accueil', shortLabel: 'Accueil', mobileShow: true },
   { href: '/app/chat', icon: MessageSquarePlus, label: 'Diagnostic IA', shortLabel: 'Diagnostic', mobileShow: true },
-  { href: '/app/mechanic-chat', icon: MessageCircle, label: 'Chat Mécanicien 24/7', shortLabel: 'Chat', tier: 'premium' },
-  { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis', tier: 'premium' },
+  { href: '/app/mechanic-chat', icon: MessageCircle, label: 'Chat Mécanicien 24/7', shortLabel: 'Chat' },
+  { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis' },
   { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic vidéo', shortLabel: 'Vidéo', tier: 'premium' },
   { href: '/app/prevision-pannes', icon: TrendingUp, label: 'Prévision pannes', shortLabel: 'Prévision', tier: 'premium' },
   { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules', tier: 'premium' },
