@@ -320,7 +320,7 @@ interface PremiumAnalysisResultProps {
   onReset: () => void
 }
 
-function PremiumAnalysisResult({ analysis, imageUrl, devisId, onReset }: PremiumAnalysisResultProps) {
+function PremiumAnalysisResult({ analysis, imageUrl, devisId: _devisId, onReset }: PremiumAnalysisResultProps) {
   const [isExporting, setIsExporting] = useState(false)
 
   // Export to PDF
