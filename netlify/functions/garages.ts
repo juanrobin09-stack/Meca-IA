@@ -21,7 +21,7 @@ export const handler: Handler = async (event) => {
     }
   }
 
-  const { query, placeId } = event.queryStringParameters || {}
+  const { query, placeId, lat, lng, radius } = event.queryStringParameters || {}
 
   try {
     // Si placeId fourni → détails d'un garage
@@ -45,32 +45,40 @@ export const handler: Handler = async (event) => {
       }
     }
 
-    // Sinon → recherche de garages
-    if (!query) {
+    let searchLat: number
+    let searchLng: number
+    const searchRadius = radius ? parseInt(radius) : 10000
+
+    // Si lat/lng fournis → recherche par coordonnées
+    if (lat && lng) {
+      searchLat = parseFloat(lat)
+      searchLng = parseFloat(lng)
+    } else if (query) {
+      // Sinon → recherche par texte, geocoder la ville
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)},France&key=${API_KEY}`
+      const geoResponse = await fetch(geocodeUrl)
+      const geoData = await geoResponse.json()
+
+      if (!geoData.results?.[0]?.geometry?.location) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Ville non trouvée' }),
+        }
+      }
+
+      searchLat = geoData.results[0].geometry.location.lat
+      searchLng = geoData.results[0].geometry.location.lng
+    } else {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Query parameter required' }),
+        body: JSON.stringify({ error: 'Query or lat/lng parameters required' }),
       }
     }
-
-    // Geocoder la ville
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)},France&key=${API_KEY}`
-    const geoResponse = await fetch(geocodeUrl)
-    const geoData = await geoResponse.json()
-
-    if (!geoData.results?.[0]?.geometry?.location) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({ error: 'Ville non trouvée' }),
-      }
-    }
-
-    const { lat, lng } = geoData.results[0].geometry.location
 
     // Chercher les garages
-    const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=10000&type=car_repair&keyword=garage+automobile&language=fr&key=${API_KEY}`
+    const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${searchLat},${searchLng}&radius=${searchRadius}&type=car_repair&keyword=garage+automobile&language=fr&key=${API_KEY}`
     const placesResponse = await fetch(placesUrl)
     const placesData = await placesResponse.json()
 

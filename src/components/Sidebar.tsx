@@ -55,9 +55,9 @@ const navItems: NavItem[] = [
 const mobileNavItems = [
   navItems.find(item => item.href === '/app')!,
   navItems.find(item => item.href === '/app/chat')!,
-  navItems.find(item => item.href === '/app/pieces')!,
+  navItems.find(item => item.href === '/app/garages')!,
   navItems.find(item => item.href === '/app/vehicules')!,
-  navItems.find(item => item.href === '/app/history')!,
+  navItems.find(item => item.href === '/app/pieces')!,
 ]
 
 export default function Sidebar() {
