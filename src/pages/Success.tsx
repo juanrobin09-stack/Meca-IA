@@ -1,9 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, Sparkles, MessageSquare, FileText, Wrench } from 'lucide-react'
+
+// Function to sync subscription with Stripe
+async function syncSubscription(userId: string, email: string): Promise<boolean> {
+  try {
+    const response = await fetch('/.netlify/functions/sync-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, email }),
+    })
+    const data = await response.json()
+    return data.success && data.status === 'premium'
+  } catch (error) {
+    console.error('Sync subscription error:', error)
+    return false
+  }
+}
 
 type PaymentType = 'subscription' | 'diagnostic' | 'devis' | 'chat' | 'video'
 
@@ -60,9 +76,10 @@ const paymentMessages: Record<PaymentType, {
 export default function Success() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { refreshProfile } = useAuth()
+  const { user, refreshProfile } = useAuth()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
+  const syncAttempted = useRef(false)
 
   const sessionId = searchParams.get('session_id')
 
@@ -80,25 +97,54 @@ export default function Success() {
         if (response.ok) {
           const session = await response.json()
           setSessionData(session)
+
           if (session.payment_status === 'paid') {
-            // Refresh profile to get updated subscription status
-            refreshProfile?.()
+            // For subscription payments, sync with Stripe to ensure Premium is activated
+            if (session.mode === 'subscription' && user?.email && !syncAttempted.current) {
+              syncAttempted.current = true
+              console.log('Syncing subscription after payment...')
+
+              // Try to sync subscription with Stripe (retry up to 3 times with delay)
+              let synced = false
+              for (let i = 0; i < 3 && !synced; i++) {
+                if (i > 0) {
+                  // Wait before retrying (webhook might need time to process)
+                  await new Promise(resolve => setTimeout(resolve, 2000))
+                }
+                synced = await syncSubscription(user.id, user.email)
+                console.log(`Sync attempt ${i + 1}: ${synced ? 'success' : 'pending'}`)
+              }
+            }
+
+            // Refresh profile to get updated subscription/credits status
+            await refreshProfile?.()
             setStatus('success')
             return
           }
         }
 
         // If we can't verify, still show success (webhook will handle it)
+        // But still try to sync for subscription
+        if (user?.email && !syncAttempted.current) {
+          syncAttempted.current = true
+          await syncSubscription(user.id, user.email)
+          await refreshProfile?.()
+        }
         setStatus('success')
       } catch (error) {
         console.error('Session verification error:', error)
         // Still show success as webhook should handle the update
+        if (user?.email && !syncAttempted.current) {
+          syncAttempted.current = true
+          await syncSubscription(user.id, user.email)
+          await refreshProfile?.()
+        }
         setStatus('success')
       }
     }
 
     verifySession()
-  }, [sessionId, refreshProfile])
+  }, [sessionId, refreshProfile, user])
 
   // Determine payment type
   const paymentType: PaymentType = sessionData?.mode === 'subscription'
