@@ -79,13 +79,42 @@ export default function MechanicChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Load vehicles and conversations on mount
+  const FREE_MESSAGES_LIMIT = 10
+
+  // Load vehicles, conversations and message count on mount
   useEffect(() => {
     if (user) {
       loadVehicles()
       loadConversations()
+      loadDailyMessageCount()
     }
   }, [user])
+
+  // Load daily message count for free users
+  const loadDailyMessageCount = async () => {
+    if (!user || isPremium) {
+      setMessagesRemaining(null)
+      return
+    }
+
+    try {
+      const startOfDay = new Date()
+      startOfDay.setHours(0, 0, 0, 0)
+
+      const { count } = await supabase
+        .from('chat_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('sender', 'user')
+        .gte('created_at', startOfDay.toISOString())
+
+      const used = count || 0
+      setMessagesRemaining(FREE_MESSAGES_LIMIT - used)
+    } catch (err) {
+      console.error('Error loading message count:', err)
+      setMessagesRemaining(FREE_MESSAGES_LIMIT)
+    }
+  }
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -400,20 +429,30 @@ export default function MechanicChat() {
                     </SelectContent>
                   </Select>
 
-                  {/* Messages remaining for free users - daily limit */}
-                  {!isPremium && messagesRemaining !== null && (
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      {messagesRemaining > 0 ? (
-                        <span className={messagesRemaining <= 3 ? 'text-amber-600 font-medium' : ''}>
-                          {messagesRemaining}/10 message{messagesRemaining > 1 ? 's' : ''} restant{messagesRemaining > 1 ? 's' : ''} aujourd'hui
-                        </span>
-                      ) : (
-                        <span className="text-red-600 font-medium">
-                          Limite du jour atteinte - Reviens demain ou passe Premium
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {/* Messages counter */}
+                  <div className="flex items-center gap-2">
+                    {isPremium ? (
+                      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        <MessageSquare className="h-3 w-3 mr-1" />
+                        Illimité
+                      </Badge>
+                    ) : messagesRemaining !== null ? (
+                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${
+                        messagesRemaining === 0
+                          ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+                          : messagesRemaining <= 3
+                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
+                            : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
+                      }`}>
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        {messagesRemaining > 0 ? (
+                          <span>{messagesRemaining}/{FREE_MESSAGES_LIMIT} aujourd'hui</span>
+                        ) : (
+                          <span>Limite atteinte</span>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </div>
