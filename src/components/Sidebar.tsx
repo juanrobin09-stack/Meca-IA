@@ -23,6 +23,7 @@ import {
   Video,
   TrendingUp,
   MessageCircle,
+  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
   { href: '/app/garages', icon: MapPin, label: 'Trouver un garage', shortLabel: 'Garages' },
   { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce', shortLabel: 'Pièces', mobileShow: true },
   { href: '/app/history', icon: History, label: 'Historique', shortLabel: 'Historique', mobileShow: true },
+  { href: '/app/settings', icon: Settings, label: 'Paramètres', shortLabel: 'Paramètres' },
   { href: '/app/account', icon: User, label: 'Mon compte', shortLabel: 'Compte', mobileShow: true },
 ]
 

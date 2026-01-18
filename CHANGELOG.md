@@ -2,6 +2,28 @@
 
 Toutes les modifications notables de ce projet sont documentées dans ce fichier.
 
+## v1.1.0 - Gestion Abonnement Stripe Portal (2026-01-18)
+
+### Ajouté
+- **Page Paramètres** (`/app/settings`) - Nouvelle page de gestion du compte
+- **Stripe Customer Portal** - Gestion complète des abonnements :
+  - Annuler l'abonnement
+  - Changer de plan (mensuel/annuel)
+  - Mettre à jour la carte bancaire
+  - Télécharger les factures
+- **Indicateurs d'utilisation** - Barres de progression pour diagnostics et devis
+- **Lien Sidebar** - Accès rapide aux paramètres
+
+### Amélioré
+- `create-portal-session.ts` - Lookup user par userId avec validation DB
+- `stripe.ts` - Nouvelle fonction `getCustomerPortalUrlByUserId`
+- Navigation - Icône Settings dans la sidebar
+
+### Documentation
+- `STRIPE_PORTAL.md` - Guide complet de configuration et tests
+
+---
+
 ## v1.0.0 - Lancement Production (2026-01-18)
 
 ### Ajouté

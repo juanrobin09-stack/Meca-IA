@@ -47,6 +47,29 @@ export async function getCustomerPortalUrl(customerId: string): Promise<string> 
   })
 
   if (!response.ok) {
+    const data = await response.json()
+    if (data.error === 'NO_SUBSCRIPTION') {
+      throw new Error('NO_SUBSCRIPTION')
+    }
+    throw new Error('Failed to create portal session')
+  }
+
+  const { url } = await response.json()
+  return url
+}
+
+export async function getCustomerPortalUrlByUserId(userId: string): Promise<string> {
+  const response = await fetch('/.netlify/functions/create-portal-session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId }),
+  })
+
+  if (!response.ok) {
+    const data = await response.json()
+    if (data.error === 'NO_SUBSCRIPTION') {
+      throw new Error('NO_SUBSCRIPTION')
+    }
     throw new Error('Failed to create portal session')
   }
 
