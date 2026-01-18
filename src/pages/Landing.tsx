@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import Logo from '@/components/Logo'
 import PageTransition from '@/components/PageTransition'
-import { Zap, MessageSquare, Euro, CheckCircle2, X, AlertTriangle, Star, Car, Bell, MapPin, ShoppingCart, FileText, Sparkles, Gauge, Shield } from 'lucide-react'
+import { Zap, MessageSquare, Euro, CheckCircle2, X, AlertTriangle, Star, Car, MapPin, ShoppingCart, FileText, Sparkles, Gauge, Shield } from 'lucide-react'
 import { PLANS } from '@/config/plans'
 
 // Composant pour le fond blanc animé ultra moderne
@@ -173,14 +173,19 @@ export default function Landing() {
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Header */}
       <header className="border-b border-gray-100 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Logo size="md" />
+        <div className="container mx-auto px-4 h-14 sm:h-16 flex items-center justify-between">
+          <div className="sm:hidden">
+            <Logo size="sm" />
+          </div>
+          <div className="hidden sm:block">
+            <Logo size="md" />
+          </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <Link to="/login">
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 dark:text-gray-400">Connexion</Button>
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900 dark:text-gray-400 h-9 px-3 sm:h-10 sm:px-4">Connexion</Button>
             </Link>
             <Link to="/signup">
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20">S'inscrire</Button>
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 h-9 px-3 sm:h-10 sm:px-4">S'inscrire</Button>
             </Link>
           </div>
         </div>
@@ -242,16 +247,16 @@ export default function Landing() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8"
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-8 px-4"
             >
-              <Link to="/signup">
+              <Link to="/signup" className="w-full sm:w-auto">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
                   <Button
                     size="lg"
-                    className="text-base px-8 h-14 bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40 transition-all rounded-xl"
+                    className="w-full sm:w-auto text-base px-6 sm:px-8 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/30 hover:shadow-blue-500/40 transition-all rounded-xl"
                   >
                     Essayer gratuitement
                     <motion.span
@@ -264,7 +269,7 @@ export default function Landing() {
                   </Button>
                 </motion.div>
               </Link>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
                 2 diagnostics offerts • Sans CB
               </div>
@@ -364,8 +369,7 @@ export default function Landing() {
             {[
               { icon: MessageSquare, title: "Diagnostic IA", desc: "Décris ton problème, l'IA analyse", color: "blue" },
               { icon: FileText, title: "Analyse de devis", desc: "Vérifie si ton devis est honnête", color: "emerald" },
-              { icon: Car, title: "Mes véhicules", desc: "Enregistre tes voitures", premium: true, color: "violet" },
-              { icon: Bell, title: "Rappels entretien", desc: "Ne rate plus tes révisions", premium: true, color: "amber" },
+              { icon: Car, title: "Mes véhicules", desc: "Enregistre tes voitures", color: "violet" },
               { icon: MapPin, title: "Trouver un garage", desc: "Garages de confiance près de toi", color: "rose" },
               { icon: ShoppingCart, title: "Comparer les pièces", desc: "Meilleurs prix Oscaro, Yakarouler", color: "cyan" },
             ].map((feature, i) => (
@@ -382,12 +386,7 @@ export default function Landing() {
                   <feature.icon className={`h-5 w-5 text-${feature.color}-600`} />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base">{feature.title}</h3>
-                    {feature.premium && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 text-amber-700 dark:text-amber-400 border-0">Premium</Badge>
-                    )}
-                  </div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base mb-1">{feature.title}</h3>
                   <p className="text-xs sm:text-sm text-gray-500">{feature.desc}</p>
                 </div>
               </motion.div>

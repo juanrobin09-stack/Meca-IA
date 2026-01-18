@@ -145,8 +145,8 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Nav - Limited to 5 items */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t z-50 safe-area-pb">
-        <div className="grid grid-cols-5 py-1">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t z-50 pb-safe">
+        <div className="grid grid-cols-5">
           {mobileNavItems.map((item) => {
             const isActive = location.pathname === item.href
             return (
@@ -154,12 +154,18 @@ export default function Sidebar() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px]',
+                  'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-muted/50 transition-colors',
                   isActive ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
-                <item.icon className="h-5 w-5" />
-                <span className="text-[10px] leading-tight text-center px-1 truncate max-w-full">
+                <item.icon className={cn(
+                  'h-6 w-6 transition-transform',
+                  isActive && 'scale-110'
+                )} />
+                <span className={cn(
+                  'text-[11px] font-medium leading-tight text-center',
+                  isActive && 'text-primary'
+                )}>
                   {item.shortLabel}
                 </span>
               </Link>

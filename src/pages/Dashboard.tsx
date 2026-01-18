@@ -75,35 +75,35 @@ export default function Dashboard() {
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
 
-      <main className="md:pl-64 pb-20 md:pb-0">
-        <div className="container mx-auto px-4 py-8">
+      <main className="md:pl-64 pb-24 md:pb-0">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
           {/* Welcome */}
           <motion.div
-            className="mb-8"
+            className="mb-6 sm:mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <h1 className="text-2xl md:text-3xl font-bold mb-2">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
               Salut {displayName} !
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Bienvenue sur MecaIA, ton assistant diagnostic auto.
             </p>
           </motion.div>
 
           {/* Status Card for Free Users */}
           {!isPremium && (
-            <Card className="mb-8 border-primary/20 bg-primary/5">
-              <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between p-6 gap-4">
+            <Card className="mb-6 sm:mb-8 border-primary/20 bg-primary/5">
+              <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 gap-3 sm:gap-4">
                 <div>
-                  <h3 className="font-semibold mb-1">Tu es en version gratuite</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Tu es en version gratuite</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Il te reste {diagnosticsRemaining} diagnostic{diagnosticsRemaining !== 1 ? 's' : ''} ce mois-ci.
                   </p>
                 </div>
-                <Link to="/pricing">
-                  <Button>
+                <Link to="/pricing" className="w-full sm:w-auto">
+                  <Button className="w-full sm:w-auto h-10 sm:h-auto">
                     <Sparkles className="h-4 w-4 mr-2" />
                     Passer Premium
                   </Button>
@@ -114,14 +114,14 @@ export default function Dashboard() {
 
           {/* Premium badge */}
           {isPremium && (
-            <Card className="mb-8 border-amber-500/30 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-              <CardContent className="flex items-center p-6 gap-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
-                  <Crown className="h-6 w-6 text-white" />
+            <Card className="mb-6 sm:mb-8 border-amber-500/30 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+              <CardContent className="flex items-center p-4 sm:p-6 gap-3 sm:gap-4">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center shrink-0">
+                  <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Tu es Premium !</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-semibold text-sm sm:text-base">Tu es Premium !</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Profite de toutes les fonctionnalités sans limite.
                   </p>
                 </div>
@@ -130,20 +130,20 @@ export default function Dashboard() {
           )}
 
           {/* Quick Actions - Main */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <Link to="/app/chat">
-              <motion.div whileHover={{ scale: 1.02, y: -4 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full">
-                  <CardHeader>
+              <motion.div whileHover={{ scale: 1.02, y: -4 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full active:bg-muted/50">
+                  <CardHeader className="p-4 sm:p-6">
                     <motion.div
-                      className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4"
+                      className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4"
                       whileHover={{ rotate: 10 }}
                     >
-                      <MessageSquarePlus className="h-6 w-6 text-primary" />
+                      <MessageSquarePlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </motion.div>
-                    <CardTitle>Nouveau diagnostic</CardTitle>
-                    <CardDescription>
-                      Décris ton problème de voiture et obtiens un diagnostic expert en quelques minutes.
+                    <CardTitle className="text-base sm:text-lg">Nouveau diagnostic</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
+                      Décris ton problème et obtiens un diagnostic expert.
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -151,18 +151,18 @@ export default function Dashboard() {
             </Link>
 
             <Link to="/app/history">
-              <motion.div whileHover={{ scale: 1.02, y: -4 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full">
-                  <CardHeader>
+              <motion.div whileHover={{ scale: 1.02, y: -4 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 300 }}>
+                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full active:bg-muted/50">
+                  <CardHeader className="p-4 sm:p-6">
                     <motion.div
-                      className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4"
+                      className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4"
                       whileHover={{ rotate: -10 }}
                     >
-                      <History className="h-6 w-6 text-primary" />
+                      <History className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                     </motion.div>
-                    <CardTitle>Historique</CardTitle>
-                    <CardDescription>
-                      Retrouve tous tes diagnostics passés et reprends une conversation.
+                    <CardTitle className="text-base sm:text-lg">Historique</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm">
+                      Retrouve tes diagnostics passés.
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -171,16 +171,16 @@ export default function Dashboard() {
           </div>
 
           {/* Premium Features Grid */}
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <h2 className="text-lg font-semibold">Fonctionnalités Premium</h2>
+          <div className="mb-6 sm:mb-8">
+            <div className="flex items-center gap-2 mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-lg font-semibold">Fonctionnalités Premium</h2>
               {!isPremium && (
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] sm:text-xs">
                   Premium
                 </Badge>
               )}
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {premiumFeatures.map((feature, index) => (
                 <Link key={feature.href} to={isPremium ? feature.href : '/pricing'}>
                   <motion.div
@@ -188,23 +188,24 @@ export default function Dashboard() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     whileHover={{ scale: 1.02, y: -4 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    <Card className={`h-full transition-all cursor-pointer ${
+                    <Card className={`h-full transition-all cursor-pointer active:bg-muted/50 ${
                       isPremium
                         ? 'hover:border-primary hover:shadow-lg'
                         : 'opacity-75 hover:opacity-100'
                     }`}>
-                      <CardHeader className="pb-3">
-                        <div className={`h-10 w-10 rounded-lg ${feature.color} flex items-center justify-center mb-3`}>
-                          <feature.icon className={`h-5 w-5 ${feature.iconColor}`} />
+                      <CardHeader className="p-3 sm:pb-3 sm:p-4">
+                        <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-lg ${feature.color} flex items-center justify-center mb-2 sm:mb-3`}>
+                          <feature.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${feature.iconColor}`} />
                         </div>
-                        <CardTitle className="text-base">{feature.title}</CardTitle>
-                        <CardDescription className="text-xs">
+                        <CardTitle className="text-sm sm:text-base leading-tight">{feature.title}</CardTitle>
+                        <CardDescription className="text-[10px] sm:text-xs line-clamp-2">
                           {feature.description}
                         </CardDescription>
                       </CardHeader>
-                      <CardContent className="pt-0">
-                        <Badge variant="secondary" className="text-[10px]">
+                      <CardContent className="pt-0 p-3 sm:p-4 sm:pt-0">
+                        <Badge variant="secondary" className="text-[9px] sm:text-[10px]">
                           {feature.badge}
                         </Badge>
                       </CardContent>

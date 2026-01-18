@@ -335,79 +335,83 @@ export default function MechanicChat() {
         <main className="md:pl-64 pb-20 md:pb-0">
           <div className="h-screen md:h-[calc(100vh-0px)] flex flex-col">
             {/* Header */}
-            <div className="border-b bg-background p-4">
+            <div className="border-b bg-background p-3 sm:p-4">
               <div className="container mx-auto max-w-4xl">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-xl">
+                {/* Mobile: Stacked layout */}
+                <div className="flex items-center justify-between gap-2 sm:gap-4">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center text-lg sm:text-xl shrink-0">
                       🤖
                     </div>
-                    <div>
-                      <h1 className="font-bold text-lg flex items-center gap-2">
-                        MecaIA Assistant
+                    <div className="min-w-0">
+                      <h1 className="font-bold text-base sm:text-lg flex items-center gap-2 truncate">
+                        <span className="truncate">MecaIA</span>
                         {isPremium && (
-                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-xs">
+                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-[10px] sm:text-xs shrink-0">
                             Premium
                           </Badge>
                         )}
                       </h1>
-                      <div className="flex items-center gap-1 text-sm text-green-600">
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                      <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600">
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
                         En ligne 24/7
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {/* Vehicle selector */}
-                    <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
-                      <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="Sélectionner véhicule..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Aucun véhicule</SelectItem>
-                        {vehicles.map(v => (
-                          <SelectItem key={v.id} value={v.id}>
-                            <div className="flex items-center gap-2">
-                              <Car className="h-4 w-4" />
-                              {v.brand} {v.model} ({v.year})
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                     {/* Conversations toggle */}
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => setShowConversations(!showConversations)}
+                      className="h-9 w-9 sm:h-10 sm:w-10"
                     >
                       <MessageSquare className="h-4 w-4" />
                     </Button>
 
                     {/* New chat button */}
-                    <Button onClick={createNewConversation}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Nouveau
+                    <Button onClick={createNewConversation} size="sm" className="h-9 sm:h-10 px-2.5 sm:px-4">
+                      <Plus className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Nouveau</span>
                     </Button>
                   </div>
                 </div>
 
-                {/* Messages remaining for free users */}
-                {!isPremium && messagesRemaining !== null && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    {messagesRemaining > 0 ? (
-                      <span className={messagesRemaining <= 3 ? 'text-amber-600' : ''}>
-                        {messagesRemaining} message{messagesRemaining > 1 ? 's' : ''} gratuit{messagesRemaining > 1 ? 's' : ''} restant{messagesRemaining > 1 ? 's' : ''} ce mois
-                      </span>
-                    ) : (
-                      <span className="text-red-600">
-                        Limite atteinte - Passez Premium pour continuer
-                      </span>
-                    )}
-                  </div>
-                )}
+                {/* Vehicle selector - Full width on mobile */}
+                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+                  <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+                    <SelectTrigger className="w-full sm:w-[200px] h-10">
+                      <SelectValue placeholder="Sélectionner véhicule..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Aucun véhicule</SelectItem>
+                      {vehicles.map(v => (
+                        <SelectItem key={v.id} value={v.id}>
+                          <div className="flex items-center gap-2">
+                            <Car className="h-4 w-4" />
+                            {v.brand} {v.model} ({v.year})
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  {/* Messages remaining for free users */}
+                  {!isPremium && messagesRemaining !== null && (
+                    <div className="text-xs sm:text-sm text-muted-foreground">
+                      {messagesRemaining > 0 ? (
+                        <span className={messagesRemaining <= 3 ? 'text-amber-600 font-medium' : ''}>
+                          {messagesRemaining} message{messagesRemaining > 1 ? 's' : ''} gratuit{messagesRemaining > 1 ? 's' : ''} restant{messagesRemaining > 1 ? 's' : ''}
+                        </span>
+                      ) : (
+                        <span className="text-red-600 font-medium">
+                          Limite atteinte - Passez Premium
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -478,24 +482,24 @@ export default function MechanicChat() {
                 <div className="flex-1 overflow-y-auto p-4">
                   <div className="container mx-auto max-w-3xl space-y-4">
                     {messages.length === 0 && !loading ? (
-                      <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🔧</div>
-                        <h2 className="text-xl font-bold mb-2">Bienvenue sur le Chat Mécanicien</h2>
-                        <p className="text-muted-foreground mb-6">
+                      <div className="text-center py-8 sm:py-12 px-4">
+                        <div className="text-5xl sm:text-6xl mb-4">🔧</div>
+                        <h2 className="text-lg sm:text-xl font-bold mb-2">Bienvenue sur le Chat Mécanicien</h2>
+                        <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-xs sm:max-w-none mx-auto">
                           Pose n'importe quelle question sur ta voiture, je suis là 24h/24 !
                         </p>
 
-                        {/* Quick actions */}
-                        <div className="grid grid-cols-2 gap-3 max-w-md mx-auto">
+                        {/* Quick actions - 2x2 grid */}
+                        <div className="grid grid-cols-2 gap-2 sm:gap-3 max-w-sm sm:max-w-md mx-auto">
                           {QUICK_ACTIONS.map((action, i) => (
                             <Button
                               key={i}
                               variant="outline"
-                              className="h-auto py-3 px-4 flex flex-col items-center gap-2"
+                              className="h-auto py-3 px-3 sm:px-4 flex flex-col items-center gap-1.5 sm:gap-2 text-left touch-feedback"
                               onClick={() => sendMessage(action.message)}
                             >
                               <action.icon className="h-5 w-5 text-primary" />
-                              <span className="text-sm">{action.label}</span>
+                              <span className="text-xs sm:text-sm">{action.label}</span>
                             </Button>
                           ))}
                         </div>
@@ -593,16 +597,16 @@ export default function MechanicChat() {
                 )}
 
                 {/* Input area */}
-                <div className="border-t bg-background p-4">
+                <div className="border-t bg-background p-3 sm:p-4 pb-safe">
                   <div className="container mx-auto max-w-3xl">
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                       <Textarea
                         ref={textareaRef}
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
                         onKeyDown={handleKeyPress}
-                        placeholder="Posez votre question automobile..."
-                        className="resize-none min-h-[44px] max-h-[150px]"
+                        placeholder="Pose ta question..."
+                        className="resize-none min-h-[48px] max-h-[120px] sm:max-h-[150px] text-base"
                         rows={1}
                         maxLength={1000}
                         disabled={isTyping}
@@ -611,7 +615,7 @@ export default function MechanicChat() {
                         onClick={() => sendMessage()}
                         disabled={!inputMessage.trim() || isTyping}
                         size="icon"
-                        className="h-11 w-11 shrink-0"
+                        className="h-12 w-12 shrink-0 touch-feedback"
                       >
                         {isTyping ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
@@ -623,13 +627,13 @@ export default function MechanicChat() {
 
                     {/* Quick actions when there are messages */}
                     {messages.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
                         {QUICK_ACTIONS.slice(0, 2).map((action, i) => (
                           <Button
                             key={i}
                             variant="ghost"
                             size="sm"
-                            className="text-xs"
+                            className="text-xs h-8 px-2 sm:px-3"
                             onClick={() => sendMessage(action.message)}
                             disabled={isTyping}
                           >
