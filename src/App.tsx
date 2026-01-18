@@ -1,42 +1,40 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense, memo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import Onboarding from '@/components/Onboarding'
+import LoadingSkeleton from '@/components/LoadingSkeleton'
 
-// Pages
-import Landing from '@/pages/Landing'
-import Login from '@/pages/Login'
-import Signup from '@/pages/Signup'
-import Dashboard from '@/pages/Dashboard'
-import Chat from '@/pages/Chat'
-import History from '@/pages/History'
-import Account from '@/pages/Account'
-import Success from '@/pages/Success'
-import AnalyseDevis from '@/pages/AnalyseDevis'
-import Garages from '@/pages/Garages'
-import Pieces from '@/pages/Pieces'
-import MentionsLegales from '@/pages/MentionsLegales'
-import CGU from '@/pages/CGU'
-import Confidentialite from '@/pages/Confidentialite'
-import NotFound from '@/pages/NotFound'
-import Pricing from '@/pages/Pricing'
-import Vehicles from '@/pages/Vehicles'
-import Reminders from '@/pages/Reminders'
+// Lazy loaded pages - Code splitting pour performance
+const Landing = lazy(() => import('@/pages/Landing'))
+const Login = lazy(() => import('@/pages/Login'))
+const Signup = lazy(() => import('@/pages/Signup'))
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const Chat = lazy(() => import('@/pages/Chat'))
+const History = lazy(() => import('@/pages/History'))
+const Account = lazy(() => import('@/pages/Account'))
+const Success = lazy(() => import('@/pages/Success'))
+const AnalyseDevis = lazy(() => import('@/pages/AnalyseDevis'))
+const Garages = lazy(() => import('@/pages/Garages'))
+const Pieces = lazy(() => import('@/pages/Pieces'))
+const MentionsLegales = lazy(() => import('@/pages/MentionsLegales'))
+const CGU = lazy(() => import('@/pages/CGU'))
+const Confidentialite = lazy(() => import('@/pages/Confidentialite'))
+const NotFound = lazy(() => import('@/pages/NotFound'))
+const Pricing = lazy(() => import('@/pages/Pricing'))
+const Vehicles = lazy(() => import('@/pages/Vehicles'))
+const Reminders = lazy(() => import('@/pages/Reminders'))
 
-// Components
-import CookieBanner from '@/components/CookieBanner'
+// Lazy load heavy components
+const Onboarding = lazy(() => import('@/components/Onboarding'))
+const CookieBanner = lazy(() => import('@/components/CookieBanner'))
 
-function AuthRedirect({ children }: { children: React.ReactNode }) {
+// Memoized AuthRedirect pour éviter re-renders inutiles
+const AuthRedirect = memo(function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    )
+    return <LoadingSkeleton />
   }
 
   if (user) {
@@ -44,15 +42,15 @@ function AuthRedirect({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>
-}
+})
 
-function OnboardingWrapper({ children }: { children: React.ReactNode }) {
+// Memoized OnboardingWrapper
+const OnboardingWrapper = memo(function OnboardingWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
     if (user) {
-      // N'afficher l'onboarding QUE si c'est une nouvelle inscription
       const shouldShow = localStorage.getItem('mecaia_show_onboarding')
       if (shouldShow === 'true') {
         setShowOnboarding(true)
@@ -69,146 +67,154 @@ function OnboardingWrapper({ children }: { children: React.ReactNode }) {
     <>
       <AnimatePresence>
         {showOnboarding && (
-          <Onboarding onComplete={handleComplete} />
+          <Suspense fallback={null}>
+            <Onboarding onComplete={handleComplete} />
+          </Suspense>
         )}
       </AnimatePresence>
       {children}
     </>
   )
-}
+})
 
 export default function App() {
   return (
     <BrowserRouter>
       <OnboardingWrapper>
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/"
-          element={
-            <AuthRedirect>
-              <Landing />
-            </AuthRedirect>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <AuthRedirect>
-              <Login />
-            </AuthRedirect>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <AuthRedirect>
-              <Signup />
-            </AuthRedirect>
-          }
-        />
+        <Suspense fallback={<LoadingSkeleton />}>
+          <Routes>
+            {/* Public routes */}
+            <Route
+              path="/"
+              element={
+                <AuthRedirect>
+                  <Landing />
+                </AuthRedirect>
+              }
+            />
+            <Route
+              path="/login"
+              element={
+                <AuthRedirect>
+                  <Login />
+                </AuthRedirect>
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                <AuthRedirect>
+                  <Signup />
+                </AuthRedirect>
+              }
+            />
 
-        {/* Protected routes */}
-        <Route
-          path="/app"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/chat"
-          element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/chat/:id"
-          element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/analyser-devis"
-          element={
-            <ProtectedRoute>
-              <AnalyseDevis />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/garages"
-          element={
-            <ProtectedRoute>
-              <Garages />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/pieces"
-          element={
-            <ProtectedRoute>
-              <Pieces />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/history"
-          element={
-            <ProtectedRoute>
-              <History />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/account"
-          element={
-            <ProtectedRoute>
-              <Account />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/success"
-          element={
-            <ProtectedRoute>
-              <Success />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/vehicules"
-          element={
-            <ProtectedRoute>
-              <Vehicles />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/app/rappels"
-          element={
-            <ProtectedRoute>
-              <Reminders />
-            </ProtectedRoute>
-          }
-        />
-        {/* Public pages */}
-        <Route path="/pricing" element={<Pricing />} />
+            {/* Protected routes */}
+            <Route
+              path="/app"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/chat"
+              element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/chat/:id"
+              element={
+                <ProtectedRoute>
+                  <Chat />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/analyser-devis"
+              element={
+                <ProtectedRoute>
+                  <AnalyseDevis />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/garages"
+              element={
+                <ProtectedRoute>
+                  <Garages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/pieces"
+              element={
+                <ProtectedRoute>
+                  <Pieces />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/history"
+              element={
+                <ProtectedRoute>
+                  <History />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/account"
+              element={
+                <ProtectedRoute>
+                  <Account />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/success"
+              element={
+                <ProtectedRoute>
+                  <Success />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/vehicules"
+              element={
+                <ProtectedRoute>
+                  <Vehicles />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/rappels"
+              element={
+                <ProtectedRoute>
+                  <Reminders />
+                </ProtectedRoute>
+              }
+            />
 
-        {/* Legal pages */}
-        <Route path="/mentions-legales" element={<MentionsLegales />} />
-        <Route path="/cgu" element={<CGU />} />
-        <Route path="/confidentialite" element={<Confidentialite />} />
+            {/* Public pages */}
+            <Route path="/pricing" element={<Pricing />} />
 
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <CookieBanner />
+            {/* Legal pages */}
+            <Route path="/mentions-legales" element={<MentionsLegales />} />
+            <Route path="/cgu" element={<CGU />} />
+            <Route path="/confidentialite" element={<Confidentialite />} />
+
+            {/* 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+
+        <Suspense fallback={null}>
+          <CookieBanner />
+        </Suspense>
       </OnboardingWrapper>
     </BrowserRouter>
   )
