@@ -1,24 +1,46 @@
 import { useState } from 'react'
-import { Check, X, Zap, Star, ArrowLeft } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Check, X, Zap, Star, ArrowLeft, Loader2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { PLANS } from '@/config/plans'
 import { useAuth } from '@/hooks/useAuth'
+import { useSubscription } from '@/hooks/useSubscription'
+import { createCheckoutSession, STRIPE_PRICES } from '@/lib/stripe'
 import PageTransition from '@/components/PageTransition'
 
 export default function Pricing() {
   const [yearly, setYearly] = useState(false)
-  const { user } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const { user, profile } = useAuth()
+  const { isPremium } = useSubscription(profile)
 
   const handleSubscribe = async () => {
-    const plan = PLANS.premium
-    const priceId = yearly ? plan.stripePriceYearly : plan.stripePriceMonthly
+    // Check if user is logged in
+    if (!user) {
+      navigate(`/login?redirect=/pricing&plan=${yearly ? 'yearly' : 'monthly'}`)
+      return
+    }
 
-    // TODO: Integrate with Stripe checkout
-    console.log('Subscribe to Premium, Price ID:', priceId)
+    // Check if already premium
+    if (isPremium) {
+      navigate('/app/settings')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const priceId = yearly ? STRIPE_PRICES.PREMIUM_YEARLY : STRIPE_PRICES.PREMIUM_MONTHLY
+      await createCheckoutSession(priceId, true, user.id)
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Erreur lors de la création de la session de paiement. Réessaie.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -130,8 +152,18 @@ export default function Pricing() {
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700"
                 onClick={handleSubscribe}
+                disabled={loading || isPremium}
               >
-                Passer Premium
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Chargement...
+                  </>
+                ) : isPremium ? (
+                  'Déjà Premium'
+                ) : (
+                  'Passer Premium'
+                )}
               </Button>
             </Card>
           </div>

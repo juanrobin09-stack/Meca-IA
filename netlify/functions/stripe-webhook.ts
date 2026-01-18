@@ -117,12 +117,74 @@ export async function handler(event: WebhookEvent) {
         break
       }
 
+      case 'invoice.payment_succeeded': {
+        const invoice = stripeEvent.data.object as Stripe.Invoice
+        const customerId = invoice.customer as string
+        const subscriptionId = invoice.subscription as string
+
+        console.log('Payment succeeded for customer:', customerId)
+
+        if (subscriptionId) {
+          // Get subscription to access metadata
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+          const userId = subscription.metadata.user_id
+
+          if (userId) {
+            // Update subscription status to active (in case of renewal after failed payment)
+            await supabase
+              .from('profiles')
+              .update({
+                subscription_status: 'premium',
+                stripe_subscription_id: subscriptionId,
+              })
+              .eq('id', userId)
+
+            console.log(`Payment succeeded - User ${userId} subscription active`)
+          }
+        }
+        break
+      }
+
       case 'invoice.payment_failed': {
         const invoice = stripeEvent.data.object as Stripe.Invoice
         const customerId = invoice.customer as string
 
-        // Could send notification to user here
         console.log('Payment failed for customer:', customerId)
+
+        // Find user by customer ID and mark payment as failed
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', customerId)
+          .single()
+
+        if (profile) {
+          // Don't downgrade immediately - Stripe will retry
+          // Just log for now, could send email notification
+          console.log(`Payment failed for user ${profile.id}`)
+        }
+        break
+      }
+
+      case 'customer.subscription.created': {
+        const subscription = stripeEvent.data.object as Stripe.Subscription
+        const customerId = subscription.customer as string
+        const userId = subscription.metadata.user_id
+
+        console.log('Subscription created:', subscription.id)
+
+        if (userId) {
+          await supabase
+            .from('profiles')
+            .update({
+              subscription_status: 'premium',
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscription.id,
+            })
+            .eq('id', userId)
+
+          console.log(`User ${userId} subscription created and activated`)
+        }
         break
       }
 

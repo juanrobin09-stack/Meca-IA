@@ -1,37 +1,124 @@
 import Stripe from 'stripe'
+import { createClient } from '@supabase/supabase-js'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-12-18.acacia',
 })
 
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+)
+
 interface RequestBody {
   priceId: string
   mode: 'subscription' | 'payment'
   userId: string
+  plan?: 'monthly' | 'yearly'
 }
 
-export async function handler(event: { body: string | null }) {
+interface WebhookEvent {
+  body: string | null
+  headers: Record<string, string>
+  httpMethod: string
+}
+
+export async function handler(event: WebhookEvent) {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Content-Type': 'application/json',
+  }
+
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' }
+  }
+
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    }
+  }
+
   if (!event.body) {
     return {
       statusCode: 400,
+      headers,
       body: JSON.stringify({ error: 'Missing request body' }),
     }
   }
 
   try {
-    const { priceId, mode, userId } = JSON.parse(event.body) as RequestBody
+    const { priceId, mode, userId, plan } = JSON.parse(event.body) as RequestBody
 
     if (!priceId || !mode || !userId) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Missing required fields' }),
+        headers,
+        body: JSON.stringify({ error: 'Missing required fields: priceId, mode, userId' }),
       }
+    }
+
+    // 1. Get user profile from Supabase
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, stripe_customer_id, subscription_status')
+      .eq('id', userId)
+      .single()
+
+    if (profileError) {
+      console.error('Profile error:', profileError)
+      return {
+        statusCode: 404,
+        headers,
+        body: JSON.stringify({ error: 'User not found' }),
+      }
+    }
+
+    // 2. Check if already premium
+    if (profile.subscription_status === 'premium') {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'User is already Premium' }),
+      }
+    }
+
+    // 3. Get or create Stripe customer
+    let customerId = profile.stripe_customer_id
+
+    if (!customerId) {
+      // Get user email from auth
+      const { data: authData } = await supabase.auth.admin.getUserById(userId)
+      const email = authData?.user?.email
+
+      // Create new Stripe customer
+      const customer = await stripe.customers.create({
+        email: email || undefined,
+        metadata: {
+          supabase_user_id: userId,
+        },
+      })
+      customerId = customer.id
+
+      // Save customer ID to profile
+      await supabase
+        .from('profiles')
+        .update({ stripe_customer_id: customerId })
+        .eq('id', userId)
     }
 
     const origin = process.env.URL || 'http://localhost:5173'
 
+    // 4. Create Checkout Session
     const session = await stripe.checkout.sessions.create({
+      customer: customerId,
       mode,
+      payment_method_types: ['card'],
       line_items: [
         {
           price: priceId,
@@ -39,16 +126,26 @@ export async function handler(event: { body: string | null }) {
         },
       ],
       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/app`,
+      cancel_url: `${origin}/pricing?cancelled=true`,
       client_reference_id: userId,
-      metadata: { userId },
+      metadata: {
+        userId,
+        plan: plan || 'monthly',
+      },
+      subscription_data: mode === 'subscription' ? {
+        metadata: {
+          user_id: userId,
+          plan: plan || 'monthly',
+        },
+      } : undefined,
+      billing_address_collection: 'required',
+      allow_promotion_codes: true,
+      locale: 'fr',
     })
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         sessionId: session.id,
         url: session.url,
@@ -58,6 +155,7 @@ export async function handler(event: { body: string | null }) {
     console.error('Stripe session error:', error)
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ error: 'Failed to create checkout session' }),
     }
   }

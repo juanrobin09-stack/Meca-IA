@@ -2,6 +2,32 @@
 
 Toutes les modifications notables de ce projet sont documentées dans ce fichier.
 
+## v1.2.0 - Stripe Checkout & Webhooks Complet (2026-01-18)
+
+### Ajouté
+- **Stripe Checkout intégré** - Paiement sécurisé pour abonnement Premium
+- **Webhooks complets** - Synchronisation automatique avec la DB :
+  - `checkout.session.completed` - Active premium
+  - `invoice.payment_succeeded` - Confirme renouvellement
+  - `invoice.payment_failed` - Gestion échec paiement
+  - `customer.subscription.created` - Nouvelle souscription
+  - `customer.subscription.updated` - Modification/annulation
+  - `customer.subscription.deleted` - Expiration définitive
+- **Customer création automatique** - Stripe customer créé si inexistant
+- **Codes promo** - Support des codes promotionnels Stripe
+
+### Amélioré
+- `create-checkout-session.ts` - CORS, validation, création customer auto
+- `stripe-webhook.ts` - Handlers complets pour tous events
+- `Pricing.tsx` - Boutons checkout avec loading states
+- `stripe.ts` - Support du paramètre plan (monthly/yearly)
+
+### Documentation
+- `STRIPE_PRODUCTS_SETUP.md` - Guide création produits Stripe
+- `STRIPE_WEBHOOK_SETUP.md` - Configuration webhooks complète
+
+---
+
 ## v1.1.0 - Gestion Abonnement Stripe Portal (2026-01-18)
 
 ### Ajouté

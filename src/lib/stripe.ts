@@ -15,7 +15,10 @@ export const STRIPE_PRICES = {
   PAY_PER_DEVIS: import.meta.env.VITE_STRIPE_PRICE_DEVIS || 'price_devis',
 }
 
-export async function createCheckoutSession(priceId: string, isSubscription: boolean, userId: string) {
+export async function createCheckoutSession(priceId: string, isSubscription: boolean, userId: string, plan?: 'monthly' | 'yearly') {
+  // Detect plan from priceId if not provided
+  const detectedPlan = plan || (priceId === STRIPE_PRICES.PREMIUM_YEARLY ? 'yearly' : 'monthly')
+
   const response = await fetch('/.netlify/functions/create-checkout-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -23,11 +26,13 @@ export async function createCheckoutSession(priceId: string, isSubscription: boo
       priceId,
       mode: isSubscription ? 'subscription' : 'payment',
       userId,
+      plan: detectedPlan,
     }),
   })
 
   if (!response.ok) {
-    throw new Error('Failed to create checkout session')
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to create checkout session')
   }
 
   const { url } = await response.json()
