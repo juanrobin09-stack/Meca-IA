@@ -25,6 +25,7 @@ const Pricing = lazy(() => import('@/pages/Pricing'))
 const Vehicles = lazy(() => import('@/pages/Vehicles'))
 const DiagnosticVideo = lazy(() => import('@/pages/DiagnosticVideo'))
 const PrevisionPannes = lazy(() => import('@/pages/PrevisionPannes'))
+const MechanicChat = lazy(() => import('@/pages/MechanicChat'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -204,6 +205,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <PrevisionPannes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/mechanic-chat"
+              element={
+                <ProtectedRoute>
+                  <MechanicChat />
                 </ProtectedRoute>
               }
             />
