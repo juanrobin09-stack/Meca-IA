@@ -1,13 +1,24 @@
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+
+// Log env vars status at cold start
+console.log('Checkout session env check:', {
+  hasStripeKey: !!STRIPE_SECRET_KEY,
+  hasSupabaseUrl: !!SUPABASE_URL,
+  hasSupabaseServiceKey: !!SUPABASE_SERVICE_KEY,
+})
+
+const stripe = new Stripe(STRIPE_SECRET_KEY || '', {
   apiVersion: '2024-12-18.acacia',
 })
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+  SUPABASE_URL || '',
+  SUPABASE_SERVICE_KEY || ''
 )
 
 type ProductType = 'subscription' | 'diagnostic' | 'devis' | 'chat' | 'video'
@@ -58,11 +69,32 @@ export async function handler(event: WebhookEvent) {
   try {
     const { priceId, mode, userId, plan, productType } = JSON.parse(event.body) as RequestBody
 
+    console.log('Checkout request:', { priceId, mode, userId, plan, productType })
+
     if (!priceId || !mode || !userId) {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: 'Missing required fields: priceId, mode, userId' }),
+      }
+    }
+
+    // Validate env vars at runtime
+    if (!STRIPE_SECRET_KEY) {
+      console.error('STRIPE_SECRET_KEY is not configured')
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Stripe is not configured on the server' }),
+      }
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+      console.error('Supabase is not configured')
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Database is not configured on the server' }),
       }
     }
 
@@ -155,12 +187,17 @@ export async function handler(event: WebhookEvent) {
         url: session.url,
       }),
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Stripe session error:', error)
+    const errorMessage = error?.message || error?.raw?.message || 'Unknown error'
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Failed to create checkout session' }),
+      body: JSON.stringify({
+        error: errorMessage,
+        type: error?.type || 'unknown',
+        code: error?.code || 'unknown'
+      }),
     }
   }
 }

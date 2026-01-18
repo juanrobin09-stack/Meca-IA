@@ -150,10 +150,11 @@ export default function PaywallModal({
 
     setLoading(priceId)
     try {
+      console.log('Creating checkout session with:', { priceId, isSubscription, userId: user.id, productType })
       await createCheckoutSession(priceId, isSubscription, user.id, undefined, productType)
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Erreur lors du paiement. Réessaie.')
+    } catch (error: any) {
+      console.error('Checkout error details:', error)
+      alert(`Erreur: ${error.message || 'Erreur inconnue'}`)
     } finally {
       setLoading(null)
     }
