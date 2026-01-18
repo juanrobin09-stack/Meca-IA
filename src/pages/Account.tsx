@@ -94,12 +94,10 @@ export default function Account() {
       if (data.success) {
         if (data.status === 'premium') {
           setSyncMessage({ type: 'success', text: 'Abonnement Premium activé ! Rafraîchissement...' })
-          // Refresh the profile to get updated data
-          if (refreshProfile) {
-            await refreshProfile()
-          }
-          // Reload the page to reflect changes
-          setTimeout(() => window.location.reload(), 1500)
+          // Force reload immediately to get fresh profile data
+          setTimeout(() => {
+            window.location.href = '/app'  // Redirect to dashboard with full reload
+          }, 1000)
         } else {
           setSyncMessage({ type: 'error', text: data.message || 'Aucun abonnement actif trouvé' })
         }

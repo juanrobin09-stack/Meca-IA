@@ -150,6 +150,25 @@ export function useAuth() {
     await signOut()
   }
 
+  async function refreshProfile(): Promise<Profile | null> {
+    if (!state.user) return null
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', state.user.id)
+      .single()
+
+    if (error) {
+      console.error('Error refreshing profile:', error)
+      return null
+    }
+
+    const profile = data as Profile
+    setState((prev) => ({ ...prev, profile }))
+    return profile
+  }
+
   return {
     user: state.user,
     profile: state.profile,
@@ -160,6 +179,6 @@ export function useAuth() {
     signOut,
     updateProfile,
     deleteAccount,
-    refreshProfile: () => state.user && fetchProfile(state.user.id),
+    refreshProfile,
   }
 }
