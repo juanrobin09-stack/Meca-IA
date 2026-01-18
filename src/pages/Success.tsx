@@ -3,13 +3,66 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, CheckCircle2, Sparkles } from 'lucide-react'
+import { Loader2, CheckCircle2, Sparkles, MessageSquare, FileText, Wrench } from 'lucide-react'
+
+type PaymentType = 'subscription' | 'diagnostic' | 'devis' | 'chat' | 'video'
+
+interface SessionData {
+  payment_status: string
+  mode: 'subscription' | 'payment'
+  productType: PaymentType
+}
+
+const paymentMessages: Record<PaymentType, {
+  icon: React.ReactNode
+  title: string
+  description: string
+  buttonText: string
+  buttonPath: string
+}> = {
+  subscription: {
+    icon: <Sparkles className="h-5 w-5 text-amber-500" />,
+    title: 'Bienvenue en Premium !',
+    description: 'Tu as maintenant accès à toutes les fonctionnalités en illimité.',
+    buttonText: 'Nouveau diagnostic',
+    buttonPath: '/app/chat',
+  },
+  diagnostic: {
+    icon: <Wrench className="h-5 w-5 text-blue-500" />,
+    title: '+1 Crédit Diagnostic',
+    description: 'Ton crédit diagnostic a été ajouté. Tu peux maintenant effectuer un diagnostic.',
+    buttonText: 'Faire un diagnostic',
+    buttonPath: '/app/chat',
+  },
+  video: {
+    icon: <Wrench className="h-5 w-5 text-purple-500" />,
+    title: '+1 Crédit Diagnostic Vidéo',
+    description: 'Ton crédit a été ajouté. Tu peux maintenant analyser une vidéo.',
+    buttonText: 'Diagnostic vidéo',
+    buttonPath: '/app/diagnostic-video',
+  },
+  devis: {
+    icon: <FileText className="h-5 w-5 text-green-500" />,
+    title: '+1 Crédit Analyse Devis',
+    description: 'Ton crédit a été ajouté. Tu peux maintenant analyser un devis.',
+    buttonText: 'Analyser un devis',
+    buttonPath: '/app/analyse-devis',
+  },
+  chat: {
+    icon: <MessageSquare className="h-5 w-5 text-indigo-500" />,
+    title: '+10 Crédits Chat',
+    description: 'Tes 10 messages ont été ajoutés. Continue ta conversation avec MECAI !',
+    buttonText: 'Chat Mécanicien',
+    buttonPath: '/app/mechanic-chat',
+  },
+}
 
 export default function Success() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { refreshProfile } = useAuth()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [sessionData, setSessionData] = useState<SessionData | null>(null)
 
   const sessionId = searchParams.get('session_id')
 
@@ -26,6 +79,7 @@ export default function Success() {
 
         if (response.ok) {
           const session = await response.json()
+          setSessionData(session)
           if (session.payment_status === 'paid') {
             // Refresh profile to get updated subscription status
             refreshProfile?.()
@@ -45,6 +99,13 @@ export default function Success() {
 
     verifySession()
   }, [sessionId, refreshProfile])
+
+  // Determine payment type
+  const paymentType: PaymentType = sessionData?.mode === 'subscription'
+    ? 'subscription'
+    : (sessionData?.productType || 'diagnostic')
+
+  const message = paymentMessages[paymentType] || paymentMessages.subscription
 
   if (status === 'loading') {
     return (
@@ -98,15 +159,15 @@ export default function Success() {
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6">
           <div className="flex items-center gap-2 text-lg">
-            <Sparkles className="h-5 w-5 text-amber-500" />
-            <span className="font-medium">Bienvenue en Premium !</span>
+            {message.icon}
+            <span className="font-medium">{message.title}</span>
           </div>
           <p className="text-sm text-muted-foreground text-center">
-            Tu as maintenant accès à tous les diagnostics en illimité.
+            {message.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <Button className="flex-1" onClick={() => navigate('/app/chat')}>
-              Nouveau diagnostic
+            <Button className="flex-1" onClick={() => navigate(message.buttonPath)}>
+              {message.buttonText}
             </Button>
             <Button variant="outline" className="flex-1" onClick={() => navigate('/app')}>
               Accueil

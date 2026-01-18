@@ -28,6 +28,7 @@ export async function handler(event: { queryStringParameters: Record<string, str
         customer: session.customer,
         subscription: session.subscription,
         client_reference_id: session.client_reference_id,
+        productType: session.metadata?.productType || 'subscription',
       }),
     }
   } catch (error) {
