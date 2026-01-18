@@ -8,7 +8,16 @@ import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MessageSquarePlus, History, Sparkles } from 'lucide-react'
+import {
+  MessageSquarePlus,
+  History,
+  Sparkles,
+  FileText,
+  Video,
+  TrendingUp,
+  MessageCircle,
+  Crown
+} from 'lucide-react'
 
 export default function Dashboard() {
   const { user, profile } = useAuth()
@@ -21,6 +30,45 @@ export default function Dashboard() {
     const now = new Date()
     return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear()
   })
+
+  const premiumFeatures = [
+    {
+      href: '/app/analyser-devis',
+      icon: FileText,
+      title: 'Analyseur de Devis',
+      description: 'Détecte les arnaques et prix excessifs sur tes devis garage.',
+      badge: '🔍 Anti-arnaque',
+      color: 'bg-blue-500/10',
+      iconColor: 'text-blue-600',
+    },
+    {
+      href: '/app/diagnostic-video',
+      icon: Video,
+      title: 'Diagnostic Vidéo',
+      description: "Filme ton problème, l'IA analyse visuellement et auditivement.",
+      badge: '🎥 IA Vision',
+      color: 'bg-purple-500/10',
+      iconColor: 'text-purple-600',
+    },
+    {
+      href: '/app/prevision-pannes',
+      icon: TrendingUp,
+      title: 'Prévision de Pannes',
+      description: 'Anticipe les réparations et planifie ton budget auto.',
+      badge: '🔮 Prédictif',
+      color: 'bg-amber-500/10',
+      iconColor: 'text-amber-600',
+    },
+    {
+      href: '/app/mechanic-chat',
+      icon: MessageCircle,
+      title: 'Chat Mécanicien 24/7',
+      description: 'Pose toutes tes questions auto, je suis dispo 24h/24.',
+      badge: '💬 Illimité',
+      color: 'bg-green-500/10',
+      iconColor: 'text-green-600',
+    },
+  ]
 
   return (
     <PageTransition>
@@ -54,7 +102,7 @@ export default function Dashboard() {
                     Il te reste {diagnosticsRemaining} diagnostic{diagnosticsRemaining !== 1 ? 's' : ''} ce mois-ci.
                   </p>
                 </div>
-                <Link to="/app/account">
+                <Link to="/pricing">
                   <Button>
                     <Sparkles className="h-4 w-4 mr-2" />
                     Passer Premium
@@ -64,7 +112,24 @@ export default function Dashboard() {
             </Card>
           )}
 
-          {/* Quick Actions */}
+          {/* Premium badge */}
+          {isPremium && (
+            <Card className="mb-8 border-amber-500/30 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+              <CardContent className="flex items-center p-6 gap-4">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center">
+                  <Crown className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Tu es Premium !</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Profite de toutes les fonctionnalités sans limite.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Quick Actions - Main */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             <Link to="/app/chat">
               <motion.div whileHover={{ scale: 1.02, y: -4 }} transition={{ type: 'spring', stiffness: 300 }}>
@@ -105,9 +170,54 @@ export default function Dashboard() {
             </Link>
           </div>
 
+          {/* Premium Features Grid */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <h2 className="text-lg font-semibold">Fonctionnalités Premium</h2>
+              {!isPremium && (
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                  Premium
+                </Badge>
+              )}
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {premiumFeatures.map((feature, index) => (
+                <Link key={feature.href} to={isPremium ? feature.href : '/pricing'}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02, y: -4 }}
+                  >
+                    <Card className={`h-full transition-all cursor-pointer ${
+                      isPremium
+                        ? 'hover:border-primary hover:shadow-lg'
+                        : 'opacity-75 hover:opacity-100'
+                    }`}>
+                      <CardHeader className="pb-3">
+                        <div className={`h-10 w-10 rounded-lg ${feature.color} flex items-center justify-center mb-3`}>
+                          <feature.icon className={`h-5 w-5 ${feature.iconColor}`} />
+                        </div>
+                        <CardTitle className="text-base">{feature.title}</CardTitle>
+                        <CardDescription className="text-xs">
+                          {feature.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {feature.badge}
+                        </Badge>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
           {/* Stats (Premium) */}
           {isPremium && (
-            <Card>
+            <Card className="mb-8">
               <CardHeader>
                 <CardTitle className="text-lg">Ce mois-ci</CardTitle>
               </CardHeader>

@@ -51,7 +51,9 @@ if (!user) return <Navigate to="/login" />
 | `diagnostics` | ✅ | ✅ | ✅ | ✅ |
 | `payments` | ✅ | ❌ (service_role) | ❌ | ❌ |
 | `vehicles` | ✅ | ✅ | ✅ | ✅ |
-| `maintenance_reminders` | ✅ | ✅ | ✅ | ✅ |
+| `conversations` | ✅ | ✅ | ✅ | ✅ |
+| `conversation_messages` | ✅ | ✅ | ❌ | ✅ |
+| `user_usage` | ✅ | ✅ | ✅ | ❌ |
 
 ### Politique standard
 
@@ -70,6 +72,7 @@ CREATE POLICY "Users can view own [table]" ON [table]
 | Fonction | Auth Check | Input Validation | Error Handling |
 |----------|------------|------------------|----------------|
 | `/chat` | ✅ Bearer token | ✅ JSON schema | ✅ Generic errors |
+| `/mechanic-chat` | ✅ Bearer token | ✅ JSON schema | ✅ Generic errors |
 | `/garages` | ❌ Public | ✅ Query params | ✅ Generic errors |
 | `/stripe-webhook` | ✅ Signature | ✅ Stripe SDK | ✅ Generic errors |
 | `/analyze-quote` | ✅ Bearer token | ✅ JSON check | ✅ Generic errors |

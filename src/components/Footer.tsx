@@ -20,8 +20,11 @@ export default function Footer() {
             <Link to="/confidentialite" className="hover:text-foreground transition-colors">
               Confidentialité
             </Link>
+            <Link to="/pricing" className="hover:text-foreground transition-colors">
+              Tarifs
+            </Link>
             <a href="mailto:contact@mymecai.com" className="hover:text-foreground transition-colors">
-              Contact
+              contact@mymecai.com
             </a>
           </div>
 
@@ -30,9 +33,16 @@ export default function Footer() {
           </p>
         </div>
 
-        <p className="text-xs text-muted-foreground text-center mt-6">
-          MecaIA fournit des diagnostics à titre informatif uniquement et ne remplace pas l'avis d'un professionnel.
-        </p>
+        <div className="text-xs text-muted-foreground text-center mt-6 space-y-2">
+          <p>
+            MecaIA - Votre copilote mécanique 🚗
+          </p>
+          <p className="max-w-3xl mx-auto">
+            ⚠️ Les diagnostics IA sont fournis à titre indicatif.
+            Pour toute intervention mécanique, consultez un professionnel certifié.
+            MecaIA ne saurait être tenu responsable des décisions prises suite à l'utilisation du service.
+          </p>
+        </div>
       </div>
     </footer>
   )

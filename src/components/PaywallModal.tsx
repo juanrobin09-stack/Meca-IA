@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles, CheckCircle2, CreditCard } from 'lucide-react'
 
-type PaywallMode = 'diagnostic' | 'devis'
+type PaywallMode = 'diagnostic' | 'devis' | 'video' | 'prevision' | 'chat' | 'vehicle'
 
 interface PaywallModalProps {
   open: boolean
@@ -22,7 +22,15 @@ interface PaywallModalProps {
   subtitle?: string
 }
 
-const defaultContent = {
+const defaultContent: Record<PaywallMode, {
+  title: string
+  subtitle: string
+  unitLabel: string
+  unitButton: string
+  unitPrice: string
+  priceId: string
+  features: string[]
+}> = {
   diagnostic: {
     title: 'Tes 2 diagnostics gratuits sont épuisés',
     subtitle: 'Passe Premium pour des diagnostics illimités et un suivi complet de ta voiture.',
@@ -30,6 +38,14 @@ const defaultContent = {
     unitButton: 'Acheter 1 diagnostic',
     unitPrice: '2.99€',
     priceId: STRIPE_PRICES.PAY_PER_USE,
+    features: [
+      'Diagnostics IA illimités',
+      'Diagnostic vidéo IA',
+      'Analyseur de devis (anti-arnaque)',
+      'Prévision de pannes',
+      'Chat mécanicien 24/7',
+      'Véhicules illimités',
+    ],
   },
   devis: {
     title: 'Tu as utilisé ton analyse gratuite ce mois',
@@ -38,6 +54,73 @@ const defaultContent = {
     unitButton: 'Acheter 1 analyse',
     unitPrice: '1.99€',
     priceId: STRIPE_PRICES.PAY_PER_DEVIS,
+    features: [
+      'Analyses de devis illimitées',
+      'Détection arnaques automatique',
+      'Diagnostics IA illimités',
+      'Chat mécanicien 24/7',
+      'Support prioritaire',
+    ],
+  },
+  video: {
+    title: '🎥 Diagnostic Vidéo Premium',
+    subtitle: "Le diagnostic vidéo est une fonctionnalité Premium. L'IA analyse tes vidéos pour un diagnostic ultra-précis !",
+    unitLabel: '1 diagnostic vidéo',
+    unitButton: 'Acheter 1 analyse',
+    unitPrice: '4.99€',
+    priceId: STRIPE_PRICES.PAY_PER_USE,
+    features: [
+      'Diagnostic vidéo illimité',
+      'Analyse audio + visuelle',
+      'Diagnostics IA illimités',
+      'Prévision de pannes',
+      'Chat mécanicien 24/7',
+    ],
+  },
+  prevision: {
+    title: '🔮 Prévision de Pannes Premium',
+    subtitle: "Anticipe les réparations de ton véhicule grâce à l'IA prédictive.",
+    unitLabel: '1 analyse prédictive',
+    unitButton: 'Acheter 1 prévision',
+    unitPrice: '3.99€',
+    priceId: STRIPE_PRICES.PAY_PER_USE,
+    features: [
+      'Prévision de pannes illimitée',
+      'Budget annuel estimé',
+      'Alertes préventives',
+      'Diagnostics IA illimités',
+      'Historique complet',
+    ],
+  },
+  chat: {
+    title: '💬 Limite de messages atteinte',
+    subtitle: 'Tu as utilisé tes 10 messages gratuits ce mois-ci. Passe Premium pour un accès illimité !',
+    unitLabel: '10 messages supplémentaires',
+    unitButton: 'Acheter 10 messages',
+    unitPrice: '2.99€',
+    priceId: STRIPE_PRICES.PAY_PER_USE,
+    features: [
+      'Chat mécanicien 24/7 illimité',
+      'Contexte véhicule automatique',
+      'Diagnostics IA illimités',
+      'Diagnostic vidéo IA',
+      'Sans limite mensuelle',
+    ],
+  },
+  vehicle: {
+    title: '🚗 Limite de véhicules atteinte',
+    subtitle: 'Tu as atteint la limite de 1 véhicule gratuit. Passe Premium pour enregistrer tous tes véhicules !',
+    unitLabel: '1 véhicule supplémentaire',
+    unitButton: 'Acheter 1 slot',
+    unitPrice: '1.99€',
+    priceId: STRIPE_PRICES.PAY_PER_USE,
+    features: [
+      'Véhicules illimités',
+      'Prévision de pannes par véhicule',
+      'Historique par véhicule',
+      'Diagnostics contextuels',
+      'Chat mécanicien personnalisé',
+    ],
   },
 }
 
@@ -97,23 +180,14 @@ export default function PaywallModal({
               </div>
             </CardHeader>
             <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
+              <p className="text-xs text-muted-foreground font-medium">Inclus dans Premium :</p>
               <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
-                  Diagnostics illimités
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
-                  Analyses de devis illimitées
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
-                  Historique permanent
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
-                  Support prioritaire
-                </li>
+                {content.features.map((feature, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600 shrink-0" />
+                    {feature}
+                  </li>
+                ))}
               </ul>
               <Button
                 className="w-full text-sm sm:text-base"

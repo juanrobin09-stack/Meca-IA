@@ -138,14 +138,21 @@ export default function Pricing() {
 
           {/* FAQ / Trust */}
           <div className="mt-16 text-center">
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              Sans engagement - Annulation en 1 clic - Paiement sécurisé Stripe
-            </p>
-            <p className="text-sm text-gray-400">
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-600 dark:text-gray-400 mb-6">
+              <span className="flex items-center gap-1">💳 Paiement sécurisé</span>
+              <span className="flex items-center gap-1">✅ Annulation à tout moment</span>
+              <span className="flex items-center gap-1">🔒 Données chiffrées</span>
+              <span className="flex items-center gap-1">💯 Satisfait ou remboursé 14 jours</span>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
               Une question ?{' '}
               <a href="mailto:contact@mymecai.com" className="text-blue-600 hover:underline">
                 contact@mymecai.com
               </a>
+            </p>
+            <p className="text-xs text-gray-400 max-w-2xl mx-auto">
+              ⚠️ Les diagnostics IA sont fournis à titre indicatif.
+              Pour toute intervention mécanique, consultez un professionnel certifié.
             </p>
           </div>
         </div>

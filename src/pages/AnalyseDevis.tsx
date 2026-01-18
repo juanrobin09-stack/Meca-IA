@@ -10,7 +10,7 @@ import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Upload, Loader2, CheckCircle2, Sparkles } from 'lucide-react'
+import { FileText, Upload, Loader2, CheckCircle2, Sparkles, Info } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import ReactMarkdown from 'react-markdown'
 
@@ -139,6 +139,15 @@ export default function AnalyseDevis() {
               Upload ton devis, l'IA te dit si c'est le bon prix et comment négocier.
             </p>
           </motion.div>
+
+          {/* Disclaimer */}
+          <div className="mb-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-200 flex items-start gap-3">
+            <Info className="h-5 w-5 shrink-0 mt-0.5" />
+            <p>
+              Notre analyse compare aux prix du marché français. Les tarifs peuvent varier
+              selon votre région et le garage. Cette analyse est indicative.
+            </p>
+          </div>
 
           {!analysis ? (
             <Card>
