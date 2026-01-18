@@ -60,7 +60,10 @@ export async function handler(event: WebhookEvent) {
             })
             .eq('id', userId)
         } else if (session.mode === 'payment') {
-          // One-time payment - just track it, user already used the diagnostic
+          // One-time payment - credit the user based on product type
+          const productType = session.metadata?.productType || 'diagnostic'
+
+          // Track the payment
           await supabase.from('payments').insert({
             user_id: userId,
             stripe_payment_id: session.payment_intent as string,
@@ -68,7 +71,23 @@ export async function handler(event: WebhookEvent) {
             currency: session.currency || 'eur',
             payment_type: 'one_time',
             status: 'succeeded',
+            description: `Achat: ${productType}`,
           })
+
+          // Credit the user based on product type
+          if (productType === 'diagnostic' || productType === 'video') {
+            // Add 1 diagnostic credit
+            await supabase.rpc('add_diagnostic_credit', { p_user_id: userId })
+            console.log(`Added 1 diagnostic credit for user ${userId}`)
+          } else if (productType === 'devis') {
+            // Add 1 devis credit
+            await supabase.rpc('add_devis_credit', { p_user_id: userId })
+            console.log(`Added 1 devis credit for user ${userId}`)
+          } else if (productType === 'chat') {
+            // Add 10 chat credits
+            await supabase.rpc('add_chat_credits', { p_user_id: userId, p_credits: 10 })
+            console.log(`Added 10 chat credits for user ${userId}`)
+          }
         }
         break
       }

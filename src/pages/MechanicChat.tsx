@@ -72,6 +72,7 @@ export default function MechanicChat() {
   const [isTyping, setIsTyping] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [messagesRemaining, setMessagesRemaining] = useState<number | null>(null)
+  const [purchasedCredits, setPurchasedCredits] = useState<number>(0)
   const [showPaywall, setShowPaywall] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showConversations, setShowConversations] = useState(false)
@@ -90,10 +91,11 @@ export default function MechanicChat() {
     }
   }, [user])
 
-  // Load daily message count for free users
+  // Load daily message count and purchased credits for free users
   const loadDailyMessageCount = async () => {
     if (!user || isPremium) {
       setMessagesRemaining(null)
+      setPurchasedCredits(0)
       return
     }
 
@@ -101,18 +103,28 @@ export default function MechanicChat() {
       const startOfDay = new Date()
       startOfDay.setHours(0, 0, 0, 0)
 
-      const { count } = await supabase
-        .from('chat_messages')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('sender', 'user')
-        .gte('created_at', startOfDay.toISOString())
+      // Get message count and purchased credits in parallel
+      const [{ count }, { data: profileData }] = await Promise.all([
+        supabase
+          .from('chat_messages')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('sender', 'user')
+          .gte('created_at', startOfDay.toISOString()),
+        supabase
+          .from('profiles')
+          .select('purchased_chat_credits')
+          .eq('id', user.id)
+          .single()
+      ])
 
       const used = count || 0
       setMessagesRemaining(FREE_MESSAGES_LIMIT - used)
+      setPurchasedCredits(profileData?.purchased_chat_credits || 0)
     } catch (err) {
       console.error('Error loading message count:', err)
       setMessagesRemaining(FREE_MESSAGES_LIMIT)
+      setPurchasedCredits(0)
     }
   }
 
@@ -310,9 +322,12 @@ export default function MechanicChat() {
       }
       setMessages(prev => [...prev, aiMsg])
 
-      // Update remaining messages
+      // Update remaining messages and purchased credits
       if (result.messagesRemaining !== null && result.messagesRemaining !== undefined) {
         setMessagesRemaining(result.messagesRemaining)
+      }
+      if (result.purchasedCredits !== null && result.purchasedCredits !== undefined) {
+        setPurchasedCredits(result.purchasedCredits)
       }
 
       // Reload conversations to update title/timestamp
@@ -442,27 +457,36 @@ export default function MechanicChat() {
                   </Select>
 
                   {/* Messages counter */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     {isPremium ? (
                       <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
                         <MessageSquare className="h-3 w-3 mr-1" />
                         Illimité
                       </Badge>
                     ) : messagesRemaining !== null ? (
-                      <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${
-                        messagesRemaining === 0
-                          ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
-                          : messagesRemaining <= 3
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
-                            : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
-                      }`}>
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        {messagesRemaining > 0 ? (
-                          <span>{messagesRemaining}/{FREE_MESSAGES_LIMIT} aujourd'hui</span>
-                        ) : (
-                          <span>Limite atteinte</span>
+                      <>
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${
+                          messagesRemaining === 0 && purchasedCredits === 0
+                            ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
+                            : messagesRemaining <= 3 && purchasedCredits === 0
+                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
+                              : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
+                        }`}>
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          {messagesRemaining > 0 ? (
+                            <span>{messagesRemaining}/{FREE_MESSAGES_LIMIT} gratuits</span>
+                          ) : purchasedCredits > 0 ? (
+                            <span>0 gratuit restant</span>
+                          ) : (
+                            <span>Limite atteinte</span>
+                          )}
+                        </div>
+                        {purchasedCredits > 0 && (
+                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                            <span>+{purchasedCredits} crédit{purchasedCredits > 1 ? 's' : ''}</span>
+                          </div>
                         )}
-                      </div>
+                      </>
                     ) : null}
                   </div>
                 </div>

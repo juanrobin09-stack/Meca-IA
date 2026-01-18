@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS profiles (
   free_chat_messages_today INTEGER DEFAULT 0 NOT NULL,
   free_chat_reset_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
 
+  -- Purchased credits (one-time purchases)
+  purchased_diagnostic_credits INTEGER DEFAULT 0 NOT NULL,
+  purchased_devis_credits INTEGER DEFAULT 0 NOT NULL,
+  purchased_chat_credits INTEGER DEFAULT 0 NOT NULL,
+
   -- Subscription
   subscription_status TEXT DEFAULT 'free' NOT NULL CHECK (subscription_status IN ('free', 'premium')),
   stripe_customer_id TEXT,
@@ -326,6 +331,127 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
+-- FONCTIONS RPC pour crédits achetés
+-- ============================================
+
+-- Ajouter un crédit diagnostic
+CREATE OR REPLACE FUNCTION add_diagnostic_credit(p_user_id UUID)
+RETURNS INTEGER AS $$
+DECLARE
+  new_credits INTEGER;
+BEGIN
+  UPDATE profiles
+  SET
+    purchased_diagnostic_credits = purchased_diagnostic_credits + 1,
+    updated_at = NOW()
+  WHERE id = p_user_id
+  RETURNING purchased_diagnostic_credits INTO new_credits;
+
+  RETURN new_credits;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Ajouter un crédit devis
+CREATE OR REPLACE FUNCTION add_devis_credit(p_user_id UUID)
+RETURNS INTEGER AS $$
+DECLARE
+  new_credits INTEGER;
+BEGIN
+  UPDATE profiles
+  SET
+    purchased_devis_credits = purchased_devis_credits + 1,
+    updated_at = NOW()
+  WHERE id = p_user_id
+  RETURNING purchased_devis_credits INTO new_credits;
+
+  RETURN new_credits;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Ajouter des crédits chat
+CREATE OR REPLACE FUNCTION add_chat_credits(p_user_id UUID, p_credits INTEGER DEFAULT 10)
+RETURNS INTEGER AS $$
+DECLARE
+  new_credits INTEGER;
+BEGIN
+  UPDATE profiles
+  SET
+    purchased_chat_credits = purchased_chat_credits + p_credits,
+    updated_at = NOW()
+  WHERE id = p_user_id
+  RETURNING purchased_chat_credits INTO new_credits;
+
+  RETURN new_credits;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Utiliser un crédit diagnostic (retourne true si ok, false si pas de crédit)
+CREATE OR REPLACE FUNCTION use_diagnostic_credit(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  current_credits INTEGER;
+BEGIN
+  SELECT purchased_diagnostic_credits INTO current_credits
+  FROM profiles WHERE id = p_user_id;
+
+  IF current_credits > 0 THEN
+    UPDATE profiles
+    SET
+      purchased_diagnostic_credits = purchased_diagnostic_credits - 1,
+      updated_at = NOW()
+    WHERE id = p_user_id;
+    RETURN true;
+  END IF;
+
+  RETURN false;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Utiliser un crédit devis (retourne true si ok, false si pas de crédit)
+CREATE OR REPLACE FUNCTION use_devis_credit(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  current_credits INTEGER;
+BEGIN
+  SELECT purchased_devis_credits INTO current_credits
+  FROM profiles WHERE id = p_user_id;
+
+  IF current_credits > 0 THEN
+    UPDATE profiles
+    SET
+      purchased_devis_credits = purchased_devis_credits - 1,
+      updated_at = NOW()
+    WHERE id = p_user_id;
+    RETURN true;
+  END IF;
+
+  RETURN false;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Utiliser un crédit chat (retourne true si ok, false si pas de crédit)
+CREATE OR REPLACE FUNCTION use_chat_credit(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE
+  current_credits INTEGER;
+BEGIN
+  SELECT purchased_chat_credits INTO current_credits
+  FROM profiles WHERE id = p_user_id;
+
+  IF current_credits > 0 THEN
+    UPDATE profiles
+    SET
+      purchased_chat_credits = purchased_chat_credits - 1,
+      updated_at = NOW()
+    WHERE id = p_user_id;
+    RETURN true;
+  END IF;
+
+  RETURN false;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
 -- TRIGGER: Créer un profil quand un user s'inscrit
 -- ============================================
 CREATE OR REPLACE FUNCTION handle_new_user()
@@ -484,6 +610,14 @@ GRANT EXECUTE ON FUNCTION increment_diagnostic_count(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION increment_devis_count(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION increment_chat_count(UUID) TO authenticated;
 GRANT EXECUTE ON FUNCTION reset_monthly_counters(UUID) TO authenticated;
+
+-- Grants pour les crédits achetés
+GRANT EXECUTE ON FUNCTION add_diagnostic_credit(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION add_devis_credit(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION add_chat_credits(UUID, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION use_diagnostic_credit(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION use_devis_credit(UUID) TO authenticated;
+GRANT EXECUTE ON FUNCTION use_chat_credit(UUID) TO authenticated;
 
 -- ============================================
 -- FIN DU SCRIPT

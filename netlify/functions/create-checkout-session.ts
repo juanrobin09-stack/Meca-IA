@@ -10,11 +10,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
 )
 
+type ProductType = 'subscription' | 'diagnostic' | 'devis' | 'chat' | 'video'
+
 interface RequestBody {
   priceId: string
   mode: 'subscription' | 'payment'
   userId: string
   plan?: 'monthly' | 'yearly'
+  productType?: ProductType
 }
 
 interface WebhookEvent {
@@ -53,7 +56,7 @@ export async function handler(event: WebhookEvent) {
   }
 
   try {
-    const { priceId, mode, userId, plan } = JSON.parse(event.body) as RequestBody
+    const { priceId, mode, userId, plan, productType } = JSON.parse(event.body) as RequestBody
 
     if (!priceId || !mode || !userId) {
       return {
@@ -131,6 +134,7 @@ export async function handler(event: WebhookEvent) {
       metadata: {
         userId,
         plan: plan || 'monthly',
+        productType: productType || 'subscription',
       },
       subscription_data: mode === 'subscription' ? {
         metadata: {

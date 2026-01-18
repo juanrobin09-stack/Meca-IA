@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { createCheckoutSession, STRIPE_PRICES } from '@/lib/stripe'
+import { createCheckoutSession, STRIPE_PRICES, type ProductType } from '@/lib/stripe'
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,7 @@ const defaultContent: Record<PaywallMode, {
   unitButton: string
   unitPrice: string
   priceId: string
+  productType: ProductType
   features: string[]
 }> = {
   diagnostic: {
@@ -38,6 +39,7 @@ const defaultContent: Record<PaywallMode, {
     unitButton: 'Acheter 1 diagnostic',
     unitPrice: '2.99€',
     priceId: STRIPE_PRICES.PAY_PER_USE,
+    productType: 'diagnostic',
     features: [
       'Diagnostics IA illimités',
       'Diagnostic vidéo IA',
@@ -54,6 +56,7 @@ const defaultContent: Record<PaywallMode, {
     unitButton: 'Acheter 1 analyse',
     unitPrice: '1.99€',
     priceId: STRIPE_PRICES.PAY_PER_DEVIS,
+    productType: 'devis',
     features: [
       'Analyses de devis illimitées',
       'Détection arnaques automatique',
@@ -69,6 +72,7 @@ const defaultContent: Record<PaywallMode, {
     unitButton: 'Acheter 1 analyse',
     unitPrice: '4.99€',
     priceId: STRIPE_PRICES.PAY_PER_USE,
+    productType: 'video',
     features: [
       'Diagnostic vidéo illimité',
       'Analyse audio + visuelle',
@@ -84,6 +88,7 @@ const defaultContent: Record<PaywallMode, {
     unitButton: 'Acheter 1 prévision',
     unitPrice: '3.99€',
     priceId: STRIPE_PRICES.PAY_PER_USE,
+    productType: 'diagnostic',
     features: [
       'Prévision de pannes illimitée',
       'Budget annuel estimé',
@@ -99,6 +104,7 @@ const defaultContent: Record<PaywallMode, {
     unitButton: 'Acheter 10 messages',
     unitPrice: '2.99€',
     priceId: STRIPE_PRICES.PAY_PER_USE,
+    productType: 'chat',
     features: [
       'Chat mécanicien 24/7 illimité',
       'Contexte véhicule automatique',
@@ -114,6 +120,7 @@ const defaultContent: Record<PaywallMode, {
     unitButton: 'Acheter 1 slot',
     unitPrice: '1.99€',
     priceId: STRIPE_PRICES.PAY_PER_USE,
+    productType: 'diagnostic',
     features: [
       'Véhicules illimités',
       'Prévision de pannes par véhicule',
@@ -138,12 +145,12 @@ export default function PaywallModal({
   const displayTitle = title || content.title
   const displaySubtitle = subtitle || content.subtitle
 
-  async function handlePurchase(priceId: string, isSubscription: boolean) {
+  async function handlePurchase(priceId: string, isSubscription: boolean, productType?: ProductType) {
     if (!user) return
 
     setLoading(priceId)
     try {
-      await createCheckoutSession(priceId, isSubscription, user.id)
+      await createCheckoutSession(priceId, isSubscription, user.id, undefined, productType)
     } catch (error) {
       console.error('Checkout error:', error)
       alert('Erreur lors du paiement. Réessaie.')
@@ -237,7 +244,7 @@ export default function PaywallModal({
               <Button
                 variant="outline"
                 className="w-full text-sm sm:text-base"
-                onClick={() => handlePurchase(content.priceId, false)}
+                onClick={() => handlePurchase(content.priceId, false, content.productType)}
                 disabled={loading !== null}
               >
                 {loading === content.priceId ? (

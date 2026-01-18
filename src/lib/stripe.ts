@@ -15,9 +15,27 @@ export const STRIPE_PRICES = {
   PAY_PER_DEVIS: import.meta.env.VITE_STRIPE_PRICE_DEVIS || 'price_devis',
 }
 
-export async function createCheckoutSession(priceId: string, isSubscription: boolean, userId: string, plan?: 'monthly' | 'yearly') {
+export type ProductType = 'subscription' | 'diagnostic' | 'devis' | 'chat' | 'video'
+
+export async function createCheckoutSession(
+  priceId: string,
+  isSubscription: boolean,
+  userId: string,
+  plan?: 'monthly' | 'yearly',
+  productType?: ProductType
+) {
   // Detect plan from priceId if not provided
   const detectedPlan = plan || (priceId === STRIPE_PRICES.PREMIUM_YEARLY ? 'yearly' : 'monthly')
+
+  // Detect product type from priceId if not provided
+  let detectedProductType: ProductType = productType || 'subscription'
+  if (!isSubscription && !productType) {
+    if (priceId === STRIPE_PRICES.PAY_PER_DEVIS) {
+      detectedProductType = 'devis'
+    } else if (priceId === STRIPE_PRICES.PAY_PER_USE) {
+      detectedProductType = 'diagnostic'
+    }
+  }
 
   const response = await fetch('/.netlify/functions/create-checkout-session', {
     method: 'POST',
@@ -27,6 +45,7 @@ export async function createCheckoutSession(priceId: string, isSubscription: boo
       mode: isSubscription ? 'subscription' : 'payment',
       userId,
       plan: detectedPlan,
+      productType: detectedProductType,
     }),
   })
 

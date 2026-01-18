@@ -143,6 +143,7 @@ export const handler: Handler = async (event) => {
 
     // 2. Check daily message limit for free users
     let messagesUsedToday = 0
+    let purchasedCredits = 0
     if (!isPremium) {
       const startOfDay = new Date()
       startOfDay.setHours(0, 0, 0, 0)
@@ -156,15 +157,31 @@ export const handler: Handler = async (event) => {
 
       messagesUsedToday = count || 0
 
+      // Get purchased chat credits
+      const { data: profileCredits } = await supabase
+        .from('profiles')
+        .select('purchased_chat_credits')
+        .eq('id', userId)
+        .single()
+
+      purchasedCredits = profileCredits?.purchased_chat_credits || 0
+
       if (messagesUsedToday >= FREE_MESSAGES_LIMIT_PER_DAY) {
-        return {
-          statusCode: 403,
-          headers,
-          body: JSON.stringify({
-            error: 'LIMIT_REACHED',
-            message: 'Tu as utilisé tes 10 messages gratuits aujourd\'hui. Reviens demain ou passe à Premium pour un accès illimité 24/7 !',
-            upgradeUrl: '/pricing'
-          }),
+        // Check if user has purchased credits
+        if (purchasedCredits > 0) {
+          // Use one purchased credit
+          await supabase.rpc('use_chat_credit', { p_user_id: userId })
+          console.log(`Used 1 chat credit for user ${userId}, remaining: ${purchasedCredits - 1}`)
+        } else {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({
+              error: 'LIMIT_REACHED',
+              message: 'Tu as utilisé tes 10 messages gratuits aujourd\'hui. Reviens demain ou passe à Premium pour un accès illimité 24/7 !',
+              upgradeUrl: '/pricing'
+            }),
+          }
         }
       }
     }
@@ -278,7 +295,11 @@ TONALITÉ :
       .eq('id', conversationId)
 
     // 10. Calculate remaining messages for today
-    const messagesRemaining = isPremium ? null : (FREE_MESSAGES_LIMIT_PER_DAY - messagesUsedToday - 1)
+    const freeMessagesRemaining = Math.max(0, FREE_MESSAGES_LIMIT_PER_DAY - messagesUsedToday - 1)
+    // Update purchased credits after potentially using one
+    const creditsRemaining = messagesUsedToday >= FREE_MESSAGES_LIMIT_PER_DAY && purchasedCredits > 0
+      ? purchasedCredits - 1
+      : purchasedCredits
 
     return {
       statusCode: 200,
@@ -286,7 +307,8 @@ TONALITÉ :
       body: JSON.stringify({
         response: aiResponse,
         conversationId,
-        messagesRemaining
+        messagesRemaining: isPremium ? null : freeMessagesRemaining,
+        purchasedCredits: isPremium ? null : creditsRemaining,
       }),
     }
 
