@@ -363,27 +363,39 @@ export default function MechanicChat() {
 
         <main className="md:pl-64 pb-20 md:pb-0">
           <div className="h-screen md:h-[calc(100vh-0px)] flex flex-col">
-            {/* Header */}
-            <div className="border-b bg-background p-3 sm:p-4">
+            {/* Header - Modern Premium Design */}
+            <div className="border-b bg-gradient-to-r from-background via-background to-primary/5 p-3 sm:p-4">
               <div className="container mx-auto max-w-4xl">
                 {/* Mobile: Stacked layout */}
                 <div className="flex items-center justify-between gap-2 sm:gap-4">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center text-lg sm:text-xl shrink-0">
-                      🤖
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    {/* Premium Robot Avatar */}
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-primary to-violet-600 rounded-xl sm:rounded-2xl blur-md opacity-60 animate-pulse" />
+                      <div className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shadow-lg">
+                        <div className="text-2xl sm:text-3xl">🤖</div>
+                        {/* Status indicator */}
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-background">
+                          <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-75" />
+                        </div>
+                      </div>
                     </div>
+
                     <div className="min-w-0">
-                      <h1 className="font-bold text-base sm:text-lg flex items-center gap-2 truncate">
-                        <span className="truncate">MECAI</span>
+                      <h1 className="font-bold text-lg sm:text-xl flex items-center gap-2">
+                        <span className="bg-gradient-to-r from-primary via-blue-600 to-violet-600 bg-clip-text text-transparent">
+                          MECAI
+                        </span>
                         {isPremium && (
-                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-[10px] sm:text-xs shrink-0">
-                            Premium
+                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] sm:text-xs shrink-0 shadow-sm">
+                            ✨ Premium
                           </Badge>
                         )}
                       </h1>
-                      <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
-                        En ligne 24/7
+                      <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+                        <span className="text-green-600 dark:text-green-400 font-medium">En ligne</span>
+                        <span className="text-muted-foreground">•</span>
+                        <span className="text-muted-foreground">Répond instantanément</span>
                       </div>
                     </div>
                   </div>
@@ -525,24 +537,42 @@ export default function MechanicChat() {
                   <div className="container mx-auto max-w-3xl space-y-4">
                     {messages.length === 0 && !loading ? (
                       <div className="text-center py-8 sm:py-12 px-4">
-                        <div className="text-5xl sm:text-6xl mb-4">🔧</div>
-                        <h2 className="text-lg sm:text-xl font-bold mb-2">Bienvenue sur le Chat Mécanicien</h2>
-                        <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-xs sm:max-w-none mx-auto">
-                          Pose n'importe quelle question sur ta voiture, je suis là 24h/24 !
+                        {/* Premium Robot Animation */}
+                        <div className="relative inline-block mb-6">
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-primary to-violet-600 rounded-3xl blur-xl opacity-40 animate-pulse scale-110" />
+                          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shadow-2xl mx-auto">
+                            <span className="text-4xl sm:text-5xl">🤖</span>
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-3 border-background flex items-center justify-center">
+                            <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-75" />
+                          </div>
+                        </div>
+
+                        <h2 className="text-xl sm:text-2xl font-bold mb-2 bg-gradient-to-r from-primary via-blue-600 to-violet-600 bg-clip-text text-transparent">
+                          Salut, je suis MECAI !
+                        </h2>
+                        <p className="text-sm sm:text-base text-muted-foreground mb-8 max-w-sm mx-auto">
+                          Ton assistant mécanique IA disponible 24h/24. Pose-moi n'importe quelle question sur ta voiture !
                         </p>
 
-                        {/* Quick actions - 2x2 grid */}
-                        <div className="grid grid-cols-2 gap-2 sm:gap-3 max-w-sm sm:max-w-md mx-auto">
+                        {/* Quick actions - 2x2 grid with modern style */}
+                        <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-sm sm:max-w-md mx-auto">
                           {QUICK_ACTIONS.map((action, i) => (
-                            <Button
+                            <motion.button
                               key={i}
-                              variant="outline"
-                              className="h-auto py-3 px-3 sm:px-4 flex flex-col items-center gap-1.5 sm:gap-2 text-left touch-feedback"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="group relative overflow-hidden rounded-xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md hover:border-primary/50"
                               onClick={() => sendMessage(action.message)}
                             >
-                              <action.icon className="h-5 w-5 text-primary" />
-                              <span className="text-xs sm:text-sm">{action.label}</span>
-                            </Button>
+                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <div className="relative flex flex-col items-center gap-2">
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                                  <action.icon className="h-5 w-5 text-primary" />
+                                </div>
+                                <span className="text-xs sm:text-sm font-medium">{action.label}</span>
+                              </div>
+                            </motion.button>
                           ))}
                         </div>
                       </div>
@@ -557,13 +587,15 @@ export default function MechanicChat() {
                             className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
                           >
                             {/* Avatar */}
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                              msg.sender === 'ai'
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted'
-                            }`}>
-                              {msg.sender === 'ai' ? '🤖' : '👤'}
-                            </div>
+                            {msg.sender === 'ai' ? (
+                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shrink-0 shadow-sm">
+                                <span className="text-sm">🤖</span>
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                <span className="text-sm">👤</span>
+                              </div>
+                            )}
 
                             {/* Message bubble */}
                             <div className={`max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}>
@@ -605,8 +637,8 @@ export default function MechanicChat() {
                             animate={{ opacity: 1 }}
                             className="flex gap-3"
                           >
-                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                              🤖
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shadow-sm">
+                              <span className="text-sm">🤖</span>
                             </div>
                             <Card className="bg-muted">
                               <CardContent className="p-3">
