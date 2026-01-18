@@ -145,11 +145,11 @@ export default function CGU() {
       title: "Contact",
       content: (
         <a
-          href="mailto:contact@mecaia.fr"
+          href="mailto:contact@mymecai.com"
           className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-lg transition-colors"
         >
           <Mail className="h-4 w-4" />
-          contact@mecaia.fr
+          contact@mymecai.com
         </a>
       )
     },

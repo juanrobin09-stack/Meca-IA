@@ -143,8 +143,8 @@ export default function Pricing() {
             </p>
             <p className="text-sm text-gray-400">
               Une question ?{' '}
-              <a href="mailto:contact@mecaia.fr" className="text-blue-600 hover:underline">
-                contact@mecaia.fr
+              <a href="mailto:contact@mymecai.com" className="text-blue-600 hover:underline">
+                contact@mymecai.com
               </a>
             </p>
           </div>

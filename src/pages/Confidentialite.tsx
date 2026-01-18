@@ -16,7 +16,7 @@ export default function Confidentialite() {
           <p className="font-semibold text-lg">MecaIA</p>
           <p><span className="text-muted-foreground">SIREN :</span> 994 221 653</p>
           <p><span className="text-muted-foreground">Responsable :</span> Juan Robin</p>
-          <p><span className="text-muted-foreground">Email :</span> contact@mecaia.fr</p>
+          <p><span className="text-muted-foreground">Email :</span> contact@mymecai.com</p>
         </div>
       )
     },
@@ -176,11 +176,11 @@ export default function Confidentialite() {
       content: (
         <div className="space-y-3">
           <a
-            href="mailto:contact@mecaia.fr"
+            href="mailto:contact@mymecai.com"
             className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary px-4 py-2 rounded-lg transition-colors"
           >
             <Mail className="h-4 w-4" />
-            contact@mecaia.fr
+            contact@mymecai.com
           </a>
           <p className="text-sm text-muted-foreground">
             Vous pouvez également introduire une réclamation auprès de la CNIL :

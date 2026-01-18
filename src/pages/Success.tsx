@@ -71,7 +71,7 @@ export default function Success() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             <p className="text-sm text-muted-foreground text-center">
-              Si tu as été débité, contacte-nous à contact@mecaia.fr
+              Si tu as été débité, contacte-nous à contact@mymecai.com
             </p>
             <Button onClick={() => navigate('/app')}>
               Retour à l'application

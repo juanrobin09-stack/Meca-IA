@@ -20,7 +20,7 @@ export default function Footer() {
             <Link to="/confidentialite" className="hover:text-foreground transition-colors">
               Confidentialité
             </Link>
-            <a href="mailto:contact@mecaia.fr" className="hover:text-foreground transition-colors">
+            <a href="mailto:contact@mymecai.com" className="hover:text-foreground transition-colors">
               Contact
             </a>
           </div>
