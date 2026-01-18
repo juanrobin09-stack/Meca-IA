@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -74,9 +74,8 @@ const paymentMessages: Record<PaymentType, {
 }
 
 export default function Success() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user, refreshProfile } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [sessionData, setSessionData] = useState<SessionData | null>(null)
   const syncAttempted = useRef(false)
@@ -85,8 +84,18 @@ export default function Success() {
 
   useEffect(() => {
     async function verifySession() {
+      // Wait for auth to be ready
+      if (authLoading) {
+        return
+      }
+
       if (!sessionId) {
         setStatus('error')
+        return
+      }
+
+      // Skip if already processed
+      if (syncAttempted.current) {
         return
       }
 
@@ -100,7 +109,7 @@ export default function Success() {
 
           if (session.payment_status === 'paid') {
             // For subscription payments, sync with Stripe to ensure Premium is activated
-            if (session.mode === 'subscription' && user?.email && !syncAttempted.current) {
+            if (session.mode === 'subscription' && user?.email) {
               syncAttempted.current = true
               console.log('Syncing subscription after payment...')
 
@@ -114,37 +123,34 @@ export default function Success() {
                 synced = await syncSubscription(user.id, user.email)
                 console.log(`Sync attempt ${i + 1}: ${synced ? 'success' : 'pending'}`)
               }
+            } else if (user?.email) {
+              // For one-time payments, also try sync in case webhook is slow
+              syncAttempted.current = true
             }
 
-            // Refresh profile to get updated subscription/credits status
-            await refreshProfile?.()
             setStatus('success')
             return
           }
         }
 
         // If we can't verify, still show success (webhook will handle it)
-        // But still try to sync for subscription
-        if (user?.email && !syncAttempted.current) {
-          syncAttempted.current = true
-          await syncSubscription(user.id, user.email)
-          await refreshProfile?.()
-        }
+        syncAttempted.current = true
         setStatus('success')
       } catch (error) {
         console.error('Session verification error:', error)
         // Still show success as webhook should handle the update
-        if (user?.email && !syncAttempted.current) {
-          syncAttempted.current = true
-          await syncSubscription(user.id, user.email)
-          await refreshProfile?.()
-        }
+        syncAttempted.current = true
         setStatus('success')
       }
     }
 
     verifySession()
-  }, [sessionId, refreshProfile, user])
+  }, [sessionId, user, authLoading])
+
+  // Force full page reload to get fresh auth state
+  function handleNavigate(path: string) {
+    window.location.href = path
+  }
 
   // Determine payment type
   const paymentType: PaymentType = sessionData?.mode === 'subscription'
@@ -180,7 +186,7 @@ export default function Success() {
             <p className="text-sm text-muted-foreground text-center">
               Si tu as été débité, contacte-nous à contact@mymecai.com
             </p>
-            <Button onClick={() => navigate('/app')}>
+            <Button onClick={() => handleNavigate('/app')}>
               Retour à l'application
             </Button>
           </CardContent>
@@ -212,10 +218,10 @@ export default function Success() {
             {message.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <Button className="flex-1" onClick={() => navigate(message.buttonPath)}>
+            <Button className="flex-1" onClick={() => handleNavigate(message.buttonPath)}>
               {message.buttonText}
             </Button>
-            <Button variant="outline" className="flex-1" onClick={() => navigate('/app')}>
+            <Button variant="outline" className="flex-1" onClick={() => handleNavigate('/app')}>
               Accueil
             </Button>
           </div>
