@@ -4,7 +4,7 @@ import type { Handler } from '@netlify/functions'
 
 // Validate environment variables
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
 
 // Only create clients if env vars exist
