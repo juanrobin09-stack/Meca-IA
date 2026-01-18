@@ -46,7 +46,7 @@ const paymentMessages: Record<PaymentType, {
     title: '+1 Crédit Analyse Devis',
     description: 'Ton crédit a été ajouté. Tu peux maintenant analyser un devis.',
     buttonText: 'Analyser un devis',
-    buttonPath: '/app/analyse-devis',
+    buttonPath: '/app/analyser-devis',
   },
   chat: {
     icon: <MessageSquare className="h-5 w-5 text-indigo-500" />,
