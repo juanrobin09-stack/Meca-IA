@@ -60,3 +60,18 @@ export interface DiagnosticLimitStatus {
   remaining: number
   isPremium: boolean
 }
+
+export interface DevisAnalysis {
+  id: string
+  user_id: string
+  garage_name?: string
+  original_amount?: number
+  analyzed_amount?: number
+  potential_savings?: number
+  image_url?: string
+  analysis_result: string
+  verdict_type?: 'good' | 'warning' | 'bad' | 'neutral'
+  recommendation?: string
+  is_fair_price?: boolean
+  created_at: string
+}

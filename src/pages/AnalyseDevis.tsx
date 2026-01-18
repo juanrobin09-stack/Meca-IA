@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useDevis } from '@/hooks/useDevis'
 import { analyzeQuote as analyzeQuoteAPI } from '@/lib/anthropic'
 import { useConfetti } from '@/hooks/useConfetti'
 import Sidebar from '@/components/Sidebar'
@@ -23,18 +24,23 @@ import {
   Lightbulb,
   XCircle,
   ChevronRight,
-  Target
+  Target,
+  Download,
+  History
 } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
+import { Link } from 'react-router-dom'
 
 export default function AnalyseDevis() {
   const { user, profile } = useAuth()
   const { isPremium, devisRemaining, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
+  const { saveDevis, devisList } = useDevis(user?.id)
   const { celebrateSuccess } = useConfetti()
 
   const [selectedFile, setSelectedFile] = useState<{ dataUrl: string; base64: string } | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysis, setAnalysis] = useState<string | null>(null)
+  const [savedDevisId, setSavedDevisId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
   const [currentRemaining, setCurrentRemaining] = useState<number>(devisRemaining as number)
@@ -101,6 +107,31 @@ export default function AnalyseDevis() {
       setAnalysis(result)
       celebrateSuccess() // Confetti on success!
 
+      // Determine verdict type from analysis
+      let verdictType: 'good' | 'warning' | 'bad' | 'neutral' = 'neutral'
+      const lowerResult = result.toLowerCase()
+      if (lowerResult.includes('négociable') || lowerResult.includes('élevé')) {
+        verdictType = 'warning'
+      } else if (lowerResult.includes('correct') || lowerResult.includes('bon prix')) {
+        verdictType = 'good'
+      } else if (lowerResult.includes('excessif') || lowerResult.includes('trop cher')) {
+        verdictType = 'bad'
+      }
+
+      // Extract potential savings if mentioned
+      const savingsMatch = result.match(/(?:économie|économies|potentiel)[^\n]*?(\d+)/i)
+      const potentialSavings = savingsMatch ? parseInt(savingsMatch[1]) : undefined
+
+      // Save to database
+      const saved = await saveDevis({
+        analysis_result: result,
+        image_url: selectedFile.dataUrl,
+        verdict_type: verdictType,
+        potential_savings: potentialSavings,
+        is_fair_price: verdictType === 'good',
+      })
+      setSavedDevisId(saved.id)
+
       // Increment counter after successful analysis (for free users)
       if (!isPremium) {
         await incrementDevisCount()
@@ -117,6 +148,7 @@ export default function AnalyseDevis() {
   function reset() {
     setSelectedFile(null)
     setAnalysis(null)
+    setSavedDevisId(null)
     setError(null)
   }
 
@@ -142,11 +174,21 @@ export default function AnalyseDevis() {
                 </motion.div>
                 Analyse ton devis garage
               </h1>
-              {!isPremium && (
-                <Badge variant="secondary" className="text-sm">
-                  {displayRemaining}/1 analyse gratuite
-                </Badge>
-              )}
+              <div className="flex items-center gap-2">
+                {devisList.length > 0 && (
+                  <Link to="/app/history?tab=devis">
+                    <Button variant="outline" size="sm">
+                      <History className="h-4 w-4 mr-2" />
+                      Historique ({devisList.length})
+                    </Button>
+                  </Link>
+                )}
+                {!isPremium && (
+                  <Badge variant="secondary" className="text-sm">
+                    {displayRemaining}/1 analyse gratuite
+                  </Badge>
+                )}
+              </div>
             </div>
             <p className="text-muted-foreground mt-2">
               Upload ton devis, l'IA te dit si c'est le bon prix et comment négocier.
@@ -167,6 +209,7 @@ export default function AnalyseDevis() {
             <PremiumAnalysisResult
               analysis={analysis}
               imageUrl={selectedFile?.dataUrl}
+              devisId={savedDevisId}
               onReset={reset}
             />
           )}
@@ -273,10 +316,62 @@ export default function AnalyseDevis() {
 interface PremiumAnalysisResultProps {
   analysis: string
   imageUrl?: string
+  devisId?: string | null
   onReset: () => void
 }
 
-function PremiumAnalysisResult({ analysis, imageUrl, onReset }: PremiumAnalysisResultProps) {
+function PremiumAnalysisResult({ analysis, imageUrl, devisId, onReset }: PremiumAnalysisResultProps) {
+  const [isExporting, setIsExporting] = useState(false)
+
+  // Export to PDF
+  const exportToPDF = async () => {
+    setIsExporting(true)
+    try {
+      // Create a simple printable version
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Analyse de Devis - MECAI</title>
+          <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+            h1 { color: #3b82f6; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+            h2 { color: #1f2937; margin-top: 20px; }
+            .verdict { background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 15px 0; }
+            .analysis { white-space: pre-wrap; line-height: 1.6; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
+            @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+          </style>
+        </head>
+        <body>
+          <h1>🔧 Analyse de Devis - MECAI</h1>
+          <p style="color: #6b7280;">Généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+
+          <div class="analysis">${analysis.replace(/\n/g, '<br>')}</div>
+
+          <div class="footer">
+            <p>Ce rapport a été généré par MECAI - Votre assistant automobile intelligent.</p>
+            <p>Les informations fournies sont indicatives et basées sur les prix du marché français.</p>
+          </div>
+        </body>
+        </html>
+      `
+
+      const printWindow = window.open('', '_blank')
+      if (printWindow) {
+        printWindow.document.write(printContent)
+        printWindow.document.close()
+        printWindow.focus()
+        setTimeout(() => {
+          printWindow.print()
+        }, 250)
+      }
+    } catch (error) {
+      console.error('Export error:', error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
   // Parse the analysis to extract sections
   const parseAnalysis = (text: string) => {
     const sections = {
@@ -394,14 +489,32 @@ function PremiumAnalysisResult({ analysis, imageUrl, onReset }: PremiumAnalysisR
                 <h2 className="text-xl font-bold">{verdictStyle.label}</h2>
               </div>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onReset}
-              className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur"
-            >
-              Nouveau devis
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={exportToPDF}
+                disabled={isExporting}
+                className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur"
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Download className="h-4 w-4 mr-1" />
+                    PDF
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onReset}
+                className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur"
+              >
+                Nouveau devis
+              </Button>
+            </div>
           </div>
 
           {parsed.verdict && (
