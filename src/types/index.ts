@@ -75,3 +75,18 @@ export interface DevisAnalysis {
   is_fair_price?: boolean
   created_at: string
 }
+
+export interface VideoDiagnostic {
+  id: string
+  user_id: string
+  probleme_identifie: string
+  description_visuelle: string
+  causes_possibles: string[]
+  urgence: 'faible' | 'moyenne' | 'élevée' | 'critique'
+  pieces_concernees: string[]
+  estimation_cout_min: number
+  estimation_cout_max: number
+  recommandations: string
+  thumbnail_url?: string
+  created_at: string
+}

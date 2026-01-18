@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import PaywallModal from '@/components/PaywallModal'
-import { Video, Camera, StopCircle, RotateCcw, Loader2, AlertTriangle, CheckCircle2, Wrench, Euro, Clock, Search, MapPin } from 'lucide-react'
+import { Video, Camera, StopCircle, RotateCcw, Loader2, AlertTriangle, CheckCircle2, Wrench, Euro, Clock, Search, MapPin, Upload, History } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 
 interface DiagnosticResult {
   description_visuelle: string
@@ -22,17 +23,21 @@ interface DiagnosticResult {
 }
 
 export default function DiagnosticVideo() {
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
   const [showPaywall, setShowPaywall] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [recordedVideo, setRecordedVideo] = useState<string | null>(null)
+  const [videoBlob, setVideoBlob] = useState<Blob | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [result, setResult] = useState<DiagnosticResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -73,6 +78,7 @@ export default function DiagnosticVideo() {
         const blob = new Blob(chunksRef.current, { type: 'video/webm' })
         const url = URL.createObjectURL(blob)
         setRecordedVideo(url)
+        setVideoBlob(blob)
 
         // Stop all tracks
         stream.getTracks().forEach(track => track.stop())
@@ -115,10 +121,91 @@ export default function DiagnosticVideo() {
       URL.revokeObjectURL(recordedVideo)
     }
     setRecordedVideo(null)
+    setVideoBlob(null)
     setResult(null)
     setError(null)
     setRecordingTime(0)
+    setSaved(false)
   }, [recordedVideo])
+
+  const handleImportVideo = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isPremium) {
+      setShowPaywall(true)
+      return
+    }
+
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check file type
+    if (!file.type.startsWith('video/')) {
+      setError('Le fichier doit être une vidéo (MP4, WebM, MOV...)')
+      return
+    }
+
+    // Check file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      setError('La vidéo est trop lourde (max 50 Mo)')
+      return
+    }
+
+    const url = URL.createObjectURL(file)
+    setRecordedVideo(url)
+    setVideoBlob(file)
+    setError(null)
+    setSaved(false)
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }, [isPremium])
+
+  const saveToHistory = useCallback(async () => {
+    if (!user || !result) return
+
+    setIsSaving(true)
+    try {
+      // Generate thumbnail from first frame
+      let thumbnailBase64 = null
+      if (videoBlob) {
+        try {
+          const frames = await extractFrames(videoBlob, 1)
+          thumbnailBase64 = frames[0] || null
+        } catch {
+          // Ignore thumbnail errors
+        }
+      }
+
+      const { error: dbError } = await supabase
+        .from('video_diagnostics')
+        .insert({
+          user_id: user.id,
+          probleme_identifie: result.probleme_identifie,
+          description_visuelle: result.description_visuelle,
+          causes_possibles: result.causes_possibles,
+          urgence: result.urgence,
+          pieces_concernees: result.pieces_concernees,
+          estimation_cout_min: result.estimation_cout.min,
+          estimation_cout_max: result.estimation_cout.max,
+          recommandations: result.recommandations,
+          thumbnail_url: thumbnailBase64 ? `data:image/jpeg;base64,${thumbnailBase64}` : null,
+        })
+
+      if (dbError) {
+        console.error('Error saving video diagnostic:', dbError)
+        setError('Erreur lors de la sauvegarde')
+        return
+      }
+
+      setSaved(true)
+    } catch (err) {
+      console.error('Save error:', err)
+      setError('Erreur lors de la sauvegarde')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [user, result, videoBlob])
 
   const analyzeVideo = useCallback(async () => {
     if (!recordedVideo) return
@@ -329,15 +416,30 @@ export default function DiagnosticVideo() {
                     </div>
                   )}
 
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept="video/*"
+                    onChange={handleImportVideo}
+                    className="hidden"
+                  />
+
                   {/* Buttons */}
                   <div className="flex flex-wrap gap-3 justify-center">
                     {!recordedVideo ? (
                       <>
                         {!isRecording ? (
-                          <Button size="lg" onClick={startRecording}>
-                            <Camera className="h-5 w-5 mr-2" />
-                            Commencer l'enregistrement
-                          </Button>
+                          <>
+                            <Button size="lg" onClick={startRecording}>
+                              <Camera className="h-5 w-5 mr-2" />
+                              Filmer en direct
+                            </Button>
+                            <Button size="lg" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                              <Upload className="h-5 w-5 mr-2" />
+                              Importer une vidéo
+                            </Button>
+                          </>
                         ) : (
                           <Button size="lg" variant="destructive" onClick={stopRecording}>
                             <StopCircle className="h-5 w-5 mr-2" />
@@ -479,6 +581,28 @@ export default function DiagnosticVideo() {
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Nouveau diagnostic
                   </Button>
+                  {!saved ? (
+                    <Button variant="secondary" onClick={saveToHistory} disabled={isSaving}>
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Sauvegarde...
+                        </>
+                      ) : (
+                        <>
+                          <History className="h-4 w-4 mr-2" />
+                          Sauvegarder
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Link to="/app/history">
+                      <Button variant="secondary">
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                        Voir l'historique
+                      </Button>
+                    </Link>
+                  )}
                   <Link to="/app/garages">
                     <Button>
                       <MapPin className="h-4 w-4 mr-2" />
