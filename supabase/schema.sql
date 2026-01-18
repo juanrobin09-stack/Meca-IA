@@ -99,6 +99,46 @@ CREATE INDEX IF NOT EXISTS idx_diagnostics_user ON diagnostics(user_id);
 CREATE INDEX IF NOT EXISTS idx_diagnostics_created ON diagnostics(created_at DESC);
 
 -- ============================================
+-- TABLE: chat_conversations (conversations chat mécanicien)
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_conversations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
+
+  -- Métadonnées
+  title TEXT,
+  is_resolved BOOLEAN DEFAULT false,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_conversations_user ON chat_conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_conversations_updated ON chat_conversations(updated_at DESC);
+
+-- ============================================
+-- TABLE: chat_messages (messages du chat mécanicien)
+-- ============================================
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID NOT NULL REFERENCES chat_conversations(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  -- Message
+  sender TEXT NOT NULL CHECK (sender IN ('user', 'ai')),
+  content TEXT NOT NULL,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation ON chat_messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created ON chat_messages(created_at);
+
+-- ============================================
 -- TABLE: devis_analyses (analyses de devis)
 -- ============================================
 CREATE TABLE IF NOT EXISTS devis_analyses (
@@ -347,8 +387,9 @@ CREATE TRIGGER update_mechanic_chats_updated_at
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE diagnostics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_conversations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE devis_analyses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE mechanic_chats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pannes_predictions ENABLE ROW LEVEL SECURITY;
 
@@ -400,18 +441,31 @@ DROP POLICY IF EXISTS "Users can insert own devis" ON devis_analyses;
 CREATE POLICY "Users can insert own devis" ON devis_analyses
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
--- Policies pour mechanic_chats
-DROP POLICY IF EXISTS "Users can view own chats" ON mechanic_chats;
-CREATE POLICY "Users can view own chats" ON mechanic_chats
+-- Policies pour chat_conversations
+DROP POLICY IF EXISTS "Users can view own conversations" ON chat_conversations;
+CREATE POLICY "Users can view own conversations" ON chat_conversations
   FOR SELECT USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can insert own chats" ON mechanic_chats;
-CREATE POLICY "Users can insert own chats" ON mechanic_chats
+DROP POLICY IF EXISTS "Users can insert own conversations" ON chat_conversations;
+CREATE POLICY "Users can insert own conversations" ON chat_conversations
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "Users can update own chats" ON mechanic_chats;
-CREATE POLICY "Users can update own chats" ON mechanic_chats
+DROP POLICY IF EXISTS "Users can update own conversations" ON chat_conversations;
+CREATE POLICY "Users can update own conversations" ON chat_conversations
   FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own conversations" ON chat_conversations;
+CREATE POLICY "Users can delete own conversations" ON chat_conversations
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Policies pour chat_messages
+DROP POLICY IF EXISTS "Users can view own messages" ON chat_messages;
+CREATE POLICY "Users can view own messages" ON chat_messages
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own messages" ON chat_messages;
+CREATE POLICY "Users can insert own messages" ON chat_messages
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Policies pour payments (lecture seule)
 DROP POLICY IF EXISTS "Users can view own payments" ON payments;

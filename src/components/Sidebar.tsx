@@ -280,37 +280,39 @@ export default function Sidebar() {
 
               <Separator />
 
-              {/* Navigation - Scrollable */}
+              {/* Navigation - Scrollable (excluding items already in bottom nav) */}
               <nav className="flex-1 overflow-y-auto py-2">
-                {navItems.map((item) => {
-                  const isActive = location.pathname === item.href
-                  const isLocked = item.tier === 'premium' && !isPremium
+                {navItems
+                  .filter(item => !mobileNavItems.some(m => m.href === item.href))
+                  .map((item) => {
+                    const isActive = location.pathname === item.href
+                    const isLocked = item.tier === 'premium' && !isPremium
 
-                  return (
-                    <button
-                      key={item.href}
-                      onClick={() => handleNavClick(item.href, isLocked)}
-                      className={cn(
-                        'flex items-center gap-4 px-4 py-3.5 w-full text-left transition-colors min-h-[56px]',
-                        isActive
-                          ? 'bg-primary/10 text-primary border-r-4 border-primary'
-                          : 'text-foreground hover:bg-muted',
-                        isLocked && 'opacity-60'
-                      )}
-                    >
-                      <item.icon className={cn(
-                        'h-6 w-6 shrink-0',
-                        isActive && 'text-primary'
-                      )} />
-                      <span className="flex-1 font-medium">{item.label}</span>
-                      {item.tier === 'premium' && !isPremium && (
-                        <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] px-2">
-                          Premium
-                        </Badge>
-                      )}
-                    </button>
-                  )
-                })}
+                    return (
+                      <button
+                        key={item.href}
+                        onClick={() => handleNavClick(item.href, isLocked)}
+                        className={cn(
+                          'flex items-center gap-4 px-4 py-3.5 w-full text-left transition-colors min-h-[56px]',
+                          isActive
+                            ? 'bg-primary/10 text-primary border-r-4 border-primary'
+                            : 'text-foreground hover:bg-muted',
+                          isLocked && 'opacity-60'
+                        )}
+                      >
+                        <item.icon className={cn(
+                          'h-6 w-6 shrink-0',
+                          isActive && 'text-primary'
+                        )} />
+                        <span className="flex-1 font-medium">{item.label}</span>
+                        {item.tier === 'premium' && !isPremium && (
+                          <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] px-2">
+                            Premium
+                          </Badge>
+                        )}
+                      </button>
+                    )
+                  })}
               </nav>
 
               {/* Footer - Logout */}
