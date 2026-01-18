@@ -21,7 +21,7 @@ import { formatDate } from '@/lib/utils'
 
 export default function Account() {
   const navigate = useNavigate()
-  const { user, profile, deleteAccount, refreshProfile } = useAuth()
+  const { user, profile, deleteAccount, refreshProfile: _refreshProfile } = useAuth()
   const { isPremium, diagnosticsUsed, diagnosticsRemaining } = useSubscription(profile)
 
   const [loading, setLoading] = useState<string | null>(null)
