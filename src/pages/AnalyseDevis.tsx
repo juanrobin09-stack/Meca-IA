@@ -10,9 +10,24 @@ import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FileText, Upload, Loader2, CheckCircle2, Sparkles, Info } from 'lucide-react'
+import {
+  FileText,
+  Upload,
+  Loader2,
+  CheckCircle2,
+  Sparkles,
+  Info,
+  AlertTriangle,
+  TrendingDown,
+  MessageSquare,
+  Lightbulb,
+  Shield,
+  XCircle,
+  ChevronRight,
+  Euro,
+  Target
+} from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
-import ReactMarkdown from 'react-markdown'
 
 export default function AnalyseDevis() {
   const { user, profile } = useAuth()
@@ -149,7 +164,16 @@ export default function AnalyseDevis() {
             </p>
           </div>
 
-          {!analysis ? (
+          {/* Analysis Result - Premium Design */}
+          {analysis && (
+            <PremiumAnalysisResult
+              analysis={analysis}
+              imageUrl={selectedFile?.dataUrl}
+              onReset={reset}
+            />
+          )}
+
+          {!analysis && (
             <Card>
               <CardHeader>
                 <CardTitle>Upload ton devis</CardTitle>
@@ -214,79 +238,6 @@ export default function AnalyseDevis() {
                 </Button>
               </CardContent>
             </Card>
-          ) : (
-            <div className="space-y-4">
-              {/* Result */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                      Analyse terminée
-                    </CardTitle>
-                    <Button variant="outline" size="sm" onClick={reset}>
-                      Nouveau devis
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown
-                      components={{
-                        h2: ({ children }) => (
-                          <h2 className="text-lg font-semibold mt-6 mb-3 first:mt-0">{children}</h2>
-                        ),
-                        table: ({ children }) => (
-                          <div className="overflow-x-auto my-4">
-                            <table className="min-w-full border-collapse border border-border text-sm">
-                              {children}
-                            </table>
-                          </div>
-                        ),
-                        th: ({ children }) => (
-                          <th className="border border-border bg-muted px-3 py-2 text-left font-medium">
-                            {children}
-                          </th>
-                        ),
-                        td: ({ children }) => (
-                          <td className="border border-border px-3 py-2">{children}</td>
-                        ),
-                        p: ({ children }) => (
-                          <p className="my-2 text-sm">{children}</p>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="my-2 space-y-1 text-sm">{children}</ul>
-                        ),
-                        li: ({ children }) => (
-                          <li className="text-sm">{children}</li>
-                        ),
-                        blockquote: ({ children }) => (
-                          <blockquote className="border-l-4 border-primary pl-4 my-4 italic bg-muted/50 py-2">
-                            {children}
-                          </blockquote>
-                        ),
-                      }}
-                    >
-                      {analysis}
-                    </ReactMarkdown>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Preview of original */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Devis analysé</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <img
-                    src={selectedFile?.dataUrl}
-                    alt="Devis original"
-                    className="max-h-48 rounded-lg"
-                  />
-                </CardContent>
-              </Card>
-            </div>
           )}
 
           {/* Tips */}
@@ -317,5 +268,329 @@ export default function AnalyseDevis() {
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} mode="devis" />
     </div>
     </PageTransition>
+  )
+}
+
+// Premium Analysis Result Component
+interface PremiumAnalysisResultProps {
+  analysis: string
+  imageUrl?: string
+  onReset: () => void
+}
+
+function PremiumAnalysisResult({ analysis, imageUrl, onReset }: PremiumAnalysisResultProps) {
+  // Parse the analysis to extract sections
+  const parseAnalysis = (text: string) => {
+    const sections = {
+      verdict: '',
+      verdictType: 'neutral' as 'good' | 'warning' | 'bad' | 'neutral',
+      items: [] as Array<{ name: string; price: string; marketPrice: string; status: 'ok' | 'warning' | 'bad' }>,
+      savings: '',
+      script: '',
+      tips: [] as string[]
+    }
+
+    // Extract verdict
+    const verdictMatch = text.match(/(?:VERDICT|verdict)[^\n]*[:\s]*([^\n]+)/i)
+    if (verdictMatch) {
+      sections.verdict = verdictMatch[1].trim()
+      if (text.toLowerCase().includes('négociable') || text.toLowerCase().includes('élevé')) {
+        sections.verdictType = 'warning'
+      } else if (text.toLowerCase().includes('correct') || text.toLowerCase().includes('bon prix')) {
+        sections.verdictType = 'good'
+      } else if (text.toLowerCase().includes('excessif') || text.toLowerCase().includes('trop cher')) {
+        sections.verdictType = 'bad'
+      }
+    }
+
+    // Extract savings
+    const savingsMatch = text.match(/(?:économie|économies|potentiel)[^\n]*?(\d+[€\s]*(?:à|-)?\s*\d*\s*€?)/i)
+    if (savingsMatch) {
+      sections.savings = savingsMatch[1].trim()
+    }
+
+    // Extract script
+    const scriptMatch = text.match(/(?:script|négociation)[^\n]*[\n"«]([^"»]+)/i)
+    if (scriptMatch) {
+      sections.script = scriptMatch[1].trim().replace(/^["«\s]+|["»\s]+$/g, '')
+    }
+
+    // Extract tips/conseils
+    const tipsSection = text.match(/(?:conseils?|recommandations?)[^\n]*\n([\s\S]*?)(?:\n\n|$)/i)
+    if (tipsSection) {
+      const tipsText = tipsSection[1]
+      const tipLines = tipsText.split('\n').filter(line => line.trim().startsWith('-') || line.trim().startsWith('•'))
+      sections.tips = tipLines.map(t => t.replace(/^[-•]\s*/, '').trim()).filter(Boolean)
+    }
+
+    // If no tips found, try to extract from the whole text
+    if (sections.tips.length === 0) {
+      const lines = text.split('\n')
+      lines.forEach(line => {
+        if ((line.includes('Demande') || line.includes('Vérifie') || line.includes('Compare')) && line.length < 150) {
+          sections.tips.push(line.replace(/^[-•]\s*/, '').trim())
+        }
+      })
+    }
+
+    return sections
+  }
+
+  const parsed = parseAnalysis(analysis)
+
+  const getVerdictStyle = () => {
+    switch (parsed.verdictType) {
+      case 'good':
+        return {
+          bg: 'from-green-500 to-emerald-600',
+          icon: CheckCircle2,
+          iconColor: 'text-white',
+          label: 'Bon prix'
+        }
+      case 'warning':
+        return {
+          bg: 'from-amber-500 to-orange-600',
+          icon: AlertTriangle,
+          iconColor: 'text-white',
+          label: 'Négociable'
+        }
+      case 'bad':
+        return {
+          bg: 'from-red-500 to-rose-600',
+          icon: XCircle,
+          iconColor: 'text-white',
+          label: 'Trop cher'
+        }
+      default:
+        return {
+          bg: 'from-blue-500 to-indigo-600',
+          icon: Target,
+          iconColor: 'text-white',
+          label: 'Analysé'
+        }
+    }
+  }
+
+  const verdictStyle = getVerdictStyle()
+  const VerdictIcon = verdictStyle.icon
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4"
+    >
+      {/* Header with gradient */}
+      <div className="relative overflow-hidden rounded-2xl">
+        <div className={`absolute inset-0 bg-gradient-to-br ${verdictStyle.bg} opacity-90`} />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
+
+        <div className="relative p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <VerdictIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-white/80 text-sm font-medium">Analyse terminée</p>
+                <h2 className="text-xl font-bold">{verdictStyle.label}</h2>
+              </div>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onReset}
+              className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur"
+            >
+              Nouveau devis
+            </Button>
+          </div>
+
+          {parsed.verdict && (
+            <p className="text-white/90 text-sm leading-relaxed">
+              {parsed.verdict}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Savings Card */}
+      {parsed.savings && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          <Card className="border-2 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-950/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <TrendingDown className="h-7 w-7 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Économie potentielle</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{parsed.savings}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Detailed Analysis Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <FileText className="h-4 w-4 text-primary" />
+              </div>
+              Analyse détaillée
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <div className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                {analysis.split('\n').map((line, i) => {
+                  // Style different types of lines
+                  if (line.includes('✅') || line.includes('OK') || line.toLowerCase().includes('correct')) {
+                    return (
+                      <div key={i} className="flex items-start gap-2 py-1">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                        <span className="text-foreground">{line.replace(/[✅]/g, '').trim()}</span>
+                      </div>
+                    )
+                  }
+                  if (line.includes('⚠️') || line.includes('🔶') || line.toLowerCase().includes('élevé')) {
+                    return (
+                      <div key={i} className="flex items-start gap-2 py-1">
+                        <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                        <span className="text-foreground">{line.replace(/[⚠️🔶]/g, '').trim()}</span>
+                      </div>
+                    )
+                  }
+                  if (line.includes('❌') || line.includes('🚫') || line.toLowerCase().includes('excessif')) {
+                    return (
+                      <div key={i} className="flex items-start gap-2 py-1">
+                        <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                        <span className="text-foreground">{line.replace(/[❌🚫]/g, '').trim()}</span>
+                      </div>
+                    )
+                  }
+                  if (line.trim().startsWith('#') || line.trim().startsWith('##')) {
+                    return (
+                      <h3 key={i} className="font-semibold text-foreground mt-4 mb-2 flex items-center gap-2">
+                        {line.replace(/^#+\s*/, '')}
+                      </h3>
+                    )
+                  }
+                  if (line.trim()) {
+                    return <p key={i} className="my-1">{line}</p>
+                  }
+                  return <div key={i} className="h-2" />
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Negotiation Script */}
+      {parsed.script && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                </div>
+                Script de négociation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary/30 rounded-full" />
+                <blockquote className="pl-4 italic text-sm text-foreground/80 leading-relaxed">
+                  "{parsed.script}"
+                </blockquote>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Tips */}
+      {parsed.tips.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                </div>
+                Conseils
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2">
+                {parsed.tips.slice(0, 5).map((tip, i) => (
+                  <motion.li
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + i * 0.1 }}
+                    className="flex items-start gap-3 text-sm"
+                  >
+                    <ChevronRight className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <span>{tip}</span>
+                  </motion.li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Original Quote Preview */}
+      {imageUrl && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </div>
+                Devis original
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-lg overflow-hidden border">
+                <img
+                  src={imageUrl}
+                  alt="Devis original"
+                  className="w-full max-h-48 object-contain bg-muted/50"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+    </motion.div>
   )
 }
