@@ -380,12 +380,15 @@ export default function MechanicChat() {
 
                 {/* Vehicle selector - Full width on mobile */}
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
-                  <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+                  <Select
+                    value={selectedVehicleId || '_none'}
+                    onValueChange={(val) => setSelectedVehicleId(val === '_none' ? '' : val)}
+                  >
                     <SelectTrigger className="w-full sm:w-[200px] h-10">
                       <SelectValue placeholder="Sélectionner véhicule..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun véhicule</SelectItem>
+                      <SelectItem value="_none">Aucun véhicule</SelectItem>
                       {vehicles.map(v => (
                         <SelectItem key={v.id} value={v.id}>
                           <div className="flex items-center gap-2">
