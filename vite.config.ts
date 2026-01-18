@@ -11,17 +11,7 @@ export default defineConfig({
   },
   build: {
     // Minification optimale
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true, // Supprimer console.log en prod
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info'],
-      },
-      mangle: {
-        safari10: true,
-      },
-    },
+    minify: 'esbuild',
     // Code splitting optimisé
     rollupOptions: {
       output: {

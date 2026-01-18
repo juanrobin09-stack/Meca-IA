@@ -23,7 +23,8 @@ const Confidentialite = lazy(() => import('@/pages/Confidentialite'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 const Pricing = lazy(() => import('@/pages/Pricing'))
 const Vehicles = lazy(() => import('@/pages/Vehicles'))
-const Reminders = lazy(() => import('@/pages/Reminders'))
+const DiagnosticVideo = lazy(() => import('@/pages/DiagnosticVideo'))
+const PrevisionPannes = lazy(() => import('@/pages/PrevisionPannes'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -191,10 +192,18 @@ export default function App() {
               }
             />
             <Route
-              path="/app/rappels"
+              path="/app/diagnostic-video"
               element={
                 <ProtectedRoute>
-                  <Reminders />
+                  <DiagnosticVideo />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/prevision-pannes"
+              element={
+                <ProtectedRoute>
+                  <PrevisionPannes />
                 </ProtectedRoute>
               }
             />

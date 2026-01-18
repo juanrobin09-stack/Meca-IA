@@ -20,7 +20,8 @@ import {
   ShoppingCart,
   HelpCircle,
   Car,
-  Bell,
+  Video,
+  TrendingUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -35,10 +36,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/app', icon: Home, label: 'Accueil', shortLabel: 'Accueil', mobileShow: true },
-  { href: '/app/chat', icon: MessageSquarePlus, label: 'Nouveau diagnostic', shortLabel: 'Diagnostic', mobileShow: true },
-  { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis' },
+  { href: '/app/chat', icon: MessageSquarePlus, label: 'Diagnostic IA', shortLabel: 'Diagnostic', mobileShow: true },
+  { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis', tier: 'premium' },
+  { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic vidéo', shortLabel: 'Vidéo', tier: 'premium' },
+  { href: '/app/prevision-pannes', icon: TrendingUp, label: 'Prévision pannes', shortLabel: 'Prévision', tier: 'premium' },
   { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules', tier: 'premium' },
-  { href: '/app/rappels', icon: Bell, label: 'Rappels entretien', shortLabel: 'Rappels', tier: 'premium' },
   { href: '/app/garages', icon: MapPin, label: 'Trouver un garage', shortLabel: 'Garages' },
   { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce', shortLabel: 'Pièces', mobileShow: true },
   { href: '/app/history', icon: History, label: 'Historique', shortLabel: 'Historique', mobileShow: true },
