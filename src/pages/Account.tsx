@@ -16,17 +16,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Loader2, Sparkles, ExternalLink, Trash2, CheckCircle2 } from 'lucide-react'
+import { Loader2, Sparkles, ExternalLink, Trash2, CheckCircle2, RefreshCw } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default function Account() {
   const navigate = useNavigate()
-  const { user, profile, deleteAccount } = useAuth()
+  const { user, profile, deleteAccount, refreshProfile } = useAuth()
   const { isPremium, diagnosticsUsed, diagnosticsRemaining } = useSubscription(profile)
 
   const [loading, setLoading] = useState<string | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   async function handleUpgrade(priceId: string, isSubscription: boolean) {
     if (!user) return
@@ -67,6 +68,47 @@ export default function Account() {
     } catch (error) {
       console.error('Delete error:', error)
       alert('Erreur lors de la suppression. Réessaie.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  async function handleSyncSubscription() {
+    if (!user) return
+
+    setLoading('sync')
+    setSyncMessage(null)
+
+    try {
+      const response = await fetch('/.netlify/functions/sync-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          email: user.email,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        if (data.status === 'premium') {
+          setSyncMessage({ type: 'success', text: 'Abonnement Premium activé ! Rafraîchissement...' })
+          // Refresh the profile to get updated data
+          if (refreshProfile) {
+            await refreshProfile()
+          }
+          // Reload the page to reflect changes
+          setTimeout(() => window.location.reload(), 1500)
+        } else {
+          setSyncMessage({ type: 'error', text: data.message || 'Aucun abonnement actif trouvé' })
+        }
+      } else {
+        setSyncMessage({ type: 'error', text: data.error || 'Erreur de synchronisation' })
+      }
+    } catch (error) {
+      console.error('Sync error:', error)
+      setSyncMessage({ type: 'error', text: 'Erreur de connexion. Réessaie.' })
     } finally {
       setLoading(null)
     }
@@ -138,9 +180,36 @@ export default function Account() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">Gratuit</Badge>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Gratuit</Badge>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSyncSubscription}
+                      disabled={loading !== null}
+                      className="text-primary"
+                    >
+                      {loading === 'sync' ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      )}
+                      Vérifier mon abonnement
+                    </Button>
                   </div>
+
+                  {syncMessage && (
+                    <div className={`p-3 rounded-lg text-sm ${
+                      syncMessage.type === 'success'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
+                        : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                    }`}>
+                      {syncMessage.text}
+                    </div>
+                  )}
+
                   <p className="text-sm text-muted-foreground">
                     Tu as utilisé {diagnosticsUsed}/2 diagnostics ce mois-ci.
                     <br />
