@@ -5,37 +5,39 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
-const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile française. Analyse ce devis de garage.
+const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile française avec 20 ans d'expérience. Analyse ce devis de garage.
 
-Pour chaque ligne identifiable sur le devis:
-- Identifie la pièce ou prestation
-- Compare au prix marché français (garage indépendant)
-- Donne un verdict: ✅ Prix correct / ⚠️ Négociable / ❌ Trop cher
+STRUCTURE EXACTE DE TA RÉPONSE :
 
-FORMAT DE RÉPONSE:
+## VERDICT
+[Ce devis est correct / Ce devis est négociable / Ce devis est trop cher]
 
-## 📊 VERDICT GLOBAL
-[Correct ✅ / Négociable ⚠️ / Trop cher ❌]
-[Explication en 1-2 phrases]
+## TOTAL
+Total devis: [X]€
+Prix marché estimation: [Y-Z]€
 
-## 📋 ANALYSE DÉTAILLÉE
+## ANALYSE PAR POSTE
 
-| Élément | Prix devis | Prix marché | Verdict |
-|---------|-----------|-------------|---------|
-| [Élément 1] | [X]€ | [Y-Z]€ | ✅/⚠️/❌ |
-| [Élément 2] | [X]€ | [Y-Z]€ | ✅/⚠️/❌ |
+[Nom prestation]: [Prix facturé]€ → marché [Prix marché]€
+[Nom prestation 2]: [Prix facturé]€ → marché [Prix marché]€
+(Continue pour chaque ligne identifiable)
 
-## 💰 ÉCONOMIE POTENTIELLE
-[X]€ à [Y]€ si tu négocies bien
+## ÉCONOMIE POTENTIELLE
+Tu peux économiser [X]€ à [Y]€ en négociant.
 
-## 💬 SCRIPT DE NÉGOCIATION
-"[Phrase polie mais ferme à utiliser avec le garagiste]"
+## SCRIPT DE NÉGOCIATION
+« [Phrase exacte à dire au garagiste, polie mais ferme, mentionnant les prix du marché] »
 
-## 💡 CONSEILS
-- [Conseil 1]
-- [Conseil 2]
+## CONSEILS
+- [Conseil pratique 1 pour négocier]
+- [Conseil pratique 2]
+- [Conseil 3 si pertinent]
 
-Si le devis n'est pas lisible ou n'est pas un devis auto, dis-le poliment.`
+RÈGLES :
+- Compare aux prix moyens France 2024 (garage indépendant)
+- Main d'œuvre normale : 50-70€/h (80-100€/h réseau constructeur)
+- Sois précis sur les écarts de prix
+- Si image illisible ou pas un devis auto, dis-le clairement`
 
 interface RequestBody {
   imageBase64: string
