@@ -278,19 +278,38 @@ export default function Garages() {
   }, [distanceFilter, ratingFilter, openNowFilter])
 
   async function handleCall(garage: Garage) {
+    // Si on a déjà le numéro
     if (garage.phone) {
-      window.location.href = `tel:${garage.phone.replace(/\s/g, '')}`
-    } else {
-      try {
-        const details = await getGarageDetails(garage.id)
-        if (details.phone) {
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+      if (isMobile) {
+        window.location.href = `tel:${garage.phone.replace(/\s/g, '')}`
+      } else {
+        // Sur PC, afficher le numéro dans une alerte avec option de copier
+        const copied = await navigator.clipboard.writeText(garage.phone).then(() => true).catch(() => false)
+        alert(`📞 ${garage.phone}${copied ? '\n\n(Numéro copié dans le presse-papier)' : ''}`)
+      }
+      return
+    }
+
+    // Sinon, récupérer les détails
+    try {
+      const details = await getGarageDetails(garage.id)
+      if (details.phone) {
+        // Mettre à jour le garage avec le numéro pour la prochaine fois
+        setGarages(prev => prev.map(g => g.id === garage.id ? { ...g, phone: details.phone } : g))
+
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+        if (isMobile) {
           window.location.href = `tel:${details.phone.replace(/\s/g, '')}`
         } else {
-          alert('Numéro non disponible')
+          const copied = await navigator.clipboard.writeText(details.phone).then(() => true).catch(() => false)
+          alert(`📞 ${details.phone}${copied ? '\n\n(Numéro copié dans le presse-papier)' : ''}`)
         }
-      } catch {
-        alert('Numéro non disponible')
+      } else {
+        alert('Numéro non disponible pour ce garage')
       }
+    } catch {
+      alert('Impossible de récupérer le numéro')
     }
   }
 
