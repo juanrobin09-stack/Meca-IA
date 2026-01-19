@@ -335,7 +335,6 @@ export default function Chat() {
             <div className="flex-1 overflow-y-auto">
               <div className="max-w-3xl mx-auto px-4 py-6 pb-36 md:pb-32">
                 {messages.length === 0 && !streamingContent ? (
-                  /* Empty State - Clean */}
                   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
                     {/* Scanned Vehicle */}
                     {scannedVehicle && (
