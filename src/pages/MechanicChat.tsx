@@ -388,110 +388,100 @@ export default function MechanicChat() {
       <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
         <Sidebar />
 
-        <main className="md:pl-64 pb-20 md:pb-0">
-          <div className="h-screen md:h-[calc(100vh-0px)] flex flex-col">
-            {/* Premium Minimalist Header */}
-            <header className="relative border-b border-neutral-200/60 dark:border-neutral-800/60 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl">
-              <div className="px-4 sm:px-6 lg:px-8 py-4">
+        <main className="md:pl-64">
+          <div className="h-[100dvh] md:h-screen flex flex-col overflow-hidden">
+            {/* Mobile-Optimized Header */}
+            <header className="flex-shrink-0 border-b border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl safe-area-top">
+              <div className="px-3 sm:px-6 py-2.5 sm:py-4">
                 <div className="max-w-4xl mx-auto">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     {/* Left - Avatar & Info */}
-                    <div className="flex items-center gap-4">
-                      {/* Premium Avatar */}
-                      <div className="relative">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
-                          <span className="text-xl">🔧</span>
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                      {/* Avatar - smaller on mobile */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                          <span className="text-base sm:text-xl">🔧</span>
                         </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-950" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-950" />
                       </div>
 
-                      <div>
-                        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h1 className="text-sm sm:text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
                           Alex
                           {isPremium && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full">
-                              <Sparkles className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full flex-shrink-0">
+                              <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                               PRO
                             </span>
                           )}
                         </h1>
-                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                          Ton mécanicien personnel
+                        <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 truncate">
+                          En ligne
                         </p>
                       </div>
                     </div>
 
-                    {/* Right - Actions */}
-                    <div className="flex items-center gap-2">
+                    {/* Right - Counter & Actions */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                      {/* Counter Badge - Always visible */}
+                      <div className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs font-medium whitespace-nowrap ${
+                        !isPremium && messagesRemaining !== null && messagesRemaining === 0 && purchasedCredits === 0
+                          ? 'bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400'
+                          : !isPremium && messagesRemaining !== null && messagesRemaining <= 3 && purchasedCredits === 0
+                            ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'
+                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                      }`}>
+                        {isPremium ? '∞' : messagesRemaining !== null ? `${messagesRemaining}/10` : '...'}
+                        {purchasedCredits > 0 && <span className="text-emerald-600"> +{purchasedCredits}</span>}
+                      </div>
+
                       {/* History Toggle */}
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => setShowConversations(!showConversations)}
-                        className="h-9 px-3 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors duration-200"
+                        className="h-8 w-8 sm:h-9 sm:w-9 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
                       >
-                        <Clock className="h-4 w-4 mr-2" />
-                        <span className="hidden sm:inline">Historique</span>
+                        <Clock className="h-4 w-4" />
                       </Button>
 
                       {/* New Chat */}
                       <Button
                         onClick={createNewConversation}
-                        size="sm"
-                        className="h-9 px-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 rounded-xl font-medium transition-all duration-200"
+                        size="icon"
+                        className="h-8 w-8 sm:h-9 sm:w-9 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 rounded-lg"
                       >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Nouveau
+                        <Plus className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
-                  {/* Vehicle Selector & Credits - Subtle Row */}
-                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                  {/* Vehicle Selector - Collapsible on mobile */}
+                  <div className="mt-2 sm:mt-4 flex flex-wrap items-center gap-2 sm:gap-3">
                     <Select
                       value={selectedVehicleId || '_none'}
                       onValueChange={(val) => setSelectedVehicleId(val === '_none' ? '' : val)}
                     >
-                      <SelectTrigger className="w-auto min-w-[180px] h-9 text-sm border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors duration-200">
-                        <div className="flex items-center gap-2">
-                          <Car className="h-3.5 w-3.5 text-neutral-400" />
-                          <SelectValue placeholder="Mon véhicule" />
+                      <SelectTrigger className="w-auto min-w-0 max-w-[160px] sm:max-w-none sm:min-w-[180px] h-8 sm:h-9 text-xs sm:text-sm border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-lg sm:rounded-xl">
+                        <div className="flex items-center gap-1.5 sm:gap-2 truncate">
+                          <Car className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-neutral-400 flex-shrink-0" />
+                          <SelectValue placeholder="Véhicule" />
                         </div>
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl">
+                      <SelectContent className="rounded-xl max-w-[250px]">
                         <SelectItem value="_none">Aucun véhicule</SelectItem>
                         {vehicles.map(v => (
                           <SelectItem key={v.id} value={v.id}>
-                            {v.brand} {v.model} ({v.year})
+                            <span className="truncate">{v.brand} {v.model} ({v.year})</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
 
-                    {/* Credits Display - Minimal */}
-                    {!isPremium && messagesRemaining !== null && (
-                      <div className="flex items-center gap-2">
-                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg ${
-                          messagesRemaining === 0 && purchasedCredits === 0
-                            ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400'
-                            : messagesRemaining <= 3 && purchasedCredits === 0
-                              ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400'
-                              : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
-                        }`}>
-                          <MessageSquare className="h-3 w-3" />
-                          {messagesRemaining > 0 ? (
-                            <span>{messagesRemaining} restants</span>
-                          ) : purchasedCredits > 0 ? (
-                            <span>0 gratuit</span>
-                          ) : (
-                            <span>Limite atteinte</span>
-                          )}
-                        </div>
-                        {purchasedCredits > 0 && (
-                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-                            +{purchasedCredits} crédit{purchasedCredits > 1 ? 's' : ''}
-                          </div>
-                        )}
+                    {/* Warning si proche limite - mobile */}
+                    {!isPremium && messagesRemaining !== null && messagesRemaining <= 3 && messagesRemaining > 0 && (
+                      <div className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 font-medium">
+                        ⚠️ {messagesRemaining} msg restants
                       </div>
                     )}
                   </div>
@@ -500,80 +490,101 @@ export default function MechanicChat() {
             </header>
 
             {/* Main Content */}
-            <div className="flex-1 flex overflow-hidden">
-              {/* Conversations Sidebar - Premium Slide */}
+            <div className="flex-1 flex overflow-hidden relative">
+              {/* Conversations Sidebar - Full overlay on mobile, slide panel on desktop */}
               <AnimatePresence>
                 {showConversations && (
-                  <motion.div
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 320, opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    className="border-r border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 overflow-hidden"
-                  >
-                    <div className="p-4 h-full overflow-y-auto">
-                      <h2 className="text-sm font-semibold text-neutral-900 dark:text-white mb-4 px-2">
-                        Conversations
-                      </h2>
-
-                      {conversations.length === 0 ? (
-                        <div className="text-center py-16">
-                          <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
-                            <MessageSquare className="h-5 w-5 text-neutral-400" />
-                          </div>
-                          <p className="text-sm text-neutral-500">
-                            Aucune conversation
-                          </p>
+                  <>
+                    {/* Backdrop on mobile */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                      onClick={() => setShowConversations(false)}
+                    />
+                    <motion.div
+                      initial={{ x: '-100%', opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: '-100%', opacity: 0 }}
+                      transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                      className="fixed md:relative inset-y-0 left-0 w-[280px] md:w-[320px] z-50 md:z-auto border-r border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 overflow-hidden"
+                    >
+                      <div className="p-4 h-full overflow-y-auto scrollbar-hide">
+                        <div className="flex items-center justify-between mb-4 px-2">
+                          <h2 className="text-sm font-semibold text-neutral-900 dark:text-white">
+                            Conversations
+                          </h2>
+                          {/* Close button - mobile only */}
+                          <button
+                            onClick={() => setShowConversations(false)}
+                            className="md:hidden p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
-                      ) : (
-                        <motion.div
-                          variants={staggerContainer}
-                          initial="hidden"
-                          animate="visible"
-                          className="space-y-1"
-                        >
-                          {conversations.map(conv => (
-                            <motion.button
-                              key={conv.id}
-                              variants={fadeInUp}
-                              className={`w-full p-3 rounded-xl text-left transition-all duration-200 group ${
-                                currentConversation?.id === conv.id
-                                  ? 'bg-neutral-100 dark:bg-neutral-800'
-                                  : 'hover:bg-neutral-50 dark:hover:bg-neutral-900'
-                              }`}
-                              onClick={() => selectConversation(conv)}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
-                                    {conv.title || 'Nouvelle conversation'}
-                                  </p>
-                                  <p className="text-xs text-neutral-500 mt-0.5">
-                                    {formatDate(conv.updated_at)}
-                                  </p>
+
+                        {conversations.length === 0 ? (
+                          <div className="text-center py-16">
+                            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                              <MessageSquare className="h-5 w-5 text-neutral-400" />
+                            </div>
+                            <p className="text-sm text-neutral-500">
+                              Aucune conversation
+                            </p>
+                          </div>
+                        ) : (
+                          <motion.div
+                            variants={staggerContainer}
+                            initial="hidden"
+                            animate="visible"
+                            className="space-y-1"
+                          >
+                            {conversations.map(conv => (
+                              <motion.button
+                                key={conv.id}
+                                variants={fadeInUp}
+                                className={`w-full p-3 rounded-xl text-left transition-all duration-200 group ${
+                                  currentConversation?.id === conv.id
+                                    ? 'bg-neutral-100 dark:bg-neutral-800'
+                                    : 'hover:bg-neutral-50 dark:hover:bg-neutral-900 active:bg-neutral-100'
+                                }`}
+                                onClick={() => selectConversation(conv)}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
+                                      {conv.title || 'Nouvelle conversation'}
+                                    </p>
+                                    <p className="text-xs text-neutral-500 mt-0.5">
+                                      {formatDate(conv.updated_at)}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-600 rounded-lg"
+                                    onClick={(e) => deleteConversation(conv.id, e)}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
                                 </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-600 rounded-lg"
-                                  onClick={(e) => deleteConversation(conv.id, e)}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </motion.button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </div>
-                  </motion.div>
+                              </motion.button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </div>
+                    </motion.div>
+                  </>
                 )}
               </AnimatePresence>
 
               {/* Messages Area */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto">
-                  <div className="max-w-3xl mx-auto px-4 py-8">
+                <div className="flex-1 overflow-y-auto scrollbar-hide">
+                  <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-24 md:pb-8">
                     {messages.length === 0 && !loading ? (
                       /* Empty State - Premium Hero */
                       <motion.div
@@ -649,43 +660,43 @@ export default function MechanicChat() {
                         </motion.div>
                       </motion.div>
                     ) : (
-                      /* Messages List - Premium Bubbles */
-                      <div className="space-y-6">
+                      /* Messages List - Mobile Optimized */
+                      <div className="space-y-3 sm:space-y-6">
                         {messages.map((msg, index) => (
                           <motion.div
                             key={msg.id}
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.02 }}
-                            className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+                            transition={{ duration: 0.2, delay: Math.min(index * 0.02, 0.2) }}
+                            className={`flex gap-2 sm:gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
                           >
-                            {/* Avatar */}
-                            <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center ${
+                            {/* Avatar - smaller on mobile */}
+                            <div className={`shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center ${
                               msg.sender === 'ai'
                                 ? 'bg-gradient-to-br from-orange-400 to-red-500'
                                 : 'bg-neutral-200 dark:bg-neutral-800'
                             }`}>
                               {msg.sender === 'ai' ? (
-                                <Bot className="h-4 w-4 text-white" />
+                                <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
                               ) : (
-                                <User className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />
+                                <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-600 dark:text-neutral-400" />
                               )}
                             </div>
 
-                            {/* Message */}
-                            <div className={`max-w-[75%] ${msg.sender === 'user' ? 'text-right' : ''}`}>
-                              <div className={`inline-block px-4 py-3 rounded-2xl ${
+                            {/* Message Bubble - Mobile optimized */}
+                            <div className={`max-w-[85%] sm:max-w-[75%] min-w-0 ${msg.sender === 'user' ? 'text-right' : ''}`}>
+                              <div className={`inline-block px-3 sm:px-4 py-2 sm:py-3 rounded-2xl break-words ${
                                 msg.sender === 'user'
                                   ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
                                   : 'bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60'
                               }`}>
                                 {msg.sender === 'ai' ? (
-                                  <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0.5">
+                                  <div className="prose prose-sm max-w-none dark:prose-invert prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 break-words">
                                     <ReactMarkdown
                                       components={{
-                                        p: ({ children }) => <p className="text-neutral-700 dark:text-neutral-300">{children}</p>,
-                                        ul: ({ children }) => <ul className="list-disc list-inside">{children}</ul>,
-                                        li: ({ children }) => <li className="text-neutral-700 dark:text-neutral-300">{children}</li>,
+                                        p: ({ children }) => <p className="text-sm text-neutral-700 dark:text-neutral-300 break-words whitespace-pre-wrap">{children}</p>,
+                                        ul: ({ children }) => <ul className="list-disc list-inside text-sm">{children}</ul>,
+                                        li: ({ children }) => <li className="text-neutral-700 dark:text-neutral-300 break-words">{children}</li>,
                                         strong: ({ children }) => <strong className="font-semibold text-neutral-900 dark:text-white">{children}</strong>,
                                       }}
                                     >
@@ -693,10 +704,10 @@ export default function MechanicChat() {
                                     </ReactMarkdown>
                                   </div>
                                 ) : (
-                                  <p className="text-sm">{msg.content}</p>
+                                  <p className="text-sm break-words whitespace-pre-wrap">{msg.content}</p>
                                 )}
                               </div>
-                              <p className="text-[11px] text-neutral-400 mt-1.5 px-1">
+                              <p className="text-[10px] sm:text-[11px] text-neutral-400 mt-1 px-1">
                                 {formatTime(msg.created_at)}
                               </p>
                             </div>
@@ -743,18 +754,18 @@ export default function MechanicChat() {
                   </div>
                 )}
 
-                {/* Input Area - Premium Minimal */}
-                <div className="border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl p-4 pb-safe">
+                {/* Input Area - Mobile Optimized */}
+                <div className="flex-shrink-0 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl p-2.5 sm:p-4 safe-area-bottom">
                   <div className="max-w-3xl mx-auto">
-                    <div className="flex gap-3 items-end">
-                      <div className="flex-1 relative">
+                    <div className="flex gap-2 sm:gap-3 items-end">
+                      <div className="flex-1 min-w-0">
                         <Textarea
                           ref={textareaRef}
                           value={inputMessage}
                           onChange={(e) => setInputMessage(e.target.value)}
                           onKeyDown={handleKeyPress}
-                          placeholder="Écris à Alex..."
-                          className="resize-none min-h-[48px] max-h-[150px] text-sm border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 rounded-xl focus:border-neutral-300 dark:focus:border-neutral-700 focus:ring-0 transition-colors duration-200"
+                          placeholder="Message..."
+                          className="resize-none min-h-[44px] sm:min-h-[48px] max-h-[100px] sm:max-h-[150px] text-base sm:text-sm border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 rounded-xl focus:border-neutral-300 dark:focus:border-neutral-700 focus:ring-0 transition-colors duration-200 py-2.5 px-3"
                           rows={1}
                           maxLength={1000}
                           disabled={isTyping}
@@ -764,23 +775,23 @@ export default function MechanicChat() {
                         onClick={() => sendMessage()}
                         disabled={!inputMessage.trim() || isTyping}
                         size="icon"
-                        className="h-12 w-12 shrink-0 rounded-xl bg-neutral-900 dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-100 text-white dark:text-neutral-900 disabled:opacity-40 transition-all duration-200"
+                        className="h-11 w-11 sm:h-12 sm:w-12 shrink-0 rounded-xl bg-neutral-900 dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-100 text-white dark:text-neutral-900 disabled:opacity-40 transition-all duration-200 active:scale-95"
                       >
                         {isTyping ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
+                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
                         ) : (
-                          <Send className="h-5 w-5" />
+                          <Send className="h-4 w-4 sm:h-5 sm:w-5" />
                         )}
                       </Button>
                     </div>
 
-                    {/* Quick Actions Pills - When messages exist */}
+                    {/* Quick Actions Pills - Hidden on very small screens when messages exist */}
                     {messages.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
+                      <div className="hidden sm:flex flex-wrap gap-2 mt-3">
                         {QUICK_ACTIONS.slice(0, 3).map((action, i) => (
                           <button
                             key={i}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors duration-200 disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors duration-200 disabled:opacity-50 active:scale-95"
                             onClick={() => sendMessage(action.message)}
                             disabled={isTyping}
                           >

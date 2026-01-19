@@ -361,67 +361,62 @@ export default function DiagnosticVideo() {
       <div className="min-h-screen bg-muted/40">
         <Sidebar />
 
-        <main className="md:pl-64 pb-20 md:pb-0">
-          <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <main className="md:pl-64 pb-24 md:pb-0">
+          <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl">
             <motion.div
-              className="mb-8"
+              className="mb-4 sm:mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <Video className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl md:text-3xl font-bold">Diagnostic Vidéo IA Pro</h1>
-                <Badge variant="premium">✨ Premium</Badge>
+              <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+                <Video className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Diagnostic Vidéo IA</h1>
+                <Badge variant="premium" className="text-[10px] sm:text-xs">✨ Premium</Badge>
               </div>
-              <p className="text-muted-foreground">
-                Analyse experte de ta vidéo • Vision IA • Détection anomalies • Cohérence garantie
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Vision IA • Détection anomalies • Résultat garanti
               </p>
             </motion.div>
 
-            {/* Disclaimer */}
-            <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
-              <p>
-                L'analyse vidéo IA est basée sur les preuves visuelles détectées.
-                Pour un diagnostic complet, une inspection physique par un mécanicien certifié reste recommandée.
+            {/* Disclaimer - Compact on mobile */}
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2 sm:gap-3">
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5" />
+              <p className="break-words">
+                Analyse IA à titre indicatif. Consultez un mécanicien pour confirmation.
               </p>
             </div>
 
             {!result ? (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Upload/Record Card */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileVideo className="h-5 w-5" />
+                  <CardHeader className="pb-2 sm:pb-4">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <FileVideo className="h-4 w-4 sm:h-5 sm:w-5" />
                       Vidéo du problème
                     </CardTitle>
-                    <CardDescription>
-                      Filme ou importe une vidéo de 10 à 30 secondes
+                    <CardDescription className="text-xs sm:text-sm">
+                      Filme ou importe une vidéo (10-30 sec)
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    {/* Instructions */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center text-sm">
-                      <div className="p-3 bg-muted rounded-xl">
-                        <div className="text-2xl mb-1">🎥</div>
-                        <div className="font-medium">10-30 sec</div>
-                        <div className="text-muted-foreground text-xs">Durée idéale</div>
+                  <CardContent className="space-y-4 sm:space-y-6">
+                    {/* Instructions - Compact 2x2 grid on mobile */}
+                    <div className="grid grid-cols-4 gap-2 sm:gap-3 text-center text-xs sm:text-sm">
+                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                        <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">🎥</div>
+                        <div className="font-medium text-[10px] sm:text-sm">10-30s</div>
                       </div>
-                      <div className="p-3 bg-muted rounded-xl">
-                        <div className="text-2xl mb-1">📍</div>
-                        <div className="font-medium">Zone concernée</div>
-                        <div className="text-muted-foreground text-xs">20-50cm</div>
+                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                        <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">📍</div>
+                        <div className="font-medium text-[10px] sm:text-sm">20-50cm</div>
                       </div>
-                      <div className="p-3 bg-muted rounded-xl">
-                        <div className="text-2xl mb-1">💡</div>
-                        <div className="font-medium">Bonne lumière</div>
-                        <div className="text-muted-foreground text-xs">Détails visibles</div>
+                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                        <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">💡</div>
+                        <div className="font-medium text-[10px] sm:text-sm">Lumière</div>
                       </div>
-                      <div className="p-3 bg-muted rounded-xl">
-                        <div className="text-2xl mb-1">📱</div>
-                        <div className="font-medium">Stabilité</div>
-                        <div className="text-muted-foreground text-xs">Tenez fermement</div>
+                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                        <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">📱</div>
+                        <div className="font-medium text-[10px] sm:text-sm">Stable</div>
                       </div>
                     </div>
 
@@ -464,9 +459,9 @@ export default function DiagnosticVideo() {
 
                     {/* Error */}
                     {error && (
-                      <div className="p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3">
-                        <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
-                        <p className="text-red-700 dark:text-red-300">{error}</p>
+                      <div className="p-3 sm:p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-2 sm:gap-3">
+                        <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700 dark:text-red-300 break-words">{error}</p>
                       </div>
                     )}
 
@@ -479,30 +474,30 @@ export default function DiagnosticVideo() {
                       className="hidden"
                     />
 
-                    {/* Buttons */}
-                    <div className="flex flex-wrap gap-3 justify-center">
+                    {/* Buttons - Stack on mobile */}
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-center">
                       {!recordedVideo ? (
                         <>
                           {!isRecording ? (
                             <>
-                              <Button size="lg" onClick={startRecording}>
-                                <Camera className="h-5 w-5 mr-2" />
-                                Filmer en direct
+                              <Button size="lg" onClick={startRecording} className="w-full sm:w-auto text-sm sm:text-base py-3">
+                                <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                                Filmer
                               </Button>
-                              <Button size="lg" variant="outline" onClick={() => fileInputRef.current?.click()}>
-                                <Upload className="h-5 w-5 mr-2" />
-                                Importer une vidéo
+                              <Button size="lg" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto text-sm sm:text-base py-3">
+                                <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                                Importer
                               </Button>
                             </>
                           ) : (
-                            <Button size="lg" variant="destructive" onClick={stopRecording}>
-                              <StopCircle className="h-5 w-5 mr-2" />
-                              Arrêter ({30 - recordingTime}s restantes)
+                            <Button size="lg" variant="destructive" onClick={stopRecording} className="w-full sm:w-auto text-sm sm:text-base py-3">
+                              <StopCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                              Arrêter ({30 - recordingTime}s)
                             </Button>
                           )}
                         </>
                       ) : (
-                        <Button variant="outline" onClick={resetRecording}>
+                        <Button variant="outline" onClick={resetRecording} className="w-full sm:w-auto">
                           <RotateCcw className="h-4 w-4 mr-2" />
                           Changer de vidéo
                         </Button>
@@ -518,24 +513,24 @@ export default function DiagnosticVideo() {
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <Card>
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                          <Lightbulb className="h-5 w-5" />
+                      <CardHeader className="pb-2 sm:pb-4">
+                        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                          <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5" />
                           Description (optionnel)
                         </CardTitle>
-                        <CardDescription>
-                          Décris le problème pour aider l'IA à mieux cibler son analyse
+                        <CardDescription className="text-xs sm:text-sm">
+                          Décris le problème pour une meilleure analyse
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <Textarea
                           value={userDescription}
                           onChange={(e) => setUserDescription(e.target.value)}
-                          placeholder="Ex: Grincement au freinage depuis 2 semaines, surtout à froid. Le bruit vient de la roue avant gauche..."
-                          className="h-24 resize-none"
+                          placeholder="Ex: Grincement au freinage depuis 2 semaines..."
+                          className="h-20 sm:h-24 resize-none text-base sm:text-sm"
                           maxLength={500}
                         />
-                        <div className="text-xs text-muted-foreground text-right mt-1">
+                        <div className="text-[10px] sm:text-xs text-muted-foreground text-right mt-1">
                           {userDescription.length}/500
                         </div>
                       </CardContent>
@@ -544,58 +539,58 @@ export default function DiagnosticVideo() {
                     {/* Analyze Button */}
                     <Button
                       size="lg"
-                      className="w-full mt-6 h-14 text-lg bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700"
+                      className="w-full mt-4 sm:mt-6 h-12 sm:h-14 text-base sm:text-lg bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 active:scale-98"
                       onClick={analyzeVideo}
                       disabled={isAnalyzing}
                     >
                       {isAnalyzing ? (
-                        <div className="flex items-center gap-3">
-                          <Loader2 className="h-6 w-6 animate-spin" />
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
                           <div className="text-left">
-                            <div>Analyse en cours...</div>
+                            <div className="text-sm sm:text-base">Analyse...</div>
                             {analysisStep && (
-                              <div className="text-sm opacity-75">{analysisStep}</div>
+                              <div className="text-xs sm:text-sm opacity-75 truncate max-w-[200px]">{analysisStep}</div>
                             )}
                           </div>
                         </div>
                       ) : (
                         <>
-                          <Sparkles className="h-6 w-6 mr-2" />
-                          Analyser la vidéo avec l'IA
+                          <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 mr-2" />
+                          Analyser avec l'IA
                         </>
                       )}
                     </Button>
                   </motion.div>
                 )}
 
-                {/* Tips */}
+                {/* Tips - Collapsed on mobile */}
                 <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-                  <CardHeader>
-                    <CardTitle className="text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                      💡 Conseils pour une bonne vidéo
+                  <CardHeader className="pb-2 sm:pb-4">
+                    <CardTitle className="text-blue-900 dark:text-blue-100 flex items-center gap-2 text-sm sm:text-base">
+                      💡 Conseils
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+                  <CardContent className="pt-0">
+                    <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-blue-800 dark:text-blue-200">
                       <li className="flex items-start gap-2">
                         <span className="text-blue-600">•</span>
-                        <span>Filme la pièce ou zone concernée de près (20-50cm)</span>
+                        <span>Filme de près (20-50cm)</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-blue-600">•</span>
-                        <span>Assure-toi d'avoir un bon éclairage pour voir les détails</span>
+                        <span>Bonne lumière = meilleure analyse</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-blue-600">•</span>
-                        <span>Filme pendant que le problème se produit (bruit, fuite...)</span>
+                        <span>Capture le problème en action</span>
                       </li>
-                      <li className="flex items-start gap-2">
+                      <li className="hidden sm:flex items-start gap-2">
                         <span className="text-blue-600">•</span>
-                        <span>Montre différents angles si possible (avant, côté, dessous)</span>
+                        <span>Montre différents angles</span>
                       </li>
-                      <li className="flex items-start gap-2">
+                      <li className="hidden sm:flex items-start gap-2">
                         <span className="text-blue-600">•</span>
-                        <span>Active le son pour capturer les bruits anormaux</span>
+                        <span>Active le son pour les bruits</span>
                       </li>
                     </ul>
                   </CardContent>

@@ -285,9 +285,6 @@ export default function Pricing() {
               <span className="flex items-center gap-1.5 bg-muted/50 px-3 py-2 rounded-full">
                 🔒 Données chiffrées
               </span>
-              <span className="flex items-center gap-1.5 bg-muted/50 px-3 py-2 rounded-full">
-                💯 Satisfait 14 jours
-              </span>
             </div>
             <p className="text-sm text-muted-foreground mb-3">
               Une question ?{' '}
