@@ -101,27 +101,9 @@ export async function compressImage(file: File): Promise<CompressedImage> {
 
         img.onerror = (e) => {
           console.error('❌ Erreur chargement image:', e)
-
-          // Fallback: si l'image ne charge pas, essayer de compresser via canvas quand même
-          // Créer une image vide et utiliser le dataUrl original mais compressé
-          console.log('🔄 Fallback: tentative de compression du fichier original')
-
-          const base64Original = dataUrl.split(',')[1]
-
-          // Vérifier si le fichier original n'est pas trop gros
-          if (base64Original && base64Original.length > 100) {
-            if (base64Original.length > 3000000) { // > 3MB
-              reject(new Error('Image trop volumineuse et format non supporté. Utilise une photo JPG ou PNG.'))
-            } else {
-              resolve({
-                base64: base64Original,
-                dataUrl,
-                mimeType: file.type || 'image/jpeg',
-              })
-            }
-          } else {
-            reject(new Error('Format d\'image non supporté. Essaie avec une photo JPG ou PNG.'))
-          }
+          // Sur mobile (surtout iOS avec HEIC), l'image peut ne pas charger
+          // On rejette avec un message clair pour que l'utilisateur prenne une photo JPG
+          reject(new Error('Format non supporté sur ce téléphone. Prends une nouvelle photo directement avec l\'appareil photo.'))
         }
 
         // Charger l'image depuis le dataUrl

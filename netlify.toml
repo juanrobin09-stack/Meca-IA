@@ -8,13 +8,7 @@
   port = 5173
   functionsPort = 8888
 
-# Functions API - must be before catch-all
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-# SPA catch-all
+# SPA catch-all - Netlify handles /.netlify/functions/* automatically before this
 [[redirects]]
   from = "/*"
   to = "/index.html"

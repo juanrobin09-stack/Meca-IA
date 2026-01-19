@@ -104,6 +104,14 @@ export default function AnalyseDevis() {
       setAnalysisStep('Préparation de l\'image...')
       const compressed = await compressImage(file)
       console.log('✅ Image prête, taille base64:', compressed.base64.length)
+
+      // Vérifier que l'image n'est pas trop grosse pour Netlify (max ~4MB base64)
+      if (compressed.base64.length > 4000000) {
+        setError('Image trop volumineuse. Utilise le bouton "Prendre photo" pour capturer une nouvelle image.')
+        setAnalysisStep('')
+        return
+      }
+
       setSelectedFile({
         dataUrl: compressed.dataUrl,
         base64: compressed.base64,
@@ -111,7 +119,13 @@ export default function AnalyseDevis() {
       setAnalysisStep('')
     } catch (err: any) {
       console.error('❌ Erreur compression:', err)
-      setError(err.message || "Erreur lors du traitement de l'image. Essaie une autre photo.")
+      // Message d'erreur plus clair pour mobile
+      const errorMsg = err.message || "Erreur lors du traitement de l'image."
+      if (errorMsg.includes('Format') || errorMsg.includes('supporté')) {
+        setError('📸 Cette image ne peut pas être lue. Utilise le bouton "Prendre photo" pour capturer directement ton devis.')
+      } else {
+        setError(errorMsg)
+      }
       setAnalysisStep('')
     }
   }
