@@ -22,9 +22,12 @@ import {
   Lightbulb,
   Volume2,
   Euro,
-  Disc,
+  Wrench,
   Trash2,
-  Clock
+  Clock,
+  Sparkles,
+  Zap,
+  History
 } from 'lucide-react'
 
 interface Vehicle {
@@ -52,10 +55,10 @@ interface Message {
 }
 
 const QUICK_ACTIONS = [
-  { icon: Lightbulb, label: 'Voyant moteur', message: 'Pourquoi mon voyant moteur est allumé ?' },
-  { icon: Volume2, label: 'Bruit bizarre', message: 'Mon véhicule fait un bruit bizarre au démarrage' },
-  { icon: Euro, label: 'Prix vidange', message: 'Combien coûte une vidange pour ma voiture ?' },
-  { icon: Disc, label: 'Freins', message: 'Quand dois-je changer mes plaquettes de frein ?' },
+  { icon: Lightbulb, label: 'Voyant moteur', message: 'Pourquoi mon voyant moteur est allumé ?', color: 'from-amber-500 to-orange-500' },
+  { icon: Volume2, label: 'Bruit bizarre', message: 'Mon véhicule fait un bruit bizarre au démarrage', color: 'from-blue-500 to-cyan-500' },
+  { icon: Euro, label: 'Prix vidange', message: 'Combien coûte une vidange pour ma voiture ?', color: 'from-green-500 to-emerald-500' },
+  { icon: Wrench, label: 'Freins', message: 'Quand dois-je changer mes plaquettes de frein ?', color: 'from-violet-500 to-purple-500' },
 ]
 
 export default function MechanicChat() {
@@ -373,121 +376,136 @@ export default function MechanicChat() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-muted/40">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-violet-50/20 dark:from-gray-950 dark:via-blue-950/20 dark:to-violet-950/10">
         <Sidebar />
 
         <main className="md:pl-64 pb-20 md:pb-0">
           <div className="h-screen md:h-[calc(100vh-0px)] flex flex-col">
-            {/* Header - Modern Premium Design */}
-            <div className="border-b bg-gradient-to-r from-background via-background to-primary/5 p-3 sm:p-4">
-              <div className="container mx-auto max-w-4xl">
-                {/* Mobile: Stacked layout */}
-                <div className="flex items-center justify-between gap-2 sm:gap-4">
-                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                    {/* Premium Robot Avatar */}
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-primary to-violet-600 rounded-xl sm:rounded-2xl blur-md opacity-60 animate-pulse" />
-                      <div className="relative w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shadow-lg">
-                        <div className="text-2xl sm:text-3xl">🤖</div>
-                        {/* Status indicator */}
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-background">
-                          <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-75" />
+            {/* Header - Ultra Modern Glass Design */}
+            <div className="relative overflow-hidden">
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-indigo-600/5 to-violet-600/5" />
+              <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-500/10 to-violet-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+              <div className="relative border-b backdrop-blur-xl bg-background/80 p-4 sm:p-5">
+                <div className="container mx-auto max-w-4xl">
+                  <div className="flex items-center justify-between gap-4">
+                    {/* Bot Avatar & Info */}
+                    <div className="flex items-center gap-4">
+                      {/* Animated Avatar */}
+                      <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity animate-pulse" />
+                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-xl">
+                          <span className="text-3xl sm:text-4xl drop-shadow-lg">🤖</span>
+                        </div>
+                        {/* Online indicator */}
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-3 border-background shadow-lg">
+                          <span className="absolute inset-0.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
                         </div>
                       </div>
-                    </div>
 
-                    <div className="min-w-0">
-                      <h1 className="font-bold text-lg sm:text-xl flex items-center gap-2">
-                        <span className="bg-gradient-to-r from-primary via-blue-600 to-violet-600 bg-clip-text text-transparent">
-                          MECAI
-                        </span>
-                        {isPremium && (
-                          <Badge variant="premium" className="text-[10px] sm:text-xs shrink-0">
-                            ✨ Premium
-                          </Badge>
-                        )}
-                      </h1>
-                      <div className="flex items-center gap-1.5 text-xs sm:text-sm">
-                        <span className="text-green-600 dark:text-green-400 font-medium">En ligne</span>
-                        <span className="text-muted-foreground">•</span>
-                        <span className="text-muted-foreground">Répond instantanément</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    {/* Conversations toggle */}
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowConversations(!showConversations)}
-                      className="h-9 w-9 sm:h-10 sm:w-10"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-
-                    {/* New chat button */}
-                    <Button onClick={createNewConversation} size="sm" className="h-9 sm:h-10 px-2.5 sm:px-4">
-                      <Plus className="h-4 w-4 sm:mr-2" />
-                      <span className="hidden sm:inline">Nouveau</span>
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Vehicle selector - Full width on mobile */}
-                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
-                  <Select
-                    value={selectedVehicleId || '_none'}
-                    onValueChange={(val) => setSelectedVehicleId(val === '_none' ? '' : val)}
-                  >
-                    <SelectTrigger className="w-full sm:w-[200px] h-10">
-                      <SelectValue placeholder="Sélectionner véhicule..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Aucun véhicule</SelectItem>
-                      {vehicles.map(v => (
-                        <SelectItem key={v.id} value={v.id}>
-                          <div className="flex items-center gap-2">
-                            <Car className="h-4 w-4" />
-                            {v.brand} {v.model} ({v.year})
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  {/* Messages counter */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {isPremium ? (
-                      <Badge variant="premium">
-                        <MessageSquare className="h-3 w-3 mr-1" />
-                        ✨ Illimité
-                      </Badge>
-                    ) : messagesRemaining !== null ? (
-                      <>
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium ${
-                          messagesRemaining === 0 && purchasedCredits === 0
-                            ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400'
-                            : messagesRemaining <= 3 && purchasedCredits === 0
-                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400'
-                              : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
-                        }`}>
-                          <MessageSquare className="h-3.5 w-3.5" />
-                          {messagesRemaining > 0 ? (
-                            <span>{messagesRemaining}/{FREE_MESSAGES_LIMIT} gratuits</span>
-                          ) : purchasedCredits > 0 ? (
-                            <span>0 gratuit restant</span>
-                          ) : (
-                            <span>Limite atteinte</span>
+                      <div>
+                        <h1 className="font-bold text-xl sm:text-2xl flex items-center gap-2 flex-wrap">
+                          <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                            MECAI
+                          </span>
+                          {isPremium && (
+                            <Badge variant="premium" className="text-xs">
+                              ✨ Premium
+                            </Badge>
                           )}
+                        </h1>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-emerald-600 dark:text-emerald-400 font-medium">En ligne</span>
+                          </span>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Zap className="h-3.5 w-3.5" />
+                            Répond instantanément
+                          </span>
                         </div>
-                        {purchasedCredits > 0 && (
-                          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-                            <span>+{purchasedCredits} crédit{purchasedCredits > 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowConversations(!showConversations)}
+                        className="h-10 w-10 rounded-xl border-2 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                      >
+                        <History className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        onClick={createNewConversation}
+                        className="h-10 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40"
+                      >
+                        <Plus className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline font-medium">Nouveau</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Vehicle & Credits Row */}
+                  <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <Select
+                      value={selectedVehicleId || '_none'}
+                      onValueChange={(val) => setSelectedVehicleId(val === '_none' ? '' : val)}
+                    >
+                      <SelectTrigger className="w-full sm:w-[220px] h-11 rounded-xl border-2 hover:border-primary/50 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <Car className="h-4 w-4 text-muted-foreground" />
+                          <SelectValue placeholder="Sélectionner véhicule..." />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Aucun véhicule</SelectItem>
+                        {vehicles.map(v => (
+                          <SelectItem key={v.id} value={v.id}>
+                            {v.brand} {v.model} ({v.year})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Credits Badge */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {isPremium ? (
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 border border-indigo-500/20">
+                          <Sparkles className="h-4 w-4 text-indigo-500" />
+                          <span className="text-sm font-semibold bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+                            Illimité
+                          </span>
+                        </div>
+                      ) : messagesRemaining !== null ? (
+                        <>
+                          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${
+                            messagesRemaining === 0 && purchasedCredits === 0
+                              ? 'bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-400 border border-red-200 dark:border-red-800'
+                              : messagesRemaining <= 3 && purchasedCredits === 0
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200 dark:border-amber-800'
+                                : 'bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
+                          }`}>
+                            <MessageSquare className="h-4 w-4" />
+                            {messagesRemaining > 0 ? (
+                              <span>{messagesRemaining}/{FREE_MESSAGES_LIMIT} gratuits</span>
+                            ) : purchasedCredits > 0 ? (
+                              <span>0 gratuit</span>
+                            ) : (
+                              <span>Limite atteinte</span>
+                            )}
                           </div>
-                        )}
-                      </>
-                    ) : null}
+                          {purchasedCredits > 0 && (
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                              <span>+{purchasedCredits} crédit{purchasedCredits > 1 ? 's' : ''}</span>
+                            </div>
+                          )}
+                        </>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -500,20 +518,25 @@ export default function MechanicChat() {
                 {showConversations && (
                   <motion.div
                     initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: 280, opacity: 1 }}
+                    animate={{ width: 300, opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
-                    className="border-r bg-background overflow-hidden"
+                    className="border-r bg-background/80 backdrop-blur-xl overflow-hidden"
                   >
                     <div className="p-4 h-full overflow-y-auto">
-                      <h2 className="font-semibold mb-4 flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
+                      <h2 className="font-semibold mb-4 flex items-center gap-2 text-lg">
+                        <Clock className="h-5 w-5 text-indigo-500" />
                         Historique
                       </h2>
 
                       {conversations.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">
-                          Aucune conversation
-                        </p>
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                            <MessageSquare className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Aucune conversation
+                          </p>
+                        </div>
                       ) : (
                         <div className="space-y-2">
                           {conversations.map(conv => (
@@ -521,10 +544,11 @@ export default function MechanicChat() {
                               key={conv.id}
                               initial={{ opacity: 0, x: -20 }}
                               animate={{ opacity: 1, x: 0 }}
-                              className={`p-3 rounded-lg cursor-pointer transition-colors group ${
+                              whileHover={{ scale: 1.02 }}
+                              className={`p-4 rounded-xl cursor-pointer transition-all group ${
                                 currentConversation?.id === conv.id
-                                  ? 'bg-primary/10 border border-primary'
-                                  : 'bg-muted hover:bg-muted/80'
+                                  ? 'bg-gradient-to-r from-blue-500/10 to-violet-500/10 border-2 border-indigo-500/30 shadow-sm'
+                                  : 'bg-muted/50 hover:bg-muted border-2 border-transparent'
                               }`}
                               onClick={() => selectConversation(conv)}
                             >
@@ -533,17 +557,17 @@ export default function MechanicChat() {
                                   <p className="font-medium text-sm truncate">
                                     {conv.title || 'Nouvelle conversation'}
                                   </p>
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-xs text-muted-foreground mt-1">
                                     {formatDate(conv.updated_at)}
                                   </p>
                                 </div>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950"
                                   onClick={(e) => deleteConversation(conv.id, e)}
                                 >
-                                  <Trash2 className="h-3 w-3 text-muted-foreground hover:text-red-500" />
+                                  <Trash2 className="h-3.5 w-3.5" />
                                 </Button>
                               </div>
                             </motion.div>
@@ -557,78 +581,103 @@ export default function MechanicChat() {
 
               {/* Messages area */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-4">
-                  <div className="container mx-auto max-w-3xl space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                  <div className="container mx-auto max-w-3xl space-y-6">
                     {messages.length === 0 && !loading ? (
-                      <div className="text-center py-8 sm:py-12 px-4">
-                        {/* Premium Robot Animation */}
-                        <div className="relative inline-block mb-6">
-                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-primary to-violet-600 rounded-3xl blur-xl opacity-40 animate-pulse scale-110" />
-                          <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shadow-2xl mx-auto">
-                            <span className="text-4xl sm:text-5xl">🤖</span>
+                      <div className="text-center py-8 sm:py-16 px-4">
+                        {/* Hero Bot Avatar */}
+                        <motion.div
+                          className="relative inline-block mb-8"
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: 'spring', duration: 0.8 }}
+                        >
+                          <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-[32px] blur-2xl opacity-30 animate-pulse" />
+                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-2xl mx-auto">
+                            <span className="text-6xl sm:text-7xl drop-shadow-lg">🤖</span>
                           </div>
-                          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-3 border-background flex items-center justify-center">
-                            <span className="absolute inset-0 rounded-full bg-green-400 animate-ping opacity-75" />
+                          <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-background shadow-lg flex items-center justify-center">
+                            <span className="absolute inset-1 rounded-full bg-emerald-400 animate-ping opacity-75" />
+                            <span className="relative w-3 h-3 rounded-full bg-emerald-300" />
                           </div>
-                        </div>
+                        </motion.div>
 
-                        <h2 className="text-xl sm:text-2xl font-bold mb-2 bg-gradient-to-r from-primary via-blue-600 to-violet-600 bg-clip-text text-transparent">
-                          Salut, je suis MECAI !
-                        </h2>
-                        <p className="text-sm sm:text-base text-muted-foreground mb-8 max-w-sm mx-auto">
-                          Ton assistant mécanique IA disponible 24h/24. Pose-moi n'importe quelle question sur ta voiture !
-                        </p>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+                            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                              Salut, je suis MECAI !
+                            </span>
+                          </h2>
+                          <p className="text-base sm:text-lg text-muted-foreground mb-10 max-w-md mx-auto">
+                            Ton assistant mécanique IA disponible 24h/24.
+                            <br />
+                            <span className="text-sm">Pose-moi n'importe quelle question sur ta voiture !</span>
+                          </p>
+                        </motion.div>
 
-                        {/* Quick actions - 2x2 grid with modern style */}
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-sm sm:max-w-md mx-auto">
+                        {/* Quick actions - Modern Cards */}
+                        <motion.div
+                          className="grid grid-cols-2 gap-4 max-w-lg mx-auto"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                        >
                           {QUICK_ACTIONS.map((action, i) => (
                             <motion.button
                               key={i}
-                              whileHover={{ scale: 1.02 }}
+                              whileHover={{ scale: 1.03, y: -2 }}
                               whileTap={{ scale: 0.98 }}
-                              className="group relative overflow-hidden rounded-xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md hover:border-primary/50"
+                              className="group relative overflow-hidden rounded-2xl border-2 border-transparent bg-card p-5 text-left shadow-lg hover:shadow-xl transition-all hover:border-indigo-500/30"
                               onClick={() => sendMessage(action.message)}
                             >
-                              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-violet-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              <div className="relative flex flex-col items-center gap-2">
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                  <action.icon className="h-5 w-5 text-primary" />
+                              {/* Gradient overlay on hover */}
+                              <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-5 transition-opacity`} />
+
+                              <div className="relative flex flex-col items-center gap-3">
+                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                                  <action.icon className="h-6 w-6 text-white" />
                                 </div>
-                                <span className="text-xs sm:text-sm font-medium">{action.label}</span>
+                                <span className="text-sm font-semibold">{action.label}</span>
                               </div>
                             </motion.button>
                           ))}
-                        </div>
+                        </motion.div>
                       </div>
                     ) : (
                       <>
                         {messages.map((msg, index) => (
                           <motion.div
                             key={msg.id}
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className={`flex gap-3 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+                            transition={{ delay: index * 0.03 }}
+                            className={`flex gap-4 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
                           >
                             {/* Avatar */}
                             {msg.sender === 'ai' ? (
-                              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shrink-0 shadow-sm">
-                                <span className="text-sm">🤖</span>
+                              <div className="relative shrink-0">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
+                                  <span className="text-lg">🤖</span>
+                                </div>
                               </div>
                             ) : (
-                              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                                <span className="text-sm">👤</span>
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center shrink-0 shadow-sm">
+                                <span className="text-lg">👤</span>
                               </div>
                             )}
 
                             {/* Message bubble */}
                             <div className={`max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}>
-                              <Card className={`inline-block ${
+                              <Card className={`inline-block shadow-md ${
                                 msg.sender === 'user'
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted'
+                                  ? 'bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-white border-0'
+                                  : 'bg-card border-2'
                               }`}>
-                                <CardContent className="p-3">
+                                <CardContent className="p-4">
                                   {msg.sender === 'ai' ? (
                                     <div className="prose prose-sm max-w-none dark:prose-invert">
                                       <ReactMarkdown
@@ -643,11 +692,11 @@ export default function MechanicChat() {
                                       </ReactMarkdown>
                                     </div>
                                   ) : (
-                                    <p>{msg.content}</p>
+                                    <p className="text-white">{msg.content}</p>
                                   )}
                                 </CardContent>
                               </Card>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-xs text-muted-foreground mt-2 px-1">
                                 {formatTime(msg.created_at)}
                               </p>
                             </div>
@@ -657,19 +706,19 @@ export default function MechanicChat() {
                         {/* Typing indicator */}
                         {isTyping && (
                           <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="flex gap-3"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex gap-4"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 via-primary to-violet-600 flex items-center justify-center shadow-sm">
-                              <span className="text-sm">🤖</span>
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
+                              <span className="text-lg">🤖</span>
                             </div>
-                            <Card className="bg-muted">
-                              <CardContent className="p-3">
-                                <div className="flex gap-1">
-                                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0ms' }} />
-                                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '150ms' }} />
-                                  <span className="w-2 h-2 rounded-full bg-primary animate-bounce" style={{ animationDelay: '300ms' }} />
+                            <Card className="bg-card border-2 shadow-md">
+                              <CardContent className="p-4">
+                                <div className="flex gap-1.5">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
                                 </div>
                               </CardContent>
                             </Card>
@@ -684,36 +733,42 @@ export default function MechanicChat() {
 
                 {/* Error message */}
                 {error && (
-                  <div className="px-4">
+                  <div className="px-4 sm:px-6">
                     <div className="container mx-auto max-w-3xl">
-                      <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-sm text-red-700 dark:text-red-300">
-                        <AlertTriangle className="h-4 w-4" />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-red-50 dark:bg-red-950/50 border-2 border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-sm text-red-700 dark:text-red-300"
+                      >
+                        <AlertTriangle className="h-5 w-5 shrink-0" />
                         {error}
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 )}
 
-                {/* Input area */}
-                <div className="border-t bg-background p-3 sm:p-4 pb-safe">
+                {/* Input area - Modern Floating Design */}
+                <div className="border-t bg-background/80 backdrop-blur-xl p-4 sm:p-5 pb-safe">
                   <div className="container mx-auto max-w-3xl">
-                    <div className="flex gap-2 sm:gap-3">
-                      <Textarea
-                        ref={textareaRef}
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        placeholder="Pose ta question..."
-                        className="resize-none min-h-[48px] max-h-[120px] sm:max-h-[150px] text-base"
-                        rows={1}
-                        maxLength={1000}
-                        disabled={isTyping}
-                      />
+                    <div className="flex gap-3">
+                      <div className="flex-1 relative">
+                        <Textarea
+                          ref={textareaRef}
+                          value={inputMessage}
+                          onChange={(e) => setInputMessage(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="Pose ta question..."
+                          className="resize-none min-h-[52px] max-h-[150px] text-base rounded-2xl border-2 pr-4 focus:border-indigo-500 transition-colors"
+                          rows={1}
+                          maxLength={1000}
+                          disabled={isTyping}
+                        />
+                      </div>
                       <Button
                         onClick={() => sendMessage()}
                         disabled={!inputMessage.trim() || isTyping}
                         size="icon"
-                        className="h-12 w-12 shrink-0 touch-feedback"
+                        className="h-[52px] w-[52px] shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all"
                       >
                         {isTyping ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
@@ -725,17 +780,17 @@ export default function MechanicChat() {
 
                     {/* Quick actions when there are messages */}
                     {messages.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3">
-                        {QUICK_ACTIONS.slice(0, 2).map((action, i) => (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {QUICK_ACTIONS.slice(0, 3).map((action, i) => (
                           <Button
                             key={i}
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="text-xs h-8 px-2 sm:px-3"
+                            className="text-xs h-9 px-3 rounded-xl border-2 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all"
                             onClick={() => sendMessage(action.message)}
                             disabled={isTyping}
                           >
-                            <action.icon className="h-3 w-3 mr-1" />
+                            <action.icon className="h-3.5 w-3.5 mr-1.5" />
                             {action.label}
                           </Button>
                         ))}
