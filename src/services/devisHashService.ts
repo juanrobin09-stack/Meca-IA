@@ -45,11 +45,24 @@ export class DevisHashService {
         .maybeSingle()
 
       if (error) {
-        console.error('Error checking existing analysis:', error)
+        // Table might not exist or have different schema - just skip cache
+        console.warn('Cache check skipped:', error.message)
         return null
       }
 
-      return data
+      if (data) {
+        // Map column names if needed
+        return {
+          id: data.id,
+          user_id: data.user_id || data.utilisateur_id,
+          devis_hash: data.devis_hash || data.devi_hash,
+          ocr_text: data.ocr_text,
+          analysis_result: data.analysis_result || data.analyse_resultat,
+          created_at: data.created_at || data.cree_at
+        }
+      }
+
+      return null
     } catch (err) {
       console.error('Error in checkExistingAnalysis:', err)
       return null
@@ -80,10 +93,12 @@ export class DevisHashService {
         })
 
       if (error) {
-        console.error('Error saving analysis:', error)
+        // Cache save failed - not critical, analysis still works
+        console.warn('Cache save skipped:', error.message)
       }
     } catch (err) {
-      console.error('Error in saveAnalysis:', err)
+      // Non-blocking error
+      console.warn('Error in saveAnalysis:', err)
     }
   }
 

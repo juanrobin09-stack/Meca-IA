@@ -314,6 +314,3 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
   }
 }
 
-export const config = {
-  path: '/api/analyze-devis-pro'
-}
