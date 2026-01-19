@@ -186,7 +186,7 @@ export const handler: Handler = async (event) => {
       iterations++
 
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-latest',
+        model: 'claude-3-sonnet-20240229',
         max_tokens: 1500,
         tools: BRAVE_API_KEY ? [webSearchTool] : [],
         messages,

@@ -51,7 +51,7 @@ export const handler: Handler = async (event) => {
 
     // Analyser l'image
     const response = await client.messages.create({
-      model: 'claude-3-5-sonnet-latest',
+      model: 'claude-3-sonnet-20240229',
       max_tokens: 300,
       messages: [{
         role: 'user',
