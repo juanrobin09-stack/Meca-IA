@@ -19,7 +19,9 @@ import {
   CheckCircle2,
   Info,
   History,
-  Shield
+  Shield,
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import { Link } from 'react-router-dom'
@@ -39,7 +41,19 @@ export default function AnalyseDevis() {
   const [currentRemaining, setCurrentRemaining] = useState<number>(devisRemaining as number)
   const [fromCache, setFromCache] = useState(false)
   const [analysisStep, setAnalysisStep] = useState<string>('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isMobile, setIsMobile] = useState(false)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+
+  // Detect mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Check limit on page load - wait for profile to be loaded
   useEffect(() => {
@@ -69,8 +83,9 @@ export default function AnalyseDevis() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Reset
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    // Reset both refs
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+    if (galleryInputRef.current) galleryInputRef.current.value = ''
     setError(null)
     setAnalysisResult(null)
     setFromCache(false)
@@ -329,40 +344,92 @@ export default function AnalyseDevis() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Upload zone */}
-                <div
-                  className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleFileSelect}
-                    className="hidden"
-                  />
-                  {selectedFile ? (
-                    <div className="space-y-4">
-                      <img
-                        src={selectedFile.dataUrl}
-                        alt="Devis"
-                        className="max-h-64 mx-auto rounded-lg shadow-md"
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Clique pour changer d'image
-                      </p>
+                {/* Hidden inputs */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*,.heic,.heif"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
+                {/* Preview if file selected */}
+                {selectedFile ? (
+                  <div className="border-2 border-dashed rounded-xl p-6 text-center">
+                    <img
+                      src={selectedFile.dataUrl}
+                      alt="Devis"
+                      className="max-h-64 mx-auto rounded-lg shadow-md mb-4"
+                    />
+                    <div className="flex gap-3 justify-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => cameraInputRef.current?.click()}
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Reprendre
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => galleryInputRef.current?.click()}
+                      >
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        Changer
+                      </Button>
                     </div>
-                  ) : (
-                    <>
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                        <Upload className="h-8 w-8 text-primary" />
-                      </div>
-                      <p className="font-medium text-lg">Clique ou glisse ton devis ici</p>
-                      <p className="text-sm text-muted-foreground mt-1">JPG, PNG (max 10MB)</p>
-                    </>
-                  )}
-                </div>
+                  </div>
+                ) : isMobile ? (
+                  /* Mobile: Two separate buttons */
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Button
+                        variant="outline"
+                        className="h-32 flex-col gap-3 border-2 border-dashed hover:border-primary hover:bg-primary/5"
+                        onClick={() => cameraInputRef.current?.click()}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Camera className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <span className="font-medium">Prendre photo</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-32 flex-col gap-3 border-2 border-dashed hover:border-primary hover:bg-primary/5"
+                        onClick={() => galleryInputRef.current?.click()}
+                      >
+                        <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                          <ImageIcon className="h-6 w-6 text-violet-600" />
+                        </div>
+                        <span className="font-medium">Galerie</span>
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      JPG, PNG, HEIC (max 15MB)
+                    </p>
+                  </div>
+                ) : (
+                  /* Desktop: Click zone */
+                  <div
+                    className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
+                    onClick={() => galleryInputRef.current?.click()}
+                  >
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <Upload className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="font-medium text-lg">Clique ou glisse ton devis ici</p>
+                    <p className="text-sm text-muted-foreground mt-1">JPG, PNG (max 15MB)</p>
+                  </div>
+                )}
 
                 {error && (
                   <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
