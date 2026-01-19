@@ -27,6 +27,7 @@ const DiagnosticVideo = lazy(() => import('@/pages/DiagnosticVideo'))
 const PrevisionPannes = lazy(() => import('@/pages/PrevisionPannes'))
 const MechanicChat = lazy(() => import('@/pages/MechanicChat'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -111,6 +112,7 @@ export default function App() {
                 </AuthRedirect>
               }
             />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Protected routes */}
             <Route

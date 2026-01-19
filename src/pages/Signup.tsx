@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import Logo from '@/components/Logo'
 import PageTransition from '@/components/PageTransition'
 import { Loader2 } from 'lucide-react'
+import { GoogleAuthButton } from '@/components/GoogleAuthButton'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
@@ -63,6 +64,20 @@ export default function Signup() {
                 {error}
               </div>
             )}
+
+            {/* Google OAuth */}
+            <GoogleAuthButton />
+
+            {/* Séparateur */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-muted-foreground/20"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">ou</span>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="displayName">
                 Prénom <span className="text-red-500">*</span>
