@@ -54,6 +54,20 @@ const BRANDS = [
 ]
 const FUEL_TYPES = ['Essence', 'Diesel', 'Électrique', 'Hybride', 'GPL']
 
+// Convertir fuel_type DB (minuscules) vers affichage (majuscules)
+const fuelTypeToDisplay = (dbValue: string | undefined): string => {
+  if (!dbValue) return 'Essence'
+  const map: Record<string, string> = {
+    'essence': 'Essence',
+    'diesel': 'Diesel',
+    'electrique': 'Électrique',
+    'hybride': 'Hybride',
+    'gpl': 'GPL',
+    'autre': 'Essence'
+  }
+  return map[dbValue.toLowerCase()] || 'Essence'
+}
+
 export default function Vehicles() {
   const { user, profile } = useAuth()
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -361,7 +375,7 @@ function VehicleModal({
         brand: vehicle.brand || '',
         model: vehicle.model || '',
         year: vehicle.year || new Date().getFullYear(),
-        fuel_type: vehicle.fuel_type || 'Essence',
+        fuel_type: fuelTypeToDisplay(vehicle.fuel_type),
         mileage: vehicle.mileage || 0,
         plate: vehicle.plate || '',
       })
@@ -380,7 +394,12 @@ function VehicleModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(formData)
+    // Convertir fuel_type en minuscules pour la DB
+    const dataToSave = {
+      ...formData,
+      fuel_type: formData.fuel_type.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') // 'Électrique' -> 'electrique'
+    }
+    onSave(dataToSave)
   }
 
   return (
