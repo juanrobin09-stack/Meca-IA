@@ -139,6 +139,11 @@ export default function AnalyseDevis() {
       })
 
       if (!response.ok) {
+        // Check if response is HTML (404 page) instead of JSON
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('Service d\'analyse temporairement indisponible. Veuillez réessayer plus tard.')
+        }
         const errorData = await response.json()
         throw new Error(errorData.error || 'Erreur serveur')
       }
