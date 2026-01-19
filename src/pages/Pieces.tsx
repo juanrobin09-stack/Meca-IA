@@ -174,12 +174,12 @@ export default function Pieces() {
 
                 {/* Filters */}
                 <div className="flex gap-2">
-                  <Select value={marque} onValueChange={setMarque}>
+                  <Select value={marque || '_all'} onValueChange={(val) => setMarque(val === '_all' ? '' : val)}>
                     <SelectTrigger className="flex-1 h-10 text-sm border-0 bg-neutral-100 dark:bg-neutral-900 rounded-xl">
                       <SelectValue placeholder="Marque" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
-                      <SelectItem value="">Toutes marques</SelectItem>
+                      <SelectItem value="_all">Toutes marques</SelectItem>
                       {MARQUES.map((m) => (
                         <SelectItem key={m} value={m.toLowerCase()}>
                           {m}
