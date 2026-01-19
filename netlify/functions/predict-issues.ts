@@ -121,7 +121,7 @@ Base tes réponses sur les recherches web si disponibles. Si pas d'info, utilise
 Limite à 3 rappels max, 5 problèmes max.`
 
     const response = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }],
     })
