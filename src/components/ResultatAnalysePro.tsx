@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,8 @@ import {
   Lightbulb,
   Shield,
   Euro,
-  Info
+  Info,
+  Check
 } from 'lucide-react'
 
 interface DevisLine {
@@ -63,6 +65,124 @@ interface Props {
 
 export default function ResultatAnalysePro({ data }: Props) {
   const { verdict, lignes, alertes, totaux, economiesPotentielles, garageInfo } = data
+  const [downloadSuccess, setDownloadSuccess] = useState(false)
+  const [shareSuccess, setShareSuccess] = useState(false)
+
+  // Générer le rapport texte pour téléchargement
+  const generateReport = () => {
+    const lines = [
+      '═══════════════════════════════════════════════════════════',
+      '           RAPPORT D\'ANALYSE DE DEVIS - MECA-IA',
+      '═══════════════════════════════════════════════════════════',
+      '',
+      `Date: ${new Date().toLocaleDateString('fr-FR')}`,
+      `Garage: ${data.garage.nom}`,
+      data.garage.adresse ? `Adresse: ${data.garage.adresse}` : '',
+      '',
+      '───────────────────────────────────────────────────────────',
+      '                    VERDICT GLOBAL',
+      '───────────────────────────────────────────────────────────',
+      '',
+      `Note: ${verdict.note}/10`,
+      `Statut: ${verdict.statut === 'honnete' ? '✅ HONNÊTE' : verdict.statut === 'reserve' ? '⚠️ AVEC RÉSERVES' : '🚨 ARNAQUE DÉTECTÉE'}`,
+      `Recommandation: ${verdict.recommandation}`,
+      verdict.commentaireExpert ? `Commentaire expert: ${verdict.commentaireExpert}` : '',
+      '',
+      `Prix corrects: ${verdict.lignesOk} | Prix élevés: ${verdict.lignesElevees} | Surfacturés: ${verdict.lignesArnaques}`,
+      '',
+    ]
+
+    if (alertes.graves.length > 0) {
+      lines.push('───────────────────────────────────────────────────────────')
+      lines.push('                   ALERTES GRAVES')
+      lines.push('───────────────────────────────────────────────────────────')
+      alertes.graves.forEach(a => lines.push(`🚨 ${a}`))
+      lines.push('')
+    }
+
+    if (alertes.moyennes.length > 0) {
+      lines.push('───────────────────────────────────────────────────────────')
+      lines.push('                 POINTS D\'ATTENTION')
+      lines.push('───────────────────────────────────────────────────────────')
+      alertes.moyennes.forEach(a => lines.push(`⚠️ ${a}`))
+      lines.push('')
+    }
+
+    lines.push('───────────────────────────────────────────────────────────')
+    lines.push('                  ANALYSE DÉTAILLÉE')
+    lines.push('───────────────────────────────────────────────────────────')
+    lines.push('')
+    lignes.forEach(l => {
+      const verdictIcon = l.verdict === 'ok' ? '✅' : l.verdict === 'eleve' ? '⚠️' : '🚨'
+      lines.push(`${verdictIcon} ${l.designation}`)
+      lines.push(`   Facturé: ${l.totalTTC.toFixed(2)}€ | Marché: ~${l.prixMarche.moyenne.toFixed(2)}€ | Écart: ${l.ecart > 0 ? '+' : ''}${l.ecart}%`)
+      lines.push('')
+    })
+
+    lines.push('───────────────────────────────────────────────────────────')
+    lines.push('                COMPARATIF FINANCIER')
+    lines.push('───────────────────────────────────────────────────────────')
+    lines.push('')
+    lines.push(`Prix facturé (TTC): ${totaux.totalFacture.toFixed(2)}€`)
+    lines.push(`Prix marché estimé: ~${totaux.totalMarche.toFixed(2)}€`)
+    lines.push(`Différence: ${economiesPotentielles.montant > 0 ? '+' : ''}${economiesPotentielles.montant.toFixed(2)}€ (${economiesPotentielles.pourcentage}%)`)
+    lines.push('')
+    lines.push('═══════════════════════════════════════════════════════════')
+    lines.push('         Rapport généré par MECA-IA - mymecai.com')
+    lines.push('═══════════════════════════════════════════════════════════')
+
+    return lines.filter(l => l !== '').join('\n')
+  }
+
+  // Télécharger le rapport
+  const handleDownload = () => {
+    try {
+      const report = generateReport()
+      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `rapport-devis-${new Date().toISOString().split('T')[0]}.txt`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      setDownloadSuccess(true)
+      setTimeout(() => setDownloadSuccess(false), 2000)
+    } catch (err) {
+      console.error('Download failed:', err)
+    }
+  }
+
+  // Partager l'analyse
+  const handleShare = async () => {
+    const shareText = `🔍 Analyse de devis MECA-IA\n\n` +
+      `Note: ${verdict.note}/10 - ${verdict.statut === 'honnete' ? '✅ Honnête' : verdict.statut === 'reserve' ? '⚠️ Réserves' : '🚨 Arnaque'}\n` +
+      `Prix facturé: ${totaux.totalFacture.toFixed(2)}€\n` +
+      `Prix marché: ~${totaux.totalMarche.toFixed(2)}€\n` +
+      (economiesPotentielles.montant > 0 ? `💸 Surfacturation: +${economiesPotentielles.montant.toFixed(2)}€\n` : '') +
+      `\n📱 Analyse ton devis sur mymecai.com`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Analyse de devis MECA-IA',
+          text: shareText
+        })
+      } catch (err) {
+        // User cancelled or error - copy to clipboard as fallback
+        if ((err as Error).name !== 'AbortError') {
+          await navigator.clipboard.writeText(shareText)
+          setShareSuccess(true)
+          setTimeout(() => setShareSuccess(false), 2000)
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(shareText)
+      setShareSuccess(true)
+      setTimeout(() => setShareSuccess(false), 2000)
+    }
+  }
 
   const getVerdictColors = () => {
     switch (verdict.statut) {
@@ -393,13 +513,67 @@ export default function ResultatAnalysePro({ data }: Props) {
 
       {/* ACTIONS */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <Button className="flex-1 h-12" variant="default">
-          <Download className="h-5 w-5 mr-2" />
-          Télécharger le rapport
+        <Button
+          className="flex-1 h-12"
+          variant={downloadSuccess ? "outline" : "default"}
+          onClick={handleDownload}
+        >
+          <AnimatePresence mode="wait">
+            {downloadSuccess ? (
+              <motion.div
+                key="success"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="flex items-center"
+              >
+                <Check className="h-5 w-5 mr-2 text-emerald-500" />
+                Téléchargé !
+              </motion.div>
+            ) : (
+              <motion.div
+                key="download"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="flex items-center"
+              >
+                <Download className="h-5 w-5 mr-2" />
+                Télécharger le rapport
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Button>
-        <Button className="flex-1 h-12" variant="outline">
-          <Share2 className="h-5 w-5 mr-2" />
-          Partager l'analyse
+        <Button
+          className="flex-1 h-12"
+          variant="outline"
+          onClick={handleShare}
+        >
+          <AnimatePresence mode="wait">
+            {shareSuccess ? (
+              <motion.div
+                key="copied"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="flex items-center"
+              >
+                <Check className="h-5 w-5 mr-2 text-emerald-500" />
+                Copié !
+              </motion.div>
+            ) : (
+              <motion.div
+                key="share"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="flex items-center"
+              >
+                <Share2 className="h-5 w-5 mr-2" />
+                Partager l'analyse
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Button>
       </div>
     </div>

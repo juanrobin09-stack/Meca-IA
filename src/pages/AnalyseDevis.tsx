@@ -167,15 +167,20 @@ export default function AnalyseDevis() {
       else if (result.verdict.statut === 'reserve') verdictType = 'warning'
       else if (result.verdict.statut === 'arnaque') verdictType = 'bad'
 
-      // Save to devis history
-      const saved = await saveDevis({
-        analysis_result: JSON.stringify(result),
-        image_url: selectedFile.dataUrl,
-        verdict_type: verdictType,
-        potential_savings: result.economiesPotentielles?.montant,
-        is_fair_price: verdictType === 'good',
-      })
-      setSavedDevisId(saved.id)
+      // Save to devis history (non-blocking)
+      try {
+        const saved = await saveDevis({
+          analysis_result: JSON.stringify(result),
+          image_url: selectedFile.dataUrl,
+          verdict_type: verdictType,
+          potential_savings: result.economiesPotentielles?.montant,
+          is_fair_price: verdictType === 'good',
+        })
+        setSavedDevisId(saved.id)
+      } catch (saveErr) {
+        console.warn('History save skipped:', saveErr)
+        // Non-blocking - analysis still works
+      }
 
       // Increment counter after successful analysis (for free users)
       if (!isPremium) {
