@@ -442,7 +442,7 @@ export default function History() {
   )
 }
 
-// DevisCard component
+// DevisCard component - Design moderne
 interface DevisCardProps {
   devis: DevisAnalysis
   onDelete: (id: string) => Promise<void>
@@ -457,30 +457,42 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
       case 'good':
         return {
           icon: CheckCircle2,
-          color: 'text-green-600',
-          bg: 'bg-green-100 dark:bg-green-950',
-          label: 'Bon prix'
+          gradient: 'from-emerald-500 to-green-600',
+          color: 'text-emerald-600',
+          bg: 'bg-emerald-100 dark:bg-emerald-950/50',
+          borderColor: 'border-emerald-200 dark:border-emerald-800',
+          label: 'Bon prix',
+          emoji: '✅'
         }
       case 'warning':
         return {
           icon: AlertTriangle,
+          gradient: 'from-amber-500 to-orange-500',
           color: 'text-amber-600',
-          bg: 'bg-amber-100 dark:bg-amber-950',
-          label: 'Négociable'
+          bg: 'bg-amber-100 dark:bg-amber-950/50',
+          borderColor: 'border-amber-200 dark:border-amber-800',
+          label: 'Négociable',
+          emoji: '⚠️'
         }
       case 'bad':
         return {
           icon: XCircle,
+          gradient: 'from-red-500 to-rose-600',
           color: 'text-red-600',
-          bg: 'bg-red-100 dark:bg-red-950',
-          label: 'Trop cher'
+          bg: 'bg-red-100 dark:bg-red-950/50',
+          borderColor: 'border-red-200 dark:border-red-800',
+          label: 'Trop cher',
+          emoji: '🚨'
         }
       default:
         return {
           icon: Target,
+          gradient: 'from-blue-500 to-indigo-600',
           color: 'text-blue-600',
-          bg: 'bg-blue-100 dark:bg-blue-950',
-          label: 'Analysé'
+          bg: 'bg-blue-100 dark:bg-blue-950/50',
+          borderColor: 'border-blue-200 dark:border-blue-800',
+          label: 'Analysé',
+          emoji: '📊'
         }
     }
   }
@@ -508,18 +520,30 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
       <head>
         <title>Analyse de Devis - MECAI</title>
         <style>
-          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          h1 { color: #3b82f6; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
-          .analysis { white-space: pre-wrap; line-height: 1.6; }
-          .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
+          * { box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; }
+          .header { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 24px; border-radius: 16px; margin-bottom: 24px; }
+          .header h1 { margin: 0 0 8px 0; font-size: 24px; }
+          .header p { margin: 0; opacity: 0.9; font-size: 14px; }
+          .verdict-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-weight: 600; margin-top: 12px; }
+          .section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+          .analysis { white-space: pre-wrap; line-height: 1.8; color: #475569; }
+          .footer { margin-top: 32px; padding-top: 16px; border-top: 2px solid #e2e8f0; color: #64748b; font-size: 12px; text-align: center; }
+          @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
         </style>
       </head>
       <body>
-        <h1>🔧 Analyse de Devis - MECAI</h1>
-        <p style="color: #6b7280;">Analysé le ${new Date(devis.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-        <div class="analysis">${devis.analysis_result.replace(/\n/g, '<br>')}</div>
+        <div class="header">
+          <h1>🔧 Analyse de Devis</h1>
+          <p>Analysé le ${new Date(devis.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          <div class="verdict-badge">${verdictStyle.emoji} ${verdictStyle.label}</div>
+        </div>
+        ${devis.potential_savings ? `<div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 16px; text-align: center;"><div style="font-size: 14px; opacity: 0.9;">💰 Économie potentielle</div><div style="font-size: 28px; font-weight: 700;">${devis.potential_savings}€</div></div>` : ''}
+        <div class="section">
+          <div class="analysis">${devis.analysis_result.replace(/\n/g, '<br>')}</div>
+        </div>
         <div class="footer">
-          <p>Ce rapport a été généré par MECAI - Votre assistant automobile intelligent.</p>
+          <p><strong>MECAI</strong> - Votre assistant automobile intelligent</p>
         </div>
       </body>
       </html>
@@ -533,25 +557,33 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
     }
   }
 
-  // Get first few lines of analysis for preview
-  const previewText = devis.analysis_result.split('\n').slice(0, 3).join('\n')
+  // Extract key info from analysis
+  const extractPreview = () => {
+    const lines = devis.analysis_result.split('\n').filter(l => l.trim())
+    // Get meaningful preview lines (skip headers)
+    const meaningfulLines = lines.filter(l => !l.startsWith('#') && l.length > 20).slice(0, 2)
+    return meaningfulLines.join(' ').substring(0, 150)
+  }
 
   return (
-    <Card className="overflow-hidden">
+    <Card className={`overflow-hidden border-2 ${verdictStyle.borderColor} hover:shadow-lg transition-shadow`}>
+      {/* Gradient header bar */}
+      <div className={`h-2 bg-gradient-to-r ${verdictStyle.gradient}`} />
+
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg ${verdictStyle.bg} flex items-center justify-center`}>
-              <VerdictIcon className={`h-5 w-5 ${verdictStyle.color}`} />
+            <div className={`w-12 h-12 rounded-xl ${verdictStyle.bg} flex items-center justify-center shadow-sm`}>
+              <VerdictIcon className={`h-6 w-6 ${verdictStyle.color}`} />
             </div>
             <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                Analyse de devis
-                <Badge variant="outline" className={verdictStyle.color}>
-                  {verdictStyle.label}
+              <div className="flex items-center gap-2 flex-wrap">
+                <CardTitle className="text-base">Analyse de devis</CardTitle>
+                <Badge className={`${verdictStyle.bg} ${verdictStyle.color} border-0`}>
+                  {verdictStyle.emoji} {verdictStyle.label}
                 </Badge>
-              </CardTitle>
-              <p className="text-xs text-muted-foreground">
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
                 {new Date(devis.created_at).toLocaleDateString('fr-FR', {
                   day: 'numeric',
                   month: 'long',
@@ -562,47 +594,92 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
               </p>
             </div>
           </div>
+
+          {/* Savings badge */}
           {devis.potential_savings && devis.potential_savings > 0 && (
-            <Badge className="bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-              -{devis.potential_savings}€ potentiel
-            </Badge>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500 text-white text-sm font-semibold shadow-sm">
+              <Euro className="h-3.5 w-3.5" />
+              -{devis.potential_savings}€
+            </div>
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+
+      <CardContent className="pt-0">
+        <div className="space-y-4">
           {/* Preview or full analysis */}
-          <div className="text-sm text-muted-foreground">
-            {showFull ? (
-              <div className="whitespace-pre-wrap">{devis.analysis_result}</div>
-            ) : (
-              <div className="whitespace-pre-wrap">{previewText}...</div>
-            )}
-          </div>
+          {showFull ? (
+            <div className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-xl p-4 max-h-96 overflow-y-auto">
+              {devis.analysis_result.split('\n').map((line, i) => {
+                const trimmedLine = line.trim()
+                if (!trimmedLine) return <div key={i} className="h-2" />
+
+                if (trimmedLine.startsWith('#')) {
+                  return (
+                    <h4 key={i} className="font-semibold text-foreground mt-3 mb-1">
+                      {trimmedLine.replace(/^#+\s*/, '')}
+                    </h4>
+                  )
+                }
+
+                if (trimmedLine.includes('✅') || line.toLowerCase().includes('correct')) {
+                  return (
+                    <div key={i} className="flex items-start gap-2 py-1">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                      <span className="text-emerald-700 dark:text-emerald-300">{trimmedLine.replace(/[✅]/g, '').trim()}</span>
+                    </div>
+                  )
+                }
+                if (trimmedLine.includes('⚠️') || line.toLowerCase().includes('élevé')) {
+                  return (
+                    <div key={i} className="flex items-start gap-2 py-1">
+                      <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                      <span className="text-amber-700 dark:text-amber-300">{trimmedLine.replace(/[⚠️🔶]/g, '').trim()}</span>
+                    </div>
+                  )
+                }
+                if (trimmedLine.includes('❌') || line.toLowerCase().includes('excessif')) {
+                  return (
+                    <div key={i} className="flex items-start gap-2 py-1">
+                      <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                      <span className="text-red-700 dark:text-red-300">{trimmedLine.replace(/[❌🚫]/g, '').trim()}</span>
+                    </div>
+                  )
+                }
+
+                return <p key={i} className="my-1">{line}</p>
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground line-clamp-2">
+              {extractPreview()}...
+            </p>
+          )}
 
           {/* Image preview if available */}
           {devis.image_url && showFull && (
-            <div className="mt-3 rounded-lg overflow-hidden border max-w-xs">
-              <img src={devis.image_url} alt="Devis" className="w-full h-auto" />
+            <div className="rounded-xl overflow-hidden border-2 border-dashed border-muted bg-muted/20">
+              <img src={devis.image_url} alt="Devis" className="w-full max-h-48 object-contain" />
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-2">
+          <div className="flex items-center gap-2 pt-2 border-t border-muted/50">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowFull(!showFull)}
+              className="flex-1 sm:flex-none"
             >
-              <Eye className="h-4 w-4 mr-1" />
-              {showFull ? 'Réduire' : 'Voir tout'}
+              <Eye className="h-4 w-4 mr-1.5" />
+              {showFull ? 'Réduire' : 'Voir détails'}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={exportToPDF}
             >
-              <Download className="h-4 w-4 mr-1" />
+              <Download className="h-4 w-4 mr-1.5" />
               PDF
             </Button>
             <Button
@@ -610,7 +687,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
               size="sm"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 ml-auto"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

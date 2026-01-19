@@ -8,20 +8,29 @@ export function useDevis(userId: string | undefined) {
   const [loading, setLoading] = useState(true)
 
   const fetchDevis = useCallback(async () => {
-    if (!userId) return
+    if (!userId) {
+      console.log('[useDevis] fetchDevis: no userId, skipping')
+      return
+    }
 
     setLoading(true)
     try {
+      console.log('[useDevis] Fetching devis for user:', userId)
       const { data, error } = await supabase
         .from('devis_analyses')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('[useDevis] Error fetching devis:', error)
+        throw error
+      }
+
+      console.log('[useDevis] Fetched', data?.length || 0, 'devis')
       setDevisList(data as DevisAnalysis[])
     } catch (error) {
-      console.error('Error fetching devis:', error)
+      console.error('[useDevis] Error fetching devis:', error)
     } finally {
       setLoading(false)
     }
@@ -41,12 +50,17 @@ export function useDevis(userId: string | undefined) {
       verdict_type?: 'good' | 'warning' | 'bad' | 'neutral'
       is_fair_price?: boolean
     }): Promise<DevisAnalysis> => {
-      if (!userId) throw new Error('User not logged in')
+      if (!userId) {
+        console.error('[useDevis] saveDevis failed: no userId')
+        throw new Error('User not logged in')
+      }
 
       const newDevis = {
         user_id: userId,
         ...analysisData,
       }
+
+      console.log('[useDevis] Saving devis...', { userId, verdict_type: analysisData.verdict_type })
 
       const { data, error } = await supabase
         .from('devis_analyses')
@@ -54,9 +68,14 @@ export function useDevis(userId: string | undefined) {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('[useDevis] Error saving devis:', error)
+        throw error
+      }
 
       const devis = data as DevisAnalysis
+      console.log('[useDevis] Devis saved successfully:', devis.id)
+
       setCurrentDevis(devis)
       setDevisList((prev) => [devis, ...prev])
 
