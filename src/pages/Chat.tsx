@@ -13,23 +13,17 @@ import PaywallModal from '@/components/PaywallModal'
 import PlateScanner from '@/components/PlateScanner'
 import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Tooltip } from '@/components/ui/tooltip'
 import {
   ArrowLeft,
   Send,
   Loader2,
-  Camera,
+  Plus,
   X,
   Car,
   CheckCircle2,
-  AlertTriangle,
   Sparkles,
   Cpu,
-  ChevronRight,
-  Zap,
-  Shield,
-  Clock
+  ChevronRight
 } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
@@ -45,17 +39,6 @@ interface VehicleInfo {
 const MAX_PHOTOS_PER_CONVERSATION = 2
 const MAX_MESSAGES_PER_DIAGNOSTIC = 15
 
-// Premium animation variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] as const } }
-}
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-}
-
 // Detect if diagnostic is complete
 function isDiagnosticComplete(content: string): boolean {
   const hasEstimation = content.includes('Estimation') || content.includes('estimation')
@@ -64,11 +47,11 @@ function isDiagnosticComplete(content: string): boolean {
   return (hasEstimation && hasDiagnostic) || hasPieces
 }
 
-// Example questions
+// Example questions - simples
 const EXAMPLE_QUESTIONS = [
-  { text: 'Ma 208 fait un bruit au freinage', emoji: '🔊', category: 'Bruit suspect' },
-  { text: 'Voyant moteur allumé sur ma Clio', emoji: '🚨', category: 'Voyant allumé' },
-  { text: "Fuite d'huile sous ma voiture", emoji: '💧', category: 'Fuite liquide' }
+  { text: 'Ma voiture fait un bruit au freinage', icon: '🔊' },
+  { text: 'Voyant moteur allumé', icon: '🚨' },
+  { text: "Fuite sous ma voiture", icon: '💧' }
 ]
 
 export default function Chat() {
@@ -167,7 +150,7 @@ export default function Chat() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px'
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px'
     }
   }, [input])
 
@@ -300,235 +283,141 @@ export default function Chat() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+      <div className="min-h-screen bg-white dark:bg-neutral-950">
         <Sidebar />
 
         <main className="md:pl-64">
-          <div className="h-[100dvh] md:h-screen flex flex-col overflow-hidden">
-            {/* Mobile-Optimized Header */}
-            <header className="flex-shrink-0 border-b border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl">
-              <div className="px-3 sm:px-6 py-2.5 sm:py-4">
-                <div className="max-w-4xl mx-auto">
-                  <div className="flex items-center justify-between gap-2">
-                    {/* Left - Back & Logo */}
-                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate('/app')}
-                        className="md:hidden h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex-shrink-0"
-                      >
-                        <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </Button>
-
-                      {/* Avatar - smaller on mobile */}
-                      <div className="relative flex-shrink-0">
-                        <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                          <Cpu className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
-                        </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-950" />
+          <div className="h-[100dvh] md:h-screen flex flex-col">
+            {/* Header - Style Claude/ChatGPT */}
+            <header className="flex-shrink-0 border-b border-neutral-100 dark:border-neutral-900 bg-white dark:bg-neutral-950">
+              <div className="px-4 py-3">
+                <div className="max-w-3xl mx-auto flex items-center justify-between">
+                  {/* Left */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => navigate('/app')}
+                      className="md:hidden p-2 -ml-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+                    >
+                      <ArrowLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
+                        <Cpu className="h-4 w-4 text-white" />
                       </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h1 className="text-sm sm:text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
-                          Diagnostic IA
-                          {isPremium && (
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full flex-shrink-0">
-                              <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
-                              PRO
-                            </span>
-                          )}
-                        </h1>
-                        <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 truncate">
-                          Expert auto
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Right - Status Badges */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-                      {photosUsed > 0 && (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-                          <Camera className="h-3 w-3" />
-                          {photosUsed}/{MAX_PHOTOS_PER_CONVERSATION}
-                        </div>
-                      )}
-
-                      {isPremium ? (
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
-                          <Sparkles className="h-3 w-3" />
-                          Illimité
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          {!isNewConversation && (
-                            <Tooltip content={`${messagesRemaining} messages restants`}>
-                              <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg cursor-help ${
-                                messagesRemaining <= 3
-                                  ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400'
-                                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
-                              }`}>
-                                {messagesRemaining <= 3 && <AlertTriangle className="h-3 w-3" />}
-                                {messagesRemaining} msg
-                              </div>
-                            </Tooltip>
-                          )}
-                          {isNewConversation && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-                              {displayRemaining}/2 restants
-                            </div>
-                          )}
-                          {currentPurchasedCredits > 0 && (
-                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
-                              +{currentPurchasedCredits}
-                            </div>
-                          )}
-                        </div>
+                      <span className="font-medium text-neutral-900 dark:text-white">Diagnostic IA</span>
+                      {isPremium && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full">
+                          PRO
+                        </span>
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Disclaimer - Subtle */}
-              <div className="border-t border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/50 px-4 py-2">
-                <p className="text-[11px] text-neutral-500 text-center flex items-center justify-center gap-1.5">
-                  <span className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-[9px] font-bold">i</span>
-                  Diagnostics à titre indicatif uniquement
-                </p>
+                  {/* Right - Counter */}
+                  <div className="flex items-center gap-2">
+                    {!isPremium && (
+                      <span className="text-xs text-neutral-500">
+                        {isNewConversation ? `${displayRemaining}/2` : `${messagesRemaining} msg`}
+                        {currentPurchasedCredits > 0 && <span className="text-emerald-600"> +{currentPurchasedCredits}</span>}
+                      </span>
+                    )}
+                    {isPremium && (
+                      <span className="text-xs text-amber-600 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3" /> Illimité
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </header>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
-              <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-44 md:pb-8">
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-3xl mx-auto px-4 py-6 pb-36 md:pb-32">
                 {messages.length === 0 && !streamingContent ? (
-                  /* Empty State - Premium Hero */
-                  <motion.div
-                    className="text-center py-8"
-                    initial="hidden"
-                    animate="visible"
-                    variants={staggerContainer}
-                  >
-                    {/* Scanned Vehicle Card */}
-                    {scannedVehicle ? (
+                  /* Empty State - Clean */}
+                  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+                    {/* Scanned Vehicle */}
+                    {scannedVehicle && (
                       <motion.div
-                        variants={fadeInUp}
-                        className="mb-10 max-w-md mx-auto"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 rounded-xl inline-flex items-center gap-3"
                       >
-                        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 rounded-2xl">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <div className="flex-1 text-left">
-                              <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Véhicule identifié</p>
-                              <p className="text-base font-semibold text-neutral-900 dark:text-white">{scannedVehicle.brand} {scannedVehicle.model}</p>
-                              <p className="text-sm text-neutral-500">{scannedVehicle.year} • {scannedVehicle.plate}</p>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg"
-                              onClick={() => setScannedVehicle(null)}
-                            >
-                              Changer
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ) : (
-                      <motion.div variants={fadeInUp} className="mb-8">
-                        <button
-                          className="inline-flex items-center gap-3 px-5 py-3 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-2xl hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-lg transition-all duration-300 group"
-                          onClick={() => setShowPlateScanner(true)}
-                        >
-                          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-                            <Car className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                          </div>
-                          <div className="text-left">
-                            <p className="text-sm font-medium text-neutral-900 dark:text-white">Scanner ma plaque</p>
-                            <p className="text-xs text-neutral-500">Optionnel • Diagnostic plus précis</p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:translate-x-1 transition-transform" />
+                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        <span className="text-sm text-emerald-800 dark:text-emerald-300">
+                          {scannedVehicle.brand} {scannedVehicle.model} • {scannedVehicle.year}
+                        </span>
+                        <button onClick={() => setScannedVehicle(null)} className="text-emerald-600 hover:text-emerald-800">
+                          <X className="h-4 w-4" />
                         </button>
                       </motion.div>
                     )}
 
-                    {/* Hero Section */}
-                    <motion.div variants={fadeInUp} className="mb-12">
-                      {/* Premium Logo */}
-                      <div className="relative inline-block mb-6">
-                        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-2xl shadow-blue-500/30">
-                          <Cpu className="h-10 w-10 text-white" />
-                        </div>
-                        <motion.div
-                          className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-[#fafafa] dark:border-[#0a0a0a] flex items-center justify-center"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.5, type: 'spring' }}
-                        >
-                          <span className="text-white text-[10px]">✓</span>
-                        </motion.div>
-                      </div>
-
-                      <h2 className="text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-white mb-2">
-                        Diagnostic Intelligent
-                      </h2>
-                      <p className="text-neutral-500 dark:text-neutral-400 text-lg max-w-md mx-auto">
-                        Décris ton problème, je t'aide à comprendre.
-                      </p>
-
-                      {/* Photo hint */}
-                      <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/60 rounded-full">
-                        <Camera className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                        <span className="text-sm text-blue-700 dark:text-blue-300">Tu peux aussi envoyer une photo</span>
-                      </div>
-                    </motion.div>
-
-                    {/* Example Questions - Premium Grid */}
-                    <motion.div variants={fadeInUp} className="mb-12">
-                      <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-4">Exemples</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
-                        {EXAMPLE_QUESTIONS.map((example, i) => (
-                          <motion.button
-                            key={i}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="group relative p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 text-left hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-lg hover:shadow-neutral-200/50 dark:hover:shadow-neutral-900/50 transition-all duration-300"
-                            onClick={() => setInput(example.text)}
-                          >
-                            <span className="text-2xl mb-2 block">{example.emoji}</span>
-                            <p className="text-xs text-neutral-400 mb-1">{example.category}</p>
-                            <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 line-clamp-2">
-                              {example.text}
-                            </p>
-                            <ChevronRight className="absolute bottom-4 right-4 h-4 w-4 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
-
-                    {/* Features - Minimal */}
+                    {/* Logo */}
                     <motion.div
-                      variants={fadeInUp}
-                      className="flex flex-wrap justify-center gap-6 text-sm text-neutral-500"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20"
                     >
-                      {[
-                        { icon: Zap, label: 'Réponse instantanée' },
-                        { icon: Shield, label: 'Estimation des coûts' },
-                        { icon: Clock, label: 'Conseils personnalisés' },
-                      ].map((feature, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <feature.icon className="h-4 w-4 text-neutral-400" />
-                          <span>{feature.label}</span>
-                        </div>
+                      <Cpu className="h-8 w-8 text-white" />
+                    </motion.div>
+
+                    <motion.h1
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-xl font-semibold text-neutral-900 dark:text-white mb-2"
+                    >
+                      Comment puis-je t'aider ?
+                    </motion.h1>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="text-neutral-500 text-sm mb-8"
+                    >
+                      Décris ton problème auto
+                    </motion.p>
+
+                    {/* Quick scan button */}
+                    {!scannedVehicle && (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        onClick={() => setShowPlateScanner(true)}
+                        className="mb-8 px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-900 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2"
+                      >
+                        <Car className="h-4 w-4" />
+                        Scanner ma plaque
+                      </motion.button>
+                    )}
+
+                    {/* Example Questions - Style ChatGPT */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="w-full max-w-md space-y-2"
+                    >
+                      {EXAMPLE_QUESTIONS.map((q, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setInput(q.text)}
+                          className="w-full p-3 text-left text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-3 group"
+                        >
+                          <span className="text-lg">{q.icon}</span>
+                          <span className="flex-1">{q.text}</span>
+                          <ChevronRight className="h-4 w-4 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
                       ))}
                     </motion.div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  /* Messages List */
-                  <div className="space-y-1">
+                  /* Messages */
+                  <div className="space-y-4">
                     {messages.map((message, index) => (
                       <ChatMessage key={index} message={message} />
                     ))}
@@ -545,32 +434,24 @@ export default function Chat() {
                     )}
 
                     {isLoading && !streamingContent && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex gap-3"
-                      >
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center flex-shrink-0">
                           <Cpu className="h-4 w-4 text-white" />
                         </div>
-                        <div className="px-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-2xl">
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                            <span className="text-sm text-neutral-600 dark:text-neutral-400">Analyse en cours...</span>
+                        <div className="px-4 py-3 bg-neutral-100 dark:bg-neutral-900 rounded-2xl">
+                          <div className="flex gap-1">
+                            <span className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     )}
 
                     {error && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl flex items-center gap-3 text-sm text-red-700 dark:text-red-400"
-                      >
-                        <X className="h-4 w-4 shrink-0" />
+                      <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl text-sm text-red-600 dark:text-red-400">
                         {error}
-                      </motion.div>
+                      </div>
                     )}
 
                     <div ref={messagesEndRef} />
@@ -579,71 +460,79 @@ export default function Chat() {
               </div>
             </div>
 
-          </div>
-
-          {/* Input Area - Fixed on mobile, above bottom nav */}
-          <div className="fixed bottom-[72px] md:bottom-0 left-0 right-0 md:left-64 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 z-40">
-            <div className="max-w-3xl mx-auto p-2.5 sm:p-4">
-              {/* Message Limit Warning */}
-              {isAtMessageLimit && (
-                <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-700 dark:text-amber-400">
-                  Limite atteinte - <button className="underline font-medium" onClick={() => setShowPaywall(true)}>Passer Premium</button>
-                </div>
-              )}
-
-              {/* Image Preview */}
-              {selectedImage && (
-                <div className="mb-2">
-                  <div className="relative inline-block">
-                    <img src={selectedImage.dataUrl} alt="Preview" className="max-h-16 rounded-lg border border-neutral-200 dark:border-neutral-800" />
-                    <button type="button" onClick={removeSelectedImage} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
-                      <X className="h-3 w-3" />
-                    </button>
+            {/* Input Area - Floating Style Claude/ChatGPT */}
+            <div className="fixed bottom-0 left-0 right-0 md:left-64 pb-[72px] md:pb-4 px-4 bg-gradient-to-t from-white via-white dark:from-neutral-950 dark:via-neutral-950 to-transparent pt-6 z-40">
+              <div className="max-w-3xl mx-auto">
+                {/* Image Preview */}
+                {selectedImage && (
+                  <div className="mb-2 flex justify-start">
+                    <div className="relative inline-block">
+                      <img src={selectedImage.dataUrl} alt="Preview" className="h-16 rounded-lg" />
+                      <button
+                        onClick={removeSelectedImage}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full flex items-center justify-center"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Image Error */}
-              {imageError && (
-                <div className="mb-2 text-xs text-red-600 bg-red-50 dark:bg-red-950/30 px-2 py-1.5 rounded-lg">{imageError}</div>
-              )}
+                {imageError && (
+                  <div className="mb-2 text-xs text-red-500">{imageError}</div>
+                )}
 
-              {/* Input */}
-              <form onSubmit={handleSubmit}>
-                <div className="flex gap-2 items-end p-1.5 sm:p-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
-                  <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
-                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg text-neutral-500"
-                  >
-                    <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Button>
+                {/* Limit Warning */}
+                {isAtMessageLimit && (
+                  <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-xs text-amber-700 dark:text-amber-400 text-center">
+                    Limite atteinte · <button onClick={() => setShowPaywall(true)} className="underline font-medium">Passer Premium</button>
+                  </div>
+                )}
 
-                  <Textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={isAtMessageLimit ? "Limite atteinte" : "Ton problème..."}
-                    className="min-h-[40px] max-h-20 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base sm:text-sm"
-                    rows={1}
-                    disabled={isLoading || isAtMessageLimit}
-                  />
+                {/* Input Bar - Style Claude */}
+                <form onSubmit={handleSubmit}>
+                  <div className="relative flex items-end gap-2 p-2 bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-lg shadow-neutral-200/50 dark:shadow-neutral-900/50">
+                    {/* Photo Button */}
+                    <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
+                      className="p-2 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-xl transition-colors disabled:opacity-40"
+                    >
+                      <Plus className="h-5 w-5" />
+                    </button>
 
-                  <Button
-                    type="submit"
-                    size="icon"
-                    disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
-                    className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 disabled:opacity-40"
-                  >
-                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  </Button>
-                </div>
-              </form>
+                    {/* Textarea */}
+                    <textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={isAtMessageLimit ? "Limite atteinte" : "Message..."}
+                      disabled={isLoading || isAtMessageLimit}
+                      rows={1}
+                      className="flex-1 bg-transparent border-0 resize-none text-sm text-neutral-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-0 py-2 px-1 max-h-32"
+                      style={{ minHeight: '40px' }}
+                    />
+
+                    {/* Send Button */}
+                    <Button
+                      type="submit"
+                      size="icon"
+                      disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
+                      className="h-10 w-10 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-900 dark:disabled:hover:bg-white flex-shrink-0"
+                    >
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </form>
+
+                {/* Disclaimer */}
+                <p className="text-[10px] text-neutral-400 text-center mt-2">
+                  Diagnostics à titre indicatif uniquement
+                </p>
+              </div>
             </div>
           </div>
         </main>
