@@ -299,17 +299,7 @@ export default function Vehicles() {
                 <Card className="p-8 md:p-12 text-center">
                   <Car className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                   <h3 className="font-medium text-lg mb-2">Aucun véhicule</h3>
-                  <p className="text-muted-foreground mb-4">Ajoute ton premier véhicule pour commencer</p>
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center">
-                    <Button variant="outline" onClick={() => setShowScanner(true)}>
-                      <Camera className="h-4 w-4 mr-2" />
-                      Scanner ma plaque
-                    </Button>
-                    <Button onClick={() => setShowAddModal(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Ajouter manuellement
-                    </Button>
-                  </div>
+                  <p className="text-muted-foreground">Utilise les boutons ci-dessus pour ajouter ton premier véhicule</p>
                 </Card>
               )}
             </div>

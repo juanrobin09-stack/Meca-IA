@@ -46,7 +46,7 @@ export const handler: Handler = async (event) => {
 
     // Extraire la plaque ET identifier le véhicule
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-3-5-sonnet-20241022',
       max_tokens: 300,
       messages: [{
         role: 'user',
@@ -61,19 +61,21 @@ export const handler: Handler = async (event) => {
           },
           {
             type: 'text',
-            text: `Analyse cette image de véhicule et extrais les informations suivantes.
+            text: `Tu es un expert automobile. Analyse cette image et identifie le véhicule.
 
-RÉPONDS UNIQUEMENT en JSON valide, sans texte avant ou après :
-{
-  "plate": "XX-123-XX ou NON_DETECTE",
-  "brand": "Marque du véhicule (Peugeot, Renault, Citroën, etc.) ou null",
-  "model": "Modèle (208, Clio, C3, etc.) ou null",
-  "year": 2020 ou null (estime l'année basé sur le design),
-  "fuel": "Essence ou Diesel ou Électrique ou Hybride ou null",
-  "color": "Couleur du véhicule ou null"
-}
+INSTRUCTIONS IMPORTANTES:
+1. Lis la plaque d'immatriculation (format français AA-123-BB)
+2. Identifie la MARQUE par le logo, la calandre, le design
+3. Identifie le MODÈLE par la forme, les phares, la silhouette
+4. Estime l'ANNÉE selon la génération du modèle
+5. Devine le CARBURANT (diesel si SUV/berline, essence si citadine)
 
-Sois précis pour la marque et le modèle si tu peux les identifier visuellement.`,
+RÉPONDS UNIQUEMENT en JSON valide :
+{"plate":"EH-723-DM","brand":"Peugeot","model":"308","year":2021,"fuel":"Diesel","color":"Gris"}
+
+Si tu vois une Peugeot, identifie si c'est 208, 308, 2008, 3008, 508, etc.
+Si tu vois une Renault, identifie si c'est Clio, Megane, Captur, Arkana, etc.
+ESSAIE TOUJOURS de deviner le modèle même si tu n'es pas sûr à 100%.`,
           },
         ],
       }],
