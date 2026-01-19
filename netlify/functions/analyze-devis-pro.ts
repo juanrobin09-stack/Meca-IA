@@ -29,10 +29,33 @@ interface AnalyzedLine extends DevisLine {
 }
 
 export default async function handler(req: Request) {
+  // CORS headers
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type'
+  }
+
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders })
+  }
+
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' }
+      headers: corsHeaders
+    })
+  }
+
+  // Vérifier que l'API key est configurée
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('❌ ANTHROPIC_API_KEY manquante dans les variables d\'environnement')
+    return new Response(JSON.stringify({
+      error: 'Configuration serveur manquante. Contactez le support.'
+    }), {
+      status: 500,
+      headers: corsHeaders
     })
   }
 
@@ -42,7 +65,20 @@ export default async function handler(req: Request) {
     if (!imageBase64) {
       return new Response(JSON.stringify({ error: 'Image required' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
+      })
+    }
+
+    // Vérifier la taille de l'image (max ~4MB en base64)
+    const imageSizeInMB = (imageBase64.length * 3) / 4 / 1024 / 1024
+    console.log(`📦 Taille image reçue: ${imageSizeInMB.toFixed(2)} MB`)
+
+    if (imageSizeInMB > 4) {
+      return new Response(JSON.stringify({
+        error: 'Image trop volumineuse. Compresse-la ou prends une nouvelle photo.'
+      }), {
+        status: 400,
+        headers: corsHeaders
       })
     }
 
@@ -123,11 +159,12 @@ RÈGLES:
       extractedDevis = JSON.parse(cleanJson)
     } catch (e) {
       console.error('Erreur parsing JSON extraction:', e)
+      console.error('Texte reçu:', extractedText.substring(0, 500))
       return new Response(JSON.stringify({
-        error: 'Impossible de lire le devis. Assure-toi que l\'image est nette.'
+        error: 'Impossible de lire le devis. Assure-toi que l\'image est nette et bien éclairée.'
       }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       })
     }
 
@@ -224,11 +261,12 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
       analysisResult = JSON.parse(cleanAnalysis)
     } catch (e) {
       console.error('Erreur parsing analyse:', e)
+      console.error('Texte analyse reçu:', analysisText.substring(0, 500))
       return new Response(JSON.stringify({
-        error: 'Erreur lors de l\'analyse du devis'
+        error: 'Erreur lors de l\'analyse du devis. Réessaie.'
       }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: corsHeaders
       })
     }
 
@@ -300,16 +338,35 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
 
     return new Response(JSON.stringify(result), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: corsHeaders
     })
 
   } catch (error: any) {
-    console.error('Erreur analyze-devis-pro:', error)
+    console.error('❌ Erreur analyze-devis-pro:', error)
+
+    // Messages d'erreur spécifiques selon le type
+    let errorMessage = 'Erreur serveur. Réessaie dans quelques instants.'
+    let statusCode = 500
+
+    if (error.status === 429 || error.message?.includes('rate_limit')) {
+      errorMessage = 'Trop de requêtes. Attends 1 minute et réessaie.'
+      statusCode = 429
+    } else if (error.status === 401 || error.message?.includes('invalid_api_key')) {
+      errorMessage = 'Erreur de configuration. Contacte le support.'
+      statusCode = 401
+    } else if (error.message?.includes('Could not process image')) {
+      errorMessage = 'Impossible de traiter l\'image. Assure-toi qu\'elle est nette.'
+      statusCode = 400
+    } else if (error.message?.includes('timeout') || error.name === 'AbortError') {
+      errorMessage = 'L\'analyse a pris trop de temps. Réessaie avec une photo plus légère.'
+      statusCode = 408
+    }
+
     return new Response(JSON.stringify({
-      error: error.message || 'Erreur serveur'
+      error: errorMessage
     }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      status: statusCode,
+      headers: corsHeaders
     })
   }
 }

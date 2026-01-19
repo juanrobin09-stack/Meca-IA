@@ -125,6 +125,9 @@ export default function AnalyseDevis() {
     setFromCache(false)
     setAnalysisStep('Extraction du devis...')
 
+    const maxRetries = 3
+    let lastError: Error | null = null
+
     try {
       // Générer hash pour vérifier si déjà analysé
       const devisHash = await DevisHashService.generateDevisHash(selectedFile.base64)
@@ -143,27 +146,96 @@ export default function AnalyseDevis() {
 
       setAnalysisStep('Analyse IA professionnelle...')
 
-      // Nouvelle analyse professionnelle
-      const response = await fetch('/.netlify/functions/analyze-devis-pro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          imageBase64: selectedFile.base64,
-          userId: user.id
-        })
-      })
+      // Nouvelle analyse avec retry logic
+      let result = null
 
-      if (!response.ok) {
-        // Check if response is HTML (404 page) instead of JSON
-        const contentType = response.headers.get('content-type')
-        if (contentType && contentType.includes('text/html')) {
-          throw new Error('Service d\'analyse temporairement indisponible. Veuillez réessayer plus tard.')
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          console.log(`🔄 Tentative d'analyse ${attempt}/${maxRetries}...`)
+          setAnalysisStep(`Analyse en cours... (tentative ${attempt}/${maxRetries})`)
+
+          // Créer un AbortController pour le timeout
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 secondes timeout
+
+          const response = await fetch('/.netlify/functions/analyze-devis-pro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              imageBase64: selectedFile.base64,
+              userId: user.id
+            }),
+            signal: controller.signal
+          })
+
+          clearTimeout(timeoutId)
+
+          // Vérifier si la réponse est du JSON
+          const contentType = response.headers.get('content-type')
+
+          if (!response.ok) {
+            if (contentType && contentType.includes('text/html')) {
+              throw new Error('SERVICE_UNAVAILABLE')
+            }
+            const errorData = await response.json().catch(() => ({}))
+
+            if (response.status === 429) {
+              throw new Error('RATE_LIMIT')
+            } else if (response.status === 401 || response.status === 403) {
+              throw new Error('AUTH_ERROR')
+            } else if (response.status >= 500) {
+              throw new Error('SERVER_ERROR')
+            }
+
+            throw new Error(errorData.error || 'UNKNOWN_ERROR')
+          }
+
+          result = await response.json()
+          console.log('✅ Analyse réussie')
+          break // Succès, sortir de la boucle
+
+        } catch (err: any) {
+          console.error(`❌ Erreur tentative ${attempt}:`, err)
+          lastError = err
+
+          // Erreurs non-récupérables, ne pas réessayer
+          if (err.message === 'AUTH_ERROR') {
+            throw new Error('Erreur d\'authentification. Reconnecte-toi et réessaie.')
+          }
+
+          if (err.name === 'AbortError') {
+            lastError = new Error('TIMEOUT')
+          }
+
+          // Si ce n'est pas la dernière tentative, attendre avant de réessayer
+          if (attempt < maxRetries) {
+            const waitTime = attempt * 2000 // 2s, 4s, 6s
+            console.log(`⏳ Attente ${waitTime/1000}s avant nouvelle tentative...`)
+            setAnalysisStep(`Nouvelle tentative dans ${waitTime/1000}s...`)
+            await new Promise(resolve => setTimeout(resolve, waitTime))
+          }
         }
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Erreur serveur')
       }
 
-      const result = await response.json()
+      // Si on n'a pas de résultat après toutes les tentatives
+      if (!result) {
+        const errorMessage = lastError?.message || 'UNKNOWN_ERROR'
+
+        if (errorMessage === 'TIMEOUT') {
+          throw new Error('L\'analyse prend trop de temps. Essaie avec une photo plus petite ou réessaie plus tard.')
+        } else if (errorMessage === 'SERVICE_UNAVAILABLE') {
+          throw new Error('Le service d\'analyse est temporairement indisponible. Réessaie dans quelques minutes.')
+        } else if (errorMessage === 'RATE_LIMIT') {
+          throw new Error('Trop de requêtes. Attends 1 minute et réessaie.')
+        } else if (errorMessage === 'SERVER_ERROR') {
+          throw new Error('Erreur serveur. Nos équipes sont informées. Réessaie dans quelques minutes.')
+        } else if (errorMessage.includes('Impossible de lire')) {
+          throw new Error('Impossible de lire le devis. Assure-toi que la photo est nette et bien éclairée.')
+        } else {
+          throw new Error(`Erreur lors de l'analyse après ${maxRetries} tentatives. Réessaie plus tard.`)
+        }
+      }
+
       setAnalysisResult(result)
       celebrateSuccess()
 
@@ -203,7 +275,7 @@ export default function AnalyseDevis() {
         setCurrentRemaining(prev => Math.max(0, prev - 1))
       }
     } catch (err: any) {
-      console.error('Analysis error:', err)
+      console.error('❌ Erreur finale analyse:', err)
       setError(err.message || "Erreur lors de l'analyse. Réessaie.")
     } finally {
       setIsAnalyzing(false)
@@ -438,15 +510,18 @@ export default function AnalyseDevis() {
                 )}
 
                 <Button
-                  className="w-full h-14 text-base font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25"
+                  className="w-full h-16 text-base font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25"
                   size="lg"
                   onClick={handleAnalyzeQuote}
                   disabled={!selectedFile || isAnalyzing}
                 >
                   {isAnalyzing ? (
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>{analysisStep || 'Analyse professionnelle en cours...'}</span>
+                    <div className="flex flex-col items-center justify-center gap-1">
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span>{analysisStep || 'Analyse professionnelle en cours...'}</span>
+                      </div>
+                      <span className="text-xs opacity-80">Cela peut prendre 30-60 secondes</span>
                     </div>
                   ) : (
                     <>
