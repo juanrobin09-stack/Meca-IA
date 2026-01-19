@@ -6,6 +6,7 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
 import { useChat } from '@/hooks/useChat'
 import { useConfetti } from '@/hooks/useConfetti'
+import { AIMemoryService } from '@/services/aiMemoryService'
 import Sidebar from '@/components/Sidebar'
 import ChatMessage from '@/components/ChatMessage'
 import PaywallModal from '@/components/PaywallModal'
@@ -45,9 +46,10 @@ export default function Chat() {
   const { user, profile, refreshProfile } = useAuth()
   const { isPremium, diagnosticsRemaining, purchasedDiagnosticCredits, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
   const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
-  const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages } = useChat()
+  const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages, setMemoryContext } = useChat()
   const { celebrate } = useConfetti()
   const hasConfettiedRef = useRef(false)
+  const memoryLoadedRef = useRef(false)
 
   const [input, setInput] = useState('')
   const [showPaywall, setShowPaywall] = useState(false)
@@ -95,6 +97,26 @@ export default function Chat() {
       checkLimitOnLoad()
     }
   }, [id, user, profile, checkDiagnosticLimit])
+
+  // Load AI memory context for the user
+  useEffect(() => {
+    async function loadMemory() {
+      if (!user?.id || memoryLoadedRef.current) return
+
+      try {
+        console.log('[Chat] Loading AI memory for user...')
+        const memory = await AIMemoryService.loadUserMemory(user.id)
+        const memoryContext = AIMemoryService.generateContextForAI(memory)
+        setMemoryContext(memoryContext)
+        memoryLoadedRef.current = true
+        console.log('[Chat] AI memory loaded successfully')
+      } catch (err) {
+        console.warn('[Chat] Failed to load AI memory:', err)
+      }
+    }
+
+    loadMemory()
+  }, [user?.id, setMemoryContext])
 
   // Load existing diagnostic if ID provided
   useEffect(() => {

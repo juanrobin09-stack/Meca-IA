@@ -6,6 +6,10 @@ export interface ChatMessage {
   image?: string // Base64 data (without data URL prefix) for images
 }
 
+export interface ChatOptions {
+  memoryContext?: string
+}
+
 const API_BASE = import.meta.env.DEV
   ? 'http://localhost:8888/.netlify/functions'
   : '/.netlify/functions'
@@ -15,7 +19,7 @@ async function getAuthToken(): Promise<string | null> {
   return session?.access_token ?? null
 }
 
-export async function sendMessage(messages: ChatMessage[]): Promise<string> {
+export async function sendMessage(messages: ChatMessage[], options?: ChatOptions): Promise<string> {
   const token = await getAuthToken()
 
   if (!token) {
@@ -28,7 +32,11 @@ export async function sendMessage(messages: ChatMessage[]): Promise<string> {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ messages, stream: false }),
+    body: JSON.stringify({
+      messages,
+      stream: false,
+      memoryContext: options?.memoryContext
+    }),
   })
 
   if (!response.ok) {
@@ -41,7 +49,7 @@ export async function sendMessage(messages: ChatMessage[]): Promise<string> {
   return data.content
 }
 
-export async function* streamMessage(messages: ChatMessage[]): AsyncGenerator<string> {
+export async function* streamMessage(messages: ChatMessage[], options?: ChatOptions): AsyncGenerator<string> {
   const token = await getAuthToken()
 
   if (!token) {
@@ -56,7 +64,11 @@ export async function* streamMessage(messages: ChatMessage[]): AsyncGenerator<st
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
-    body: JSON.stringify({ messages, stream: true }),
+    body: JSON.stringify({
+      messages,
+      stream: true,
+      memoryContext: options?.memoryContext
+    }),
   })
 
   if (!response.ok) {

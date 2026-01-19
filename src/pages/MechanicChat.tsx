@@ -407,8 +407,8 @@ export default function MechanicChat() {
 
                       <div>
                         <h1 className="font-bold text-xl sm:text-2xl flex items-center gap-2 flex-wrap">
-                          <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                            MECAI
+                          <span className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 bg-clip-text text-transparent">
+                            Alex, ton mécanicien
                           </span>
                           {isPremium && (
                             <Badge variant="premium" className="text-xs">
@@ -424,7 +424,7 @@ export default function MechanicChat() {
                           <span className="text-muted-foreground">•</span>
                           <span className="text-muted-foreground flex items-center gap-1">
                             <Zap className="h-3.5 w-3.5" />
-                            Répond instantanément
+                            Ton pote mécanicien 24/7
                           </span>
                         </div>
                       </div>
@@ -442,7 +442,7 @@ export default function MechanicChat() {
                       </Button>
                       <Button
                         onClick={createNewConversation}
-                        className="h-10 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40"
+                        className="h-10 px-4 rounded-xl bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 shadow-lg shadow-orange-500/25 transition-all hover:shadow-orange-500/40"
                       >
                         <Plus className="h-4 w-4 sm:mr-2" />
                         <span className="hidden sm:inline font-medium">Nouveau</span>
@@ -609,14 +609,14 @@ export default function MechanicChat() {
                           transition={{ delay: 0.2 }}
                         >
                           <h2 className="text-2xl sm:text-3xl font-bold mb-3">
-                            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                              Salut, je suis MECAI !
+                            <span className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 bg-clip-text text-transparent">
+                              Salut, c'est Alex ! 🔧
                             </span>
                           </h2>
                           <p className="text-base sm:text-lg text-muted-foreground mb-10 max-w-md mx-auto">
-                            Ton assistant mécanique IA disponible 24h/24.
+                            Ton pote mécanicien, dispo 24h/24.
                             <br />
-                            <span className="text-sm">Pose-moi n'importe quelle question sur ta voiture !</span>
+                            <span className="text-sm">Pose-moi n'importe quelle question sur ta caisse !</span>
                           </p>
                         </motion.div>
 
@@ -632,7 +632,7 @@ export default function MechanicChat() {
                               key={i}
                               whileHover={{ scale: 1.03, y: -2 }}
                               whileTap={{ scale: 0.98 }}
-                              className="group relative overflow-hidden rounded-2xl border-2 border-transparent bg-card p-5 text-left shadow-lg hover:shadow-xl transition-all hover:border-indigo-500/30"
+                              className="group relative overflow-hidden rounded-2xl border-2 border-transparent bg-card p-5 text-left shadow-lg hover:shadow-xl transition-all hover:border-orange-500/30"
                               onClick={() => sendMessage(action.message)}
                             >
                               {/* Gradient overlay on hover */}
@@ -673,8 +673,8 @@ export default function MechanicChat() {
                             <div className={`max-w-[80%] ${msg.sender === 'user' ? 'text-right' : ''}`}>
                               <Card className={`inline-block shadow-md ${
                                 msg.sender === 'user'
-                                  ? 'bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-white border-0'
-                                  : 'bg-card border-2'
+                                  ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 text-white border-0'
+                                  : 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-2 border-orange-200/50 dark:border-orange-800/50'
                               }`}>
                                 <CardContent className="p-4">
                                   {msg.sender === 'ai' ? (
@@ -713,9 +713,9 @@ export default function MechanicChat() {
                             <Card className="bg-card border-2 shadow-md">
                               <CardContent className="p-4">
                                 <div className="flex gap-1.5">
-                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '0ms' }} />
-                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '150ms' }} />
-                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-bounce" style={{ animationDelay: '300ms' }} />
                                 </div>
                               </CardContent>
                             </Card>
@@ -754,8 +754,8 @@ export default function MechanicChat() {
                           value={inputMessage}
                           onChange={(e) => setInputMessage(e.target.value)}
                           onKeyDown={handleKeyPress}
-                          placeholder="Pose ta question..."
-                          className="resize-none min-h-[52px] max-h-[150px] text-base rounded-2xl border-2 pr-4 focus:border-indigo-500 transition-colors"
+                          placeholder="Parle à Alex... 💬"
+                          className="resize-none min-h-[52px] max-h-[150px] text-base rounded-2xl border-2 pr-4 focus:border-orange-500 transition-colors"
                           rows={1}
                           maxLength={1000}
                           disabled={isTyping}
@@ -765,7 +765,7 @@ export default function MechanicChat() {
                         onClick={() => sendMessage()}
                         disabled={!inputMessage.trim() || isTyping}
                         size="icon"
-                        className="h-[52px] w-[52px] shrink-0 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all"
+                        className="h-[52px] w-[52px] shrink-0 rounded-2xl bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 hover:from-orange-600 hover:via-red-600 hover:to-pink-600 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all"
                       >
                         {isTyping ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
@@ -783,7 +783,7 @@ export default function MechanicChat() {
                             key={i}
                             variant="outline"
                             size="sm"
-                            className="text-xs h-9 px-3 rounded-xl border-2 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all"
+                            className="text-xs h-9 px-3 rounded-xl border-2 hover:border-orange-500/50 hover:bg-orange-500/5 transition-all"
                             onClick={() => sendMessage(action.message)}
                             disabled={isTyping}
                           >

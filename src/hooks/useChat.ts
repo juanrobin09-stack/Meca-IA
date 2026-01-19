@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react'
-import { streamMessage, type ChatMessage } from '@/lib/anthropic'
+import { useState, useCallback, useRef } from 'react'
+import { streamMessage, type ChatMessage, type ChatOptions } from '@/lib/anthropic'
 import type { Message } from '@/types'
 
 export function useChat() {
@@ -7,6 +7,12 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [streamingContent, setStreamingContent] = useState('')
+  const memoryContextRef = useRef<string | undefined>(undefined)
+
+  // Set memory context for AI
+  const setMemoryContext = useCallback((context: string | undefined) => {
+    memoryContextRef.current = context
+  }, [])
 
   const sendMessage = useCallback(
     async (content: string, imageBase64?: string): Promise<Message | null> => {
@@ -36,7 +42,12 @@ export function useChat() {
           image: m.image?.startsWith('data:') ? m.image.split(',')[1] : m.image,
         }))
 
-        for await (const chunk of streamMessage(apiMessages)) {
+        // Pass memory context if available
+        const options: ChatOptions | undefined = memoryContextRef.current
+          ? { memoryContext: memoryContextRef.current }
+          : undefined
+
+        for await (const chunk of streamMessage(apiMessages, options)) {
           fullResponse += chunk
           setStreamingContent(fullResponse)
         }
@@ -81,5 +92,6 @@ export function useChat() {
     loadMessages,
     clearMessages,
     setMessages,
+    setMemoryContext,
   }
 }
