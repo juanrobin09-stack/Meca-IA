@@ -75,9 +75,12 @@ export default function Vehicles() {
 
   const fetchVehicles = async () => {
     if (!user) {
+      console.log('[Vehicles] No user, skipping fetch')
       setLoading(false)
       return
     }
+
+    console.log('[Vehicles] Fetching vehicles for user:', user.id)
 
     try {
       const { data, error } = await supabase
@@ -86,30 +89,65 @@ export default function Vehicles() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (!error && data) {
-        setVehicles(data)
+      if (error) {
+        console.error('[Vehicles] Error fetching:', error)
+      } else {
+        console.log('[Vehicles] Fetched', data?.length || 0, 'vehicles:', data)
+        setVehicles(data || [])
       }
     } catch (err) {
-      console.error('Error fetching vehicles:', err)
+      console.error('[Vehicles] Exception:', err)
     }
     setLoading(false)
   }
 
+  const [saveError, setSaveError] = useState<string | null>(null)
+
   const handleSaveVehicle = async (vehicleData: Partial<Vehicle>) => {
-    if (!user) return
+    if (!user) {
+      console.log('[Vehicles] No user, cannot save')
+      return
+    }
+    setSaveError(null)
+
+    console.log('[Vehicles] Saving vehicle:', vehicleData)
 
     try {
+      let error, data
       if (editingVehicle) {
-        await supabase.from('vehicles').update(vehicleData).eq('id', editingVehicle.id)
+        console.log('[Vehicles] Updating vehicle:', editingVehicle.id)
+        const result = await supabase
+          .from('vehicles')
+          .update(vehicleData)
+          .eq('id', editingVehicle.id)
+          .select()
+        error = result.error
+        data = result.data
       } else {
-        await supabase.from('vehicles').insert({ ...vehicleData, user_id: user.id })
+        console.log('[Vehicles] Inserting new vehicle for user:', user.id)
+        const result = await supabase
+          .from('vehicles')
+          .insert({ ...vehicleData, user_id: user.id })
+          .select()
+        error = result.error
+        data = result.data
       }
 
-      fetchVehicles()
+      console.log('[Vehicles] Save result:', { error, data })
+
+      if (error) {
+        console.error('[Vehicles] Supabase error:', error)
+        setSaveError(error.message || 'Erreur lors de la sauvegarde')
+        return
+      }
+
+      console.log('[Vehicles] Vehicle saved successfully:', data)
+      await fetchVehicles()
       setShowAddModal(false)
       setEditingVehicle(null)
     } catch (err) {
-      console.error('Error saving vehicle:', err)
+      console.error('[Vehicles] Exception:', err)
+      setSaveError('Erreur inattendue lors de la sauvegarde')
     }
   }
 
@@ -267,9 +305,11 @@ export default function Vehicles() {
               onClose={() => {
                 setShowAddModal(false)
                 setEditingVehicle(null)
+                setSaveError(null)
               }}
               onSave={handleSaveVehicle}
               vehicle={editingVehicle}
+              error={saveError}
               onOpenScanner={() => {
                 setShowAddModal(false)
                 setShowScanner(true)
@@ -294,12 +334,14 @@ function VehicleModal({
   onClose,
   onSave,
   vehicle,
+  error,
   onOpenScanner,
 }: {
   open: boolean
   onClose: () => void
   onSave: (data: Partial<Vehicle>) => void
   vehicle: Vehicle | null
+  error: string | null
   onOpenScanner: () => void
 }) {
   const [formData, setFormData] = useState({
@@ -347,6 +389,13 @@ function VehicleModal({
         <DialogHeader>
           <DialogTitle>{vehicle ? 'Modifier le véhicule' : 'Ajouter un véhicule'}</DialogTitle>
         </DialogHeader>
+
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-200 flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {error}
+          </div>
+        )}
 
         {!vehicle && (
           <Button variant="outline" className="w-full mb-4" onClick={onOpenScanner}>
