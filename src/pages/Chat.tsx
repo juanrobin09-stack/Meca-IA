@@ -582,7 +582,7 @@ export default function Chat() {
           </div>
 
           {/* Input Area - Fixed on mobile, above bottom nav */}
-          <div className="fixed bottom-[64px] md:bottom-0 left-0 right-0 md:left-64 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 z-40">
+          <div className="fixed bottom-[72px] md:bottom-0 left-0 right-0 md:left-64 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 z-40">
             <div className="max-w-3xl mx-auto p-2.5 sm:p-4">
               {/* Message Limit Warning */}
               {isAtMessageLimit && (
