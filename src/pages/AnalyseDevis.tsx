@@ -83,6 +83,8 @@ export default function AnalyseDevis() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    console.log('📁 Fichier sélectionné:', file.name, file.type, file.size)
+
     // Reset both refs
     if (cameraInputRef.current) cameraInputRef.current.value = ''
     if (galleryInputRef.current) galleryInputRef.current.value = ''
@@ -93,18 +95,24 @@ export default function AnalyseDevis() {
     // Validate
     const validation = validateImageFile(file)
     if (!validation.valid) {
+      console.error('❌ Validation échouée:', validation.error)
       setError(validation.error || 'Fichier invalide')
       return
     }
 
     try {
+      setAnalysisStep('Préparation de l\'image...')
       const compressed = await compressImage(file)
+      console.log('✅ Image prête, taille base64:', compressed.base64.length)
       setSelectedFile({
         dataUrl: compressed.dataUrl,
         base64: compressed.base64,
       })
-    } catch {
-      setError("Erreur lors du traitement de l'image")
+      setAnalysisStep('')
+    } catch (err: any) {
+      console.error('❌ Erreur compression:', err)
+      setError(err.message || "Erreur lors du traitement de l'image. Essaie une autre photo.")
+      setAnalysisStep('')
     }
   }
 

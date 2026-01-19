@@ -6,114 +6,167 @@ export interface CompressedImage {
 
 /**
  * Compresses an image file to reduce size for API calls
- * Max dimensions: 1024x1024, JPEG quality: 0.8
- * Optimized for mobile camera captures
+ * Uses FileReader for better mobile compatibility
  */
 export async function compressImage(file: File): Promise<CompressedImage> {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    const img = new Image()
+  console.log('📸 Compression image:', file.name, file.type, file.size)
 
-    // Timeout for mobile browsers that might hang
+  // Pour les fichiers HEIC/HEIF (iOS), on doit les convertir différemment
+  const isHeic = file.type === 'image/heic' ||
+                 file.type === 'image/heif' ||
+                 file.name.toLowerCase().endsWith('.heic') ||
+                 file.name.toLowerCase().endsWith('.heif')
+
+  if (isHeic) {
+    console.log('📱 Format HEIC détecté, utilisation de FileReader direct')
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+
+    // Timeout pour éviter les blocages sur mobile
     const timeout = setTimeout(() => {
-      reject(new Error('Timeout lors du chargement de l\'image. Réessaie.'))
+      console.error('⏱️ Timeout lecture fichier')
+      reject(new Error('Timeout lors du chargement. Réessaie avec une autre photo.'))
     }, 30000)
 
-    // Create object URL
-    const objectUrl = URL.createObjectURL(file)
-
-    img.onload = () => {
+    reader.onload = () => {
       clearTimeout(timeout)
-      URL.revokeObjectURL(objectUrl)
+      console.log('✅ FileReader terminé')
 
       try {
-        // Max 1024x1024 pour réduire tokens API
-        const maxSize = 1024
-        let width = img.width
-        let height = img.height
+        const dataUrl = reader.result as string
 
-        if (width > maxSize || height > maxSize) {
-          if (width > height) {
-            height = (height / width) * maxSize
-            width = maxSize
-          } else {
-            width = (width / height) * maxSize
-            height = maxSize
-          }
-        }
-
-        canvas.width = width
-        canvas.height = height
-        ctx?.drawImage(img, 0, 0, width, height)
-
-        // Qualité 0.8 pour compression
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
-        const base64 = dataUrl.split(',')[1]
-
-        if (!base64 || base64.length < 100) {
-          reject(new Error('Erreur lors de la compression de l\'image'))
+        if (!dataUrl || !dataUrl.startsWith('data:')) {
+          reject(new Error('Erreur de lecture du fichier'))
           return
         }
 
-        resolve({
-          base64,
-          dataUrl,
-          mimeType: 'image/jpeg',
-        })
+        // Créer une image pour la compression
+        const img = new Image()
+
+        img.onload = () => {
+          console.log('✅ Image chargée:', img.width, 'x', img.height)
+
+          try {
+            const canvas = document.createElement('canvas')
+            const ctx = canvas.getContext('2d')
+
+            if (!ctx) {
+              reject(new Error('Canvas non supporté'))
+              return
+            }
+
+            // Max 1200x1200 pour garder qualité mais réduire taille
+            const maxSize = 1200
+            let width = img.width
+            let height = img.height
+
+            if (width > maxSize || height > maxSize) {
+              if (width > height) {
+                height = Math.round((height / width) * maxSize)
+                width = maxSize
+              } else {
+                width = Math.round((width / height) * maxSize)
+                height = maxSize
+              }
+            }
+
+            canvas.width = width
+            canvas.height = height
+            ctx.drawImage(img, 0, 0, width, height)
+
+            // Convertir en JPEG avec qualité 0.85
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85)
+            const base64 = compressedDataUrl.split(',')[1]
+
+            if (!base64 || base64.length < 100) {
+              console.error('❌ Base64 trop court:', base64?.length)
+              reject(new Error('Erreur lors de la compression'))
+              return
+            }
+
+            console.log('✅ Compression réussie:', Math.round(base64.length / 1024), 'KB')
+
+            resolve({
+              base64,
+              dataUrl: compressedDataUrl,
+              mimeType: 'image/jpeg',
+            })
+          } catch (err) {
+            console.error('❌ Erreur canvas:', err)
+            reject(new Error('Erreur lors du traitement'))
+          }
+        }
+
+        img.onerror = (e) => {
+          console.error('❌ Erreur chargement image:', e)
+
+          // Fallback: retourner le fichier original en base64 si l'image ne charge pas
+          // Cela peut arriver avec certains formats sur mobile
+          console.log('🔄 Fallback: utilisation du fichier original')
+
+          const base64 = dataUrl.split(',')[1]
+          if (base64 && base64.length > 100) {
+            resolve({
+              base64,
+              dataUrl,
+              mimeType: file.type || 'image/jpeg',
+            })
+          } else {
+            reject(new Error('Format d\'image non supporté. Essaie avec une photo JPG ou PNG.'))
+          }
+        }
+
+        // Charger l'image depuis le dataUrl
+        img.src = dataUrl
       } catch (err) {
+        console.error('❌ Erreur traitement:', err)
         reject(new Error('Erreur lors du traitement de l\'image'))
       }
     }
 
-    img.onerror = () => {
+    reader.onerror = () => {
       clearTimeout(timeout)
-      URL.revokeObjectURL(objectUrl)
-      reject(new Error('Impossible de charger l\'image. Vérifie le format.'))
+      console.error('❌ Erreur FileReader')
+      reject(new Error('Impossible de lire le fichier. Vérifie les permissions.'))
     }
 
-    img.src = objectUrl
+    // Lire le fichier comme DataURL
+    reader.readAsDataURL(file)
   })
 }
 
 /**
  * Validates that a file is an acceptable image
- * More lenient for mobile camera captures
+ * Very lenient for mobile camera captures
  */
 export function validateImageFile(file: File): { valid: boolean; error?: string } {
-  const maxSize = 15 * 1024 * 1024 // 15MB (increased for mobile photos)
+  console.log('🔍 Validation fichier:', file.name, file.type, file.size)
 
-  // Allowed MIME types - include HEIC for iOS
-  const allowedTypes = [
-    'image/jpeg',
-    'image/jpg',
-    'image/png',
-    'image/gif',
-    'image/webp',
-    'image/heic',
-    'image/heif',
-    ''  // Some mobile browsers don't report MIME type
-  ]
+  const maxSize = 20 * 1024 * 1024 // 20MB pour mobile
 
-  // Check file extension as fallback
+  // Si pas de type MIME (courant sur mobile), vérifier l'extension
   const extension = file.name.toLowerCase().split('.').pop() || ''
-  const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif']
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'bmp']
 
-  // If file.type is empty (common on mobile), check extension
-  const hasValidType = allowedTypes.includes(file.type) || file.type.startsWith('image/')
-  const hasValidExtension = allowedExtensions.includes(extension)
+  // Vérifier si c'est une image
+  const isImage = file.type.startsWith('image/') ||
+                  file.type === '' ||
+                  imageExtensions.includes(extension)
 
-  if (!hasValidType && !hasValidExtension) {
-    return { valid: false, error: 'Format non supporté. Utilise JPG, PNG ou une photo de ta galerie.' }
+  if (!isImage) {
+    return { valid: false, error: 'Format non supporté. Utilise une photo JPG, PNG ou HEIC.' }
   }
 
   if (file.size > maxSize) {
-    return { valid: false, error: 'Image trop lourde. Maximum 15MB.' }
+    return { valid: false, error: 'Image trop lourde (max 20MB). Prends une nouvelle photo.' }
   }
 
-  if (file.size < 1000) {
-    return { valid: false, error: 'Image trop petite ou corrompue.' }
+  if (file.size < 500) {
+    return { valid: false, error: 'Fichier trop petit ou corrompu.' }
   }
 
+  console.log('✅ Fichier validé')
   return { valid: true }
 }
