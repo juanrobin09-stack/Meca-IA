@@ -21,10 +21,18 @@ export default function Signup() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    // Validation du prénom
+    const trimmedName = displayName.trim()
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('Le prénom est obligatoire (minimum 2 caractères)')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await signUp(email, password, displayName || undefined)
+      await signUp(email, password, trimmedName)
       // Marquer que c'est une nouvelle inscription pour afficher l'onboarding
       localStorage.setItem('mecaia_show_onboarding', 'true')
       navigate('/app')
@@ -56,14 +64,21 @@ export default function Signup() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="displayName">Prénom (optionnel)</Label>
+              <Label htmlFor="displayName">
+                Prénom <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="displayName"
                 type="text"
                 placeholder="Jean"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
+                required
+                minLength={2}
               />
+              <p className="text-xs text-muted-foreground">
+                Ce prénom sera affiché dans l'app
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
