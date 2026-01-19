@@ -754,8 +754,8 @@ export default function MechanicChat() {
                   </div>
                 )}
 
-                {/* Input Area - Mobile Optimized */}
-                <div className="flex-shrink-0 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl p-2.5 sm:p-4 safe-area-bottom">
+                {/* Input Area - Mobile Optimized with bottom nav space */}
+                <div className="flex-shrink-0 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl p-2.5 sm:p-4 pb-[88px] md:pb-4">
                   <div className="max-w-3xl mx-auto">
                     <div className="flex gap-2 sm:gap-3 items-end">
                       <div className="flex-1 min-w-0">

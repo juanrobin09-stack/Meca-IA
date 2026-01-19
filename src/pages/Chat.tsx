@@ -303,50 +303,50 @@ export default function Chat() {
       <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
         <Sidebar />
 
-        <main className="md:pl-64 pb-20 md:pb-0">
-          <div className="h-screen md:h-[calc(100vh-0px)] flex flex-col">
-            {/* Premium Minimalist Header */}
-            <header className="relative border-b border-neutral-200/60 dark:border-neutral-800/60 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl">
-              <div className="px-4 sm:px-6 lg:px-8 py-4">
+        <main className="md:pl-64">
+          <div className="h-[100dvh] md:h-screen flex flex-col overflow-hidden">
+            {/* Mobile-Optimized Header */}
+            <header className="flex-shrink-0 border-b border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl">
+              <div className="px-3 sm:px-6 py-2.5 sm:py-4">
                 <div className="max-w-4xl mx-auto">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     {/* Left - Back & Logo */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => navigate('/app')}
-                        className="md:hidden h-9 w-9 rounded-xl text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        className="md:hidden h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex-shrink-0"
                       >
-                        <ArrowLeft className="h-5 w-5" />
+                        <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                       </Button>
 
-                      {/* Premium Avatar */}
-                      <div className="relative">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                          <Cpu className="h-6 w-6 text-white" />
+                      {/* Avatar - smaller on mobile */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                          <Cpu className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                         </div>
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-950" />
+                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-950" />
                       </div>
 
-                      <div>
-                        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h1 className="text-sm sm:text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5 sm:gap-2 truncate">
                           Diagnostic IA
                           {isPremium && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full">
-                              <Sparkles className="w-2.5 h-2.5" />
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] sm:text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full flex-shrink-0">
+                              <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                               PRO
                             </span>
                           )}
                         </h1>
-                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                          Expert automobile intelligent
+                        <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 truncate">
+                          Expert auto
                         </p>
                       </div>
                     </div>
 
                     {/* Right - Status Badges */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                       {photosUsed > 0 && (
                         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
                           <Camera className="h-3 w-3" />
@@ -579,8 +579,8 @@ export default function Chat() {
               </div>
             </div>
 
-            {/* Input Area - Premium Minimal */}
-            <div className="border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl p-4 pb-20 md:pb-4">
+            {/* Input Area - Mobile Optimized with bottom nav space */}
+            <div className="flex-shrink-0 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl p-2.5 sm:p-4 pb-[88px] md:pb-4">
               <div className="max-w-3xl mx-auto">
                 {/* Message Limit Warning */}
                 {isAtMessageLimit && (

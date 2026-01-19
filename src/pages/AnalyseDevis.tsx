@@ -271,34 +271,36 @@ export default function AnalyseDevis() {
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
 
-      <main className="md:pl-64 pb-20 md:pb-0">
-        <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <main className="md:pl-64">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 md:pb-8 max-w-3xl">
           <motion.div
-            className="mb-8"
+            className="mb-4 sm:mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-2">
                 <motion.div whileHover={{ rotate: 10 }}>
-                  <FileText className="h-8 w-8 text-primary" />
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </motion.div>
-                Analyseur de Devis Pro
+                <span className="hidden sm:inline">Analyseur de Devis Pro</span>
+                <span className="sm:hidden">Analyse Devis</span>
               </h1>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 {devisList.length > 0 && (
                   <Link to="/app/history?tab=devis">
-                    <Button variant="outline" size="sm">
-                      <History className="h-4 w-4 mr-2" />
-                      Historique ({devisList.length})
+                    <Button variant="outline" size="sm" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
+                      <History className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Historique ({devisList.length})</span>
+                      <span className="sm:hidden">{devisList.length}</span>
                     </Button>
                   </Link>
                 )}
-                <Badge variant={isPremium ? "premium" : "secondary"} className="text-sm">
+                <Badge variant={isPremium ? "premium" : "secondary"} className="text-[10px] sm:text-sm px-2 py-0.5">
                   {isPremium ? (
-                    <>✨ Illimité</>
+                    <>✨ <span className="hidden sm:inline">Illimité</span><span className="sm:hidden">∞</span></>
                   ) : (
-                    <>{displayRemaining}/1 analyse gratuite</>
+                    <><span className="hidden sm:inline">{displayRemaining}/1 analyse gratuite</span><span className="sm:hidden">{displayRemaining}/1</span></>
                   )}
                 </Badge>
               </div>
