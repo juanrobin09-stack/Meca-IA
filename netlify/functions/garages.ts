@@ -56,8 +56,19 @@ export const handler: Handler = async (event) => {
     } else if (query) {
       // Sinon → recherche par texte, geocoder la ville
       const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)},France&key=${API_KEY}`
+      console.log('Geocoding:', query)
       const geoResponse = await fetch(geocodeUrl)
       const geoData = await geoResponse.json()
+      console.log('Geocode response status:', geoData.status)
+
+      if (geoData.status !== 'OK') {
+        console.error('Geocode error:', geoData.status, geoData.error_message)
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: `Geocode error: ${geoData.status} - ${geoData.error_message || 'Ville non trouvée'}` }),
+        }
+      }
 
       if (!geoData.results?.[0]?.geometry?.location) {
         return {
@@ -69,6 +80,7 @@ export const handler: Handler = async (event) => {
 
       searchLat = geoData.results[0].geometry.location.lat
       searchLng = geoData.results[0].geometry.location.lng
+      console.log('Geocoded to:', searchLat, searchLng)
     } else {
       return {
         statusCode: 400,
@@ -79,8 +91,19 @@ export const handler: Handler = async (event) => {
 
     // Chercher les garages
     const placesUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${searchLat},${searchLng}&radius=${searchRadius}&type=car_repair&keyword=garage+automobile&language=fr&key=${API_KEY}`
+    console.log('Searching garages at:', searchLat, searchLng, 'radius:', searchRadius)
     const placesResponse = await fetch(placesUrl)
     const placesData = await placesResponse.json()
+    console.log('Places response status:', placesData.status, 'results:', placesData.results?.length || 0)
+
+    if (placesData.status !== 'OK' && placesData.status !== 'ZERO_RESULTS') {
+      console.error('Places error:', placesData.status, placesData.error_message)
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: `Places error: ${placesData.status} - ${placesData.error_message || ''}` }),
+      }
+    }
 
     // Transformer les résultats
     interface PlaceResult {
