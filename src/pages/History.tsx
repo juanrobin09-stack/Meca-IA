@@ -31,6 +31,78 @@ import {
 } from 'lucide-react'
 import type { DevisAnalysis, VideoDiagnostic } from '@/types'
 
+// Helper function to convert analysis_result to string (handles both old string format and new JSON format)
+function getAnalysisText(analysisResult: string | object | null | undefined): string {
+  if (!analysisResult) return ''
+
+  // If it's already a string, return it
+  if (typeof analysisResult === 'string') {
+    // Try to parse as JSON in case it was stringified
+    try {
+      const parsed = JSON.parse(analysisResult)
+      return formatAnalysisObject(parsed)
+    } catch {
+      return analysisResult
+    }
+  }
+
+  // If it's an object, format it
+  return formatAnalysisObject(analysisResult)
+}
+
+// Format the professional analysis object to readable text
+function formatAnalysisObject(obj: any): string {
+  if (!obj) return ''
+
+  const lines: string[] = []
+
+  // Verdict
+  if (obj.verdict) {
+    const v = obj.verdict
+    lines.push(`# VERDICT: ${v.statut?.toUpperCase() || 'N/A'} (${v.note || 0}/10)`)
+    if (v.recommandation) lines.push(v.recommandation)
+    if (v.commentaireExpert) lines.push(`💬 ${v.commentaireExpert}`)
+    lines.push('')
+  }
+
+  // Alerts
+  if (obj.alertes) {
+    if (obj.alertes.graves?.length > 0) {
+      lines.push('# ALERTES GRAVES')
+      obj.alertes.graves.forEach((a: string) => lines.push(`❌ ${a}`))
+      lines.push('')
+    }
+    if (obj.alertes.moyennes?.length > 0) {
+      lines.push('# POINTS D\'ATTENTION')
+      obj.alertes.moyennes.forEach((a: string) => lines.push(`⚠️ ${a}`))
+      lines.push('')
+    }
+  }
+
+  // Lines analysis
+  if (obj.lignes?.length > 0) {
+    lines.push('# ANALYSE DÉTAILLÉE')
+    obj.lignes.forEach((l: any) => {
+      const icon = l.verdict === 'ok' ? '✅' : l.verdict === 'eleve' ? '⚠️' : '❌'
+      lines.push(`${icon} ${l.designation}: ${l.totalTTC?.toFixed(2) || 0}€ (marché: ~${l.prixMarche?.moyenne?.toFixed(2) || 0}€, écart: ${l.ecart > 0 ? '+' : ''}${l.ecart || 0}%)`)
+    })
+    lines.push('')
+  }
+
+  // Totals
+  if (obj.totaux) {
+    lines.push('# COMPARATIF')
+    lines.push(`Prix facturé: ${obj.totaux.totalFacture?.toFixed(2) || 0}€`)
+    lines.push(`Prix marché: ~${obj.totaux.totalMarche?.toFixed(2) || 0}€`)
+    if (obj.economiesPotentielles) {
+      const diff = obj.economiesPotentielles.montant || 0
+      lines.push(`Différence: ${diff > 0 ? '+' : ''}${diff.toFixed(2)}€`)
+    }
+  }
+
+  return lines.join('\n')
+}
+
 export default function History() {
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
@@ -94,7 +166,7 @@ export default function History() {
       const searchLower = search.toLowerCase()
       filtered = filtered.filter(
         (d) =>
-          d.analysis_result?.toLowerCase().includes(searchLower) ||
+          getAnalysisText(d.analysis_result)?.toLowerCase().includes(searchLower) ||
           d.garage_name?.toLowerCase().includes(searchLower)
       )
     }
@@ -540,7 +612,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
         </div>
         ${devis.potential_savings ? `<div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 16px; text-align: center;"><div style="font-size: 14px; opacity: 0.9;">💰 Économie potentielle</div><div style="font-size: 28px; font-weight: 700;">${devis.potential_savings}€</div></div>` : ''}
         <div class="section">
-          <div class="analysis">${devis.analysis_result.replace(/\n/g, '<br>')}</div>
+          <div class="analysis">${getAnalysisText(devis.analysis_result).replace(/\n/g, '<br>')}</div>
         </div>
         <div class="footer">
           <p><strong>MECAI</strong> - Votre assistant automobile intelligent</p>
@@ -559,7 +631,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
 
   // Extract key info from analysis
   const extractPreview = () => {
-    const lines = devis.analysis_result.split('\n').filter(l => l.trim())
+    const analysisText = getAnalysisText(devis.analysis_result)
+    const lines = analysisText.split('\n').filter(l => l.trim())
     // Get meaningful preview lines (skip headers)
     const meaningfulLines = lines.filter(l => !l.startsWith('#') && l.length > 20).slice(0, 2)
     return meaningfulLines.join(' ').substring(0, 150)
@@ -610,7 +683,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
           {/* Preview or full analysis */}
           {showFull ? (
             <div className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-xl p-4 max-h-96 overflow-y-auto">
-              {devis.analysis_result.split('\n').map((line, i) => {
+              {getAnalysisText(devis.analysis_result).split('\n').map((line, i) => {
                 const trimmedLine = line.trim()
                 if (!trimmedLine) return <div key={i} className="h-2" />
 
