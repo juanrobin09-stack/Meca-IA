@@ -62,45 +62,22 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
     try {
       const compressed = await compressImage(file)
 
-      // Call Claude Vision to extract plate
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-      if (!apiKey) throw new Error('API key not configured')
-
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // Call secure Netlify function (API key is server-side only)
+      const response = await fetch('/.netlify/functions/scan-plate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 100,
-          messages: [{
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: 'image/jpeg',
-                  data: compressed.base64,
-                },
-              },
-              {
-                type: 'text',
-                text: "Extrait le numéro de plaque d'immatriculation française de cette image. Format attendu: XX-123-XX ou ancien format. Réponds UNIQUEMENT avec le numéro de plaque, rien d'autre. Si tu ne vois pas de plaque, réponds 'NON_DETECTE'.",
-              },
-            ],
-          }],
+          imageBase64: compressed.base64,
+          mediaType: 'image/jpeg',
         }),
       })
 
       if (!response.ok) throw new Error('API error')
 
       const data = await response.json()
-      const extractedPlate = data.content[0].text.trim().toUpperCase()
+      const extractedPlate = data.plate
 
       if (extractedPlate === 'NON_DETECTE' || extractedPlate.length < 5) {
         setError("Plaque non détectée. Réessaie avec une photo plus nette.")
