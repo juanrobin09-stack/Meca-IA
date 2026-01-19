@@ -584,7 +584,7 @@ export default function MechanicChat() {
               {/* Messages Area */}
               <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex-1 overflow-y-auto scrollbar-hide">
-                  <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-24 md:pb-8">
+                  <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-40 md:pb-8">
                     {messages.length === 0 && !loading ? (
                       /* Empty State - Premium Hero */
                       <motion.div
@@ -754,55 +754,39 @@ export default function MechanicChat() {
                   </div>
                 )}
 
-                {/* Input Area - Mobile Optimized with bottom nav space */}
-                <div className="flex-shrink-0 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl p-2.5 sm:p-4 pb-[88px] md:pb-4">
-                  <div className="max-w-3xl mx-auto">
-                    <div className="flex gap-2 sm:gap-3 items-end">
-                      <div className="flex-1 min-w-0">
-                        <Textarea
-                          ref={textareaRef}
-                          value={inputMessage}
-                          onChange={(e) => setInputMessage(e.target.value)}
-                          onKeyDown={handleKeyPress}
-                          placeholder="Message..."
-                          className="resize-none min-h-[44px] sm:min-h-[48px] max-h-[100px] sm:max-h-[150px] text-base sm:text-sm border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 rounded-xl focus:border-neutral-300 dark:focus:border-neutral-700 focus:ring-0 transition-colors duration-200 py-2.5 px-3"
-                          rows={1}
-                          maxLength={1000}
-                          disabled={isTyping}
-                        />
-                      </div>
-                      <Button
-                        onClick={() => sendMessage()}
-                        disabled={!inputMessage.trim() || isTyping}
-                        size="icon"
-                        className="h-11 w-11 sm:h-12 sm:w-12 shrink-0 rounded-xl bg-neutral-900 dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-100 text-white dark:text-neutral-900 disabled:opacity-40 transition-all duration-200 active:scale-95"
-                      >
-                        {isTyping ? (
-                          <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4 sm:h-5 sm:w-5" />
-                        )}
-                      </Button>
-                    </div>
+              </div>
+            </div>
+          </div>
 
-                    {/* Quick Actions Pills - Hidden on very small screens when messages exist */}
-                    {messages.length > 0 && (
-                      <div className="hidden sm:flex flex-wrap gap-2 mt-3">
-                        {QUICK_ACTIONS.slice(0, 3).map((action, i) => (
-                          <button
-                            key={i}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition-colors duration-200 disabled:opacity-50 active:scale-95"
-                            onClick={() => sendMessage(action.message)}
-                            disabled={isTyping}
-                          >
-                            <span>{action.emoji}</span>
-                            {action.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+          {/* Input Area - Fixed on mobile, above bottom nav */}
+          <div className="fixed bottom-[64px] md:bottom-0 left-0 right-0 md:left-64 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 z-40">
+            <div className="max-w-3xl mx-auto p-2.5 sm:p-4">
+              <div className="flex gap-2 sm:gap-3 items-end">
+                <div className="flex-1 min-w-0">
+                  <Textarea
+                    ref={textareaRef}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Message..."
+                    className="resize-none min-h-[44px] sm:min-h-[48px] max-h-[80px] sm:max-h-[120px] text-base sm:text-sm border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 rounded-xl focus:border-neutral-300 dark:focus:border-neutral-700 focus:ring-0 py-2.5 px-3"
+                    rows={1}
+                    maxLength={1000}
+                    disabled={isTyping}
+                  />
                 </div>
+                <Button
+                  onClick={() => sendMessage()}
+                  disabled={!inputMessage.trim() || isTyping}
+                  size="icon"
+                  className="h-11 w-11 sm:h-12 sm:w-12 shrink-0 rounded-xl bg-neutral-900 dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-100 text-white dark:text-neutral-900 disabled:opacity-40 active:scale-95"
+                >
+                  {isTyping ? (
+                    <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
+                </Button>
               </div>
             </div>
           </div>

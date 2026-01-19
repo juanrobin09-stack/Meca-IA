@@ -400,8 +400,8 @@ export default function Chat() {
             </header>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="max-w-3xl mx-auto px-4 py-8">
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-44 md:pb-8">
                 {messages.length === 0 && !streamingContent ? (
                   /* Empty State - Premium Hero */
                   <motion.div
@@ -579,110 +579,71 @@ export default function Chat() {
               </div>
             </div>
 
-            {/* Input Area - Mobile Optimized with bottom nav space */}
-            <div className="flex-shrink-0 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl p-2.5 sm:p-4 pb-[88px] md:pb-4">
-              <div className="max-w-3xl mx-auto">
-                {/* Message Limit Warning */}
-                {isAtMessageLimit && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl"
-                  >
-                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span className="text-sm font-medium">Limite de messages atteinte</span>
-                    </div>
-                    <p className="text-xs text-amber-600 dark:text-amber-500 mt-1 ml-6">
-                      <button className="underline font-medium" onClick={() => setShowPaywall(true)}>Passe Premium</button>
-                      {' '}ou{' '}
-                      <button className="underline font-medium" onClick={() => navigate('/app/chat')}>nouveau diagnostic</button>
-                    </p>
-                  </motion.div>
-                )}
+          </div>
 
-                {/* Image Preview */}
-                {selectedImage && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="mb-3"
-                  >
-                    <div className="relative inline-block">
-                      <img
-                        src={selectedImage.dataUrl}
-                        alt="Preview"
-                        className="max-h-24 rounded-xl border border-neutral-200 dark:border-neutral-800"
-                      />
-                      <button
-                        type="button"
-                        onClick={removeSelectedImage}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+          {/* Input Area - Fixed on mobile, above bottom nav */}
+          <div className="fixed bottom-[64px] md:bottom-0 left-0 right-0 md:left-64 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white dark:bg-neutral-950 z-40">
+            <div className="max-w-3xl mx-auto p-2.5 sm:p-4">
+              {/* Message Limit Warning */}
+              {isAtMessageLimit && (
+                <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-700 dark:text-amber-400">
+                  Limite atteinte - <button className="underline font-medium" onClick={() => setShowPaywall(true)}>Passer Premium</button>
+                </div>
+              )}
 
-                {/* Image Error */}
-                {imageError && (
-                  <div className="mb-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg">
-                    {imageError}
+              {/* Image Preview */}
+              {selectedImage && (
+                <div className="mb-2">
+                  <div className="relative inline-block">
+                    <img src={selectedImage.dataUrl} alt="Preview" className="max-h-16 rounded-lg border border-neutral-200 dark:border-neutral-800" />
+                    <button type="button" onClick={removeSelectedImage} className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center">
+                      <X className="h-3 w-3" />
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Input */}
-                <form onSubmit={handleSubmit}>
-                  <div className="flex gap-3 items-end p-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl focus-within:border-neutral-300 dark:focus-within:border-neutral-700 transition-colors duration-200">
-                    {/* Photo Button */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-                    <Tooltip content={isAtMessageLimit ? 'Limite atteinte' : (photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Ajouter une photo')}>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
-                        className="h-10 w-10 rounded-xl text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/50 dark:hover:bg-neutral-800 transition-colors"
-                      >
-                        <Camera className="h-5 w-5" />
-                      </Button>
-                    </Tooltip>
+              {/* Image Error */}
+              {imageError && (
+                <div className="mb-2 text-xs text-red-600 bg-red-50 dark:bg-red-950/30 px-2 py-1.5 rounded-lg">{imageError}</div>
+              )}
 
-                    <Textarea
-                      ref={textareaRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
-                      className="min-h-[44px] max-h-32 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-neutral-400"
-                      rows={1}
-                      disabled={isLoading || isAtMessageLimit}
-                    />
+              {/* Input */}
+              <form onSubmit={handleSubmit}>
+                <div className="flex gap-2 items-end p-1.5 sm:p-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl">
+                  <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
+                    className="h-9 w-9 sm:h-10 sm:w-10 rounded-lg text-neutral-500"
+                  >
+                    <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </Button>
 
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
-                      className="h-10 w-10 shrink-0 rounded-xl bg-neutral-900 dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-100 text-white dark:text-neutral-900 disabled:opacity-40 transition-all duration-200"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Send className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </div>
+                  <Textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={isAtMessageLimit ? "Limite atteinte" : "Ton problème..."}
+                    className="min-h-[40px] max-h-20 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base sm:text-sm"
+                    rows={1}
+                    disabled={isLoading || isAtMessageLimit}
+                  />
+
+                  <Button
+                    type="submit"
+                    size="icon"
+                    disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
+                    className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-lg bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 disabled:opacity-40"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         </main>
