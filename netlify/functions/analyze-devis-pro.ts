@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import type { Handler } from '@netlify/functions'
 
 interface DevisLine {
   designation: string
@@ -13,73 +14,72 @@ interface ExtractedDevis {
     adresse?: string
     siret?: string
   }
+  vehicule?: {
+    marque?: string
+    modele?: string
+    immatriculation?: string
+  }
   lignes: DevisLine[]
   totalHT: number
   tva: number
   totalTTC: number
 }
 
-interface AnalyzedLine extends DevisLine {
-  prixMarche: {
-    estimation: number
-    source: string
-  }
-  ecart: number
-  verdict: 'ok' | 'eleve' | 'arnaque'
-}
-
-export default async function handler(req: Request) {
+export const handler: Handler = async (event) => {
   // CORS headers
-  const corsHeaders = {
+  const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type'
   }
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders })
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' }
   }
 
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: corsHeaders
-    })
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    }
   }
 
   // Vérifier que l'API key est configurée
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('❌ ANTHROPIC_API_KEY manquante dans les variables d\'environnement')
-    return new Response(JSON.stringify({
-      error: 'Configuration serveur manquante. Contactez le support.'
-    }), {
-      status: 500,
-      headers: corsHeaders
-    })
+    console.error('❌ ANTHROPIC_API_KEY manquante')
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Configuration serveur manquante. Contacte le support.' })
+    }
   }
 
   try {
-    const { imageBase64, vehicle, userId } = await req.json()
+    const body = JSON.parse(event.body || '{}')
+    const { imageBase64, vehicle } = body
+
+    console.log('📥 Requête reçue, taille body:', event.body?.length || 0)
 
     if (!imageBase64) {
-      return new Response(JSON.stringify({ error: 'Image required' }), {
-        status: 400,
-        headers: corsHeaders
-      })
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Image requise' })
+      }
     }
 
     // Vérifier la taille de l'image (max ~4MB en base64)
     const imageSizeInMB = (imageBase64.length * 3) / 4 / 1024 / 1024
-    console.log(`📦 Taille image reçue: ${imageSizeInMB.toFixed(2)} MB`)
+    console.log(`📦 Taille image: ${imageSizeInMB.toFixed(2)} MB`)
 
     if (imageSizeInMB > 4) {
-      return new Response(JSON.stringify({
-        error: 'Image trop volumineuse. Compresse-la ou prends une nouvelle photo.'
-      }), {
-        status: 400,
-        headers: corsHeaders
-      })
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Image trop volumineuse (max 4MB). Compresse-la ou prends une nouvelle photo.' })
+      }
     }
 
     const anthropic = new Anthropic({
@@ -87,7 +87,7 @@ export default async function handler(req: Request) {
     })
 
     // Étape 1: Extraction OCR + Structuration du devis
-    console.log('📄 Étape 1: Extraction et structuration du devis...')
+    console.log('📄 Étape 1: Extraction OCR...')
 
     const extractionPrompt = `Tu es un expert en analyse de devis automobile. Analyse cette image de devis et extrais TOUTES les informations de manière structurée.
 
@@ -123,7 +123,7 @@ RÈGLES:
 - Extrais CHAQUE ligne du devis séparément
 - Les prix doivent être des nombres (pas de symbole €)
 - Si une info n'est pas visible, mets null
-- Sois PRÉCIS sur les désignations (marque de pièce, référence, etc.)`
+- Sois PRÉCIS sur les désignations`
 
     const extractionResponse = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -151,27 +151,27 @@ RÈGLES:
       ? extractionResponse.content[0].text
       : ''
 
+    console.log('📝 Texte extrait (100 premiers chars):', extractedText.substring(0, 100))
+
     // Nettoyer et parser le JSON
     let extractedDevis: ExtractedDevis
     try {
-      // Supprimer les backticks markdown si présents
       const cleanJson = extractedText.replace(/```json\n?|\n?```/g, '').trim()
       extractedDevis = JSON.parse(cleanJson)
     } catch (e) {
-      console.error('Erreur parsing JSON extraction:', e)
+      console.error('❌ Erreur parsing extraction:', e)
       console.error('Texte reçu:', extractedText.substring(0, 500))
-      return new Response(JSON.stringify({
-        error: 'Impossible de lire le devis. Assure-toi que l\'image est nette et bien éclairée.'
-      }), {
-        status: 400,
-        headers: corsHeaders
-      })
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Impossible de lire le devis. Assure-toi que l\'image est nette et bien éclairée.' })
+      }
     }
 
-    console.log(`✅ Devis extrait: ${extractedDevis.lignes.length} lignes trouvées`)
+    console.log(`✅ Devis extrait: ${extractedDevis.lignes?.length || 0} lignes`)
 
-    // Étape 2: Analyse professionnelle avec recherche de prix
-    console.log('💰 Étape 2: Analyse des prix du marché...')
+    // Étape 2: Analyse professionnelle
+    console.log('💰 Étape 2: Analyse des prix...')
 
     const vehicleInfo = vehicle
       ? `${vehicle.brand} ${vehicle.model} ${vehicle.year}`
@@ -187,7 +187,7 @@ ${JSON.stringify(extractedDevis, null, 2)}
 
 POUR CHAQUE LIGNE, tu dois:
 1. Identifier précisément la pièce/prestation
-2. Estimer le prix RÉEL du marché en 2026 basé sur ta connaissance (Oscaro, Yakarouler, Mister Auto pour les pièces, tarifs garages pour la main d'œuvre)
+2. Estimer le prix RÉEL du marché en 2026
 3. Calculer l'écart en %
 4. Donner un verdict
 
@@ -196,17 +196,11 @@ BARÈME DES VERDICTS:
 - "eleve" : écart 15-40% → Prix élevé mais négociable
 - "arnaque" : écart > 40% → Surfacturation abusive
 
-PRIX DE RÉFÉRENCE 2026 (moyens marché France):
+PRIX DE RÉFÉRENCE 2026:
 - Main d'œuvre garage : 60-90€/heure
 - Plaquettes frein avant (jeu) : 25-60€
 - Disques frein avant (paire) : 50-120€
 - Filtre à huile : 8-20€
-- Filtre à air : 15-35€
-- Huile moteur 5L : 30-60€
-- Bougie allumage (x1) : 8-25€
-- Amortisseur : 60-150€
-- Courroie distribution : 40-100€
-- Kit distribution complet (pose incluse) : 400-800€
 - Vidange complète : 60-120€
 - Révision standard : 150-300€
 
@@ -214,31 +208,31 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
 {
   "lignesAnalysees": [
     {
-      "designation": "Nom de la pièce/prestation",
+      "designation": "Nom",
       "totalFacture": 0.00,
       "prixMarcheEstime": 0.00,
-      "sourceEstimation": "Explication courte du prix marché",
+      "sourceEstimation": "Explication courte",
       "ecartPourcent": 0,
       "verdict": "ok|eleve|arnaque"
     }
   ],
   "garageAnalyse": {
-    "observation": "Commentaire sur le garage si pertinent"
+    "observation": "Commentaire"
   },
   "alertes": {
-    "graves": ["Liste des problèmes graves"],
-    "moyennes": ["Liste des points d'attention"],
-    "info": ["Informations utiles"]
+    "graves": [],
+    "moyennes": [],
+    "info": []
   },
   "verdictGlobal": {
     "note": 8,
     "statut": "honnete|reserve|arnaque",
-    "recommandation": "Conseil clair et actionnable",
-    "commentaireExpert": "Ton avis d'expert en 2-3 phrases"
+    "recommandation": "Conseil",
+    "commentaireExpert": "Avis expert"
   },
   "economiesPossibles": {
     "montant": 0.00,
-    "conseils": ["Comment économiser"]
+    "conseils": []
   }
 }`
 
@@ -260,35 +254,34 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
       const cleanAnalysis = analysisText.replace(/```json\n?|\n?```/g, '').trim()
       analysisResult = JSON.parse(cleanAnalysis)
     } catch (e) {
-      console.error('Erreur parsing analyse:', e)
-      console.error('Texte analyse reçu:', analysisText.substring(0, 500))
-      return new Response(JSON.stringify({
-        error: 'Erreur lors de l\'analyse du devis. Réessaie.'
-      }), {
-        status: 500,
-        headers: corsHeaders
-      })
+      console.error('❌ Erreur parsing analyse:', e)
+      console.error('Texte:', analysisText.substring(0, 500))
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Erreur lors de l\'analyse. Réessaie.' })
+      }
     }
 
     // Construire le résultat final
-    const lignesOk = analysisResult.lignesAnalysees.filter((l: any) => l.verdict === 'ok').length
-    const lignesElevees = analysisResult.lignesAnalysees.filter((l: any) => l.verdict === 'eleve').length
-    const lignesArnaques = analysisResult.lignesAnalysees.filter((l: any) => l.verdict === 'arnaque').length
+    const lignesOk = analysisResult.lignesAnalysees?.filter((l: any) => l.verdict === 'ok').length || 0
+    const lignesElevees = analysisResult.lignesAnalysees?.filter((l: any) => l.verdict === 'eleve').length || 0
+    const lignesArnaques = analysisResult.lignesAnalysees?.filter((l: any) => l.verdict === 'arnaque').length || 0
 
     const totalFacture = extractedDevis.totalTTC ||
-      extractedDevis.lignes.reduce((sum, l) => sum + l.totalTTC, 0)
+      (extractedDevis.lignes?.reduce((sum, l) => sum + (l.totalTTC || 0), 0) || 0)
 
-    const totalMarche = analysisResult.lignesAnalysees.reduce(
+    const totalMarche = analysisResult.lignesAnalysees?.reduce(
       (sum: number, l: any) => sum + (l.prixMarcheEstime || 0), 0
-    )
+    ) || 0
 
     const result = {
       garage: extractedDevis.garage,
       vehiculeDetecte: extractedDevis.vehicule,
-      lignes: analysisResult.lignesAnalysees.map((ligne: any, index: number) => ({
+      lignes: (analysisResult.lignesAnalysees || []).map((ligne: any, index: number) => ({
         designation: ligne.designation,
-        quantite: extractedDevis.lignes[index]?.quantite || 1,
-        prixUnitaire: extractedDevis.lignes[index]?.prixUnitaire || ligne.totalFacture,
+        quantite: extractedDevis.lignes?.[index]?.quantite || 1,
+        prixUnitaire: extractedDevis.lignes?.[index]?.prixUnitaire || ligne.totalFacture,
         totalTTC: ligne.totalFacture,
         prixMarche: {
           oscaro: null,
@@ -301,8 +294,8 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
         sourceEstimation: ligne.sourceEstimation
       })),
       garageInfo: {
-        nom: extractedDevis.garage.nom,
-        adresse: extractedDevis.garage.adresse,
+        nom: extractedDevis.garage?.nom,
+        adresse: extractedDevis.garage?.adresse,
         noteGoogle: null,
         nombreAvis: 0,
         avisNegatifs: 0,
@@ -311,10 +304,10 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
       },
       alertes: analysisResult.alertes || { graves: [], moyennes: [], info: [] },
       verdict: {
-        note: analysisResult.verdictGlobal.note,
-        statut: analysisResult.verdictGlobal.statut,
-        recommandation: analysisResult.verdictGlobal.recommandation,
-        commentaireExpert: analysisResult.verdictGlobal.commentaireExpert,
+        note: analysisResult.verdictGlobal?.note || 5,
+        statut: analysisResult.verdictGlobal?.statut || 'reserve',
+        recommandation: analysisResult.verdictGlobal?.recommandation || '',
+        commentaireExpert: analysisResult.verdictGlobal?.commentaireExpert || '',
         lignesOk,
         lignesElevees,
         lignesArnaques
@@ -336,15 +329,16 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
 
     console.log(`✅ Analyse terminée: Note ${result.verdict.note}/10 - ${result.verdict.statut}`)
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: corsHeaders
-    })
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(result)
+    }
 
   } catch (error: any) {
     console.error('❌ Erreur analyze-devis-pro:', error)
+    console.error('Stack:', error.stack)
 
-    // Messages d'erreur spécifiques selon le type
     let errorMessage = 'Erreur serveur. Réessaie dans quelques instants.'
     let statusCode = 500
 
@@ -352,22 +346,17 @@ RETOURNE UNIQUEMENT UN JSON VALIDE:
       errorMessage = 'Trop de requêtes. Attends 1 minute et réessaie.'
       statusCode = 429
     } else if (error.status === 401 || error.message?.includes('invalid_api_key')) {
-      errorMessage = 'Erreur de configuration. Contacte le support.'
+      errorMessage = 'Erreur de configuration API. Contacte le support.'
       statusCode = 401
     } else if (error.message?.includes('Could not process image')) {
-      errorMessage = 'Impossible de traiter l\'image. Assure-toi qu\'elle est nette.'
+      errorMessage = 'Impossible de traiter l\'image. Vérifie qu\'elle est nette.'
       statusCode = 400
-    } else if (error.message?.includes('timeout') || error.name === 'AbortError') {
-      errorMessage = 'L\'analyse a pris trop de temps. Réessaie avec une photo plus légère.'
-      statusCode = 408
     }
 
-    return new Response(JSON.stringify({
-      error: errorMessage
-    }), {
-      status: statusCode,
-      headers: corsHeaders
-    })
+    return {
+      statusCode,
+      headers,
+      body: JSON.stringify({ error: errorMessage })
+    }
   }
 }
-
