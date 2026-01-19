@@ -7,19 +7,10 @@ export interface CompressedImage {
 /**
  * Compresses an image file to reduce size for API calls
  * Uses FileReader for better mobile compatibility
+ * Target: < 1MB base64 for Netlify function limits
  */
 export async function compressImage(file: File): Promise<CompressedImage> {
   console.log('📸 Compression image:', file.name, file.type, file.size)
-
-  // Pour les fichiers HEIC/HEIF (iOS), on doit les convertir différemment
-  const isHeic = file.type === 'image/heic' ||
-                 file.type === 'image/heif' ||
-                 file.name.toLowerCase().endsWith('.heic') ||
-                 file.name.toLowerCase().endsWith('.heif')
-
-  if (isHeic) {
-    console.log('📱 Format HEIC détecté, utilisation de FileReader direct')
-  }
 
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -57,8 +48,8 @@ export async function compressImage(file: File): Promise<CompressedImage> {
               return
             }
 
-            // Max 1200x1200 pour garder qualité mais réduire taille
-            const maxSize = 1200
+            // Max 800x800 pour réduire la taille (Netlify limite à 6MB)
+            const maxSize = 800
             let width = img.width
             let height = img.height
 
@@ -76,9 +67,18 @@ export async function compressImage(file: File): Promise<CompressedImage> {
             canvas.height = height
             ctx.drawImage(img, 0, 0, width, height)
 
-            // Convertir en JPEG avec qualité 0.85
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85)
-            const base64 = compressedDataUrl.split(',')[1]
+            // Qualité réduite à 0.7 pour mobile
+            let quality = 0.7
+            let compressedDataUrl = canvas.toDataURL('image/jpeg', quality)
+            let base64 = compressedDataUrl.split(',')[1]
+
+            // Si encore trop gros (>800KB), réduire la qualité
+            while (base64.length > 800000 && quality > 0.3) {
+              quality -= 0.1
+              compressedDataUrl = canvas.toDataURL('image/jpeg', quality)
+              base64 = compressedDataUrl.split(',')[1]
+              console.log(`🔄 Réduction qualité à ${quality.toFixed(1)}, taille: ${Math.round(base64.length / 1024)}KB`)
+            }
 
             if (!base64 || base64.length < 100) {
               console.error('❌ Base64 trop court:', base64?.length)
@@ -102,17 +102,23 @@ export async function compressImage(file: File): Promise<CompressedImage> {
         img.onerror = (e) => {
           console.error('❌ Erreur chargement image:', e)
 
-          // Fallback: retourner le fichier original en base64 si l'image ne charge pas
-          // Cela peut arriver avec certains formats sur mobile
-          console.log('🔄 Fallback: utilisation du fichier original')
+          // Fallback: si l'image ne charge pas, essayer de compresser via canvas quand même
+          // Créer une image vide et utiliser le dataUrl original mais compressé
+          console.log('🔄 Fallback: tentative de compression du fichier original')
 
-          const base64 = dataUrl.split(',')[1]
-          if (base64 && base64.length > 100) {
-            resolve({
-              base64,
-              dataUrl,
-              mimeType: file.type || 'image/jpeg',
-            })
+          const base64Original = dataUrl.split(',')[1]
+
+          // Vérifier si le fichier original n'est pas trop gros
+          if (base64Original && base64Original.length > 100) {
+            if (base64Original.length > 3000000) { // > 3MB
+              reject(new Error('Image trop volumineuse et format non supporté. Utilise une photo JPG ou PNG.'))
+            } else {
+              resolve({
+                base64: base64Original,
+                dataUrl,
+                mimeType: file.type || 'image/jpeg',
+              })
+            }
           } else {
             reject(new Error('Format d\'image non supporté. Essaie avec une photo JPG ou PNG.'))
           }
