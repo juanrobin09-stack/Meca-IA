@@ -77,15 +77,60 @@ export async function handler(event: WebhookEvent) {
           // Credit the user based on product type
           if (productType === 'diagnostic' || productType === 'video') {
             // Add 1 diagnostic credit
-            await supabase.rpc('add_diagnostic_credit', { p_user_id: userId })
+            const { error: rpcError } = await supabase.rpc('add_diagnostic_credit', { p_user_id: userId })
+            if (rpcError) {
+              console.log('RPC not available, using direct update')
+              // Fallback: direct increment
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('purchased_diagnostic_credits')
+                .eq('id', userId)
+                .single()
+
+              const currentCredits = profile?.purchased_diagnostic_credits || 0
+              await supabase
+                .from('profiles')
+                .update({ purchased_diagnostic_credits: currentCredits + 1 })
+                .eq('id', userId)
+            }
             console.log(`Added 1 diagnostic credit for user ${userId}`)
           } else if (productType === 'devis') {
             // Add 1 devis credit
-            await supabase.rpc('add_devis_credit', { p_user_id: userId })
+            const { error: rpcError } = await supabase.rpc('add_devis_credit', { p_user_id: userId })
+            if (rpcError) {
+              console.log('RPC not available, using direct update')
+              // Fallback: direct increment
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('purchased_devis_credits')
+                .eq('id', userId)
+                .single()
+
+              const currentCredits = profile?.purchased_devis_credits || 0
+              await supabase
+                .from('profiles')
+                .update({ purchased_devis_credits: currentCredits + 1 })
+                .eq('id', userId)
+            }
             console.log(`Added 1 devis credit for user ${userId}`)
           } else if (productType === 'chat') {
             // Add 10 chat credits
-            await supabase.rpc('add_chat_credits', { p_user_id: userId, p_credits: 10 })
+            const { error: rpcError } = await supabase.rpc('add_chat_credits', { p_user_id: userId, p_credits: 10 })
+            if (rpcError) {
+              console.log('RPC not available, using direct update')
+              // Fallback: direct increment
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('purchased_chat_credits')
+                .eq('id', userId)
+                .single()
+
+              const currentCredits = profile?.purchased_chat_credits || 0
+              await supabase
+                .from('profiles')
+                .update({ purchased_chat_credits: currentCredits + 10 })
+                .eq('id', userId)
+            }
             console.log(`Added 10 chat credits for user ${userId}`)
           }
         }

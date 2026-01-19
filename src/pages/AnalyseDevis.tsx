@@ -50,13 +50,17 @@ export default function AnalyseDevis() {
   // Check limit on page load
   useEffect(() => {
     async function checkLimit() {
-      if (!isPremium) {
-        const status = await checkDevisLimit()
-        if (!status.canAnalyze) {
-          setShowPaywall(true)
-        }
-        setCurrentRemaining(status.remaining as number)
+      // Premium users don't need limit check
+      if (isPremium) {
+        setCurrentRemaining(Infinity)
+        return
       }
+
+      const status = await checkDevisLimit()
+      if (!status.canAnalyze && !status.isPremium) {
+        setShowPaywall(true)
+      }
+      setCurrentRemaining(status.remaining as number)
     }
     checkLimit()
   }, [isPremium, checkDevisLimit])
@@ -184,11 +188,13 @@ export default function AnalyseDevis() {
                     </Button>
                   </Link>
                 )}
-                {!isPremium && (
-                  <Badge variant="secondary" className="text-sm">
-                    {displayRemaining}/1 analyse gratuite
-                  </Badge>
-                )}
+                <Badge variant={isPremium ? "default" : "secondary"} className="text-sm">
+                  {isPremium ? (
+                    <>✨ Illimité</>
+                  ) : (
+                    <>{displayRemaining}/1 analyse gratuite</>
+                  )}
+                </Badge>
               </div>
             </div>
             <p className="text-muted-foreground mt-2">
