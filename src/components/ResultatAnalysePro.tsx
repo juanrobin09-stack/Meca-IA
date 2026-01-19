@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { jsPDF } from 'jspdf'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -10,13 +11,13 @@ import {
   TrendingDown,
   TrendingUp,
   Store,
-  Download,
   Share2,
   Lightbulb,
   Shield,
   Euro,
   Info,
-  Check
+  Check,
+  FileText
 } from 'lucide-react'
 
 interface DevisLine {
@@ -68,85 +69,154 @@ export default function ResultatAnalysePro({ data }: Props) {
   const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [shareSuccess, setShareSuccess] = useState(false)
 
-  // Générer le rapport texte pour téléchargement
-  const generateReport = () => {
-    const lines = [
-      '═══════════════════════════════════════════════════════════',
-      '           RAPPORT D\'ANALYSE DE DEVIS - MECA-IA',
-      '═══════════════════════════════════════════════════════════',
-      '',
-      `Date: ${new Date().toLocaleDateString('fr-FR')}`,
-      `Garage: ${data.garage.nom}`,
-      data.garage.adresse ? `Adresse: ${data.garage.adresse}` : '',
-      '',
-      '───────────────────────────────────────────────────────────',
-      '                    VERDICT GLOBAL',
-      '───────────────────────────────────────────────────────────',
-      '',
-      `Note: ${verdict.note}/10`,
-      `Statut: ${verdict.statut === 'honnete' ? '✅ HONNÊTE' : verdict.statut === 'reserve' ? '⚠️ AVEC RÉSERVES' : '🚨 ARNAQUE DÉTECTÉE'}`,
-      `Recommandation: ${verdict.recommandation}`,
-      verdict.commentaireExpert ? `Commentaire expert: ${verdict.commentaireExpert}` : '',
-      '',
-      `Prix corrects: ${verdict.lignesOk} | Prix élevés: ${verdict.lignesElevees} | Surfacturés: ${verdict.lignesArnaques}`,
-      '',
-    ]
-
-    if (alertes.graves.length > 0) {
-      lines.push('───────────────────────────────────────────────────────────')
-      lines.push('                   ALERTES GRAVES')
-      lines.push('───────────────────────────────────────────────────────────')
-      alertes.graves.forEach(a => lines.push(`🚨 ${a}`))
-      lines.push('')
-    }
-
-    if (alertes.moyennes.length > 0) {
-      lines.push('───────────────────────────────────────────────────────────')
-      lines.push('                 POINTS D\'ATTENTION')
-      lines.push('───────────────────────────────────────────────────────────')
-      alertes.moyennes.forEach(a => lines.push(`⚠️ ${a}`))
-      lines.push('')
-    }
-
-    lines.push('───────────────────────────────────────────────────────────')
-    lines.push('                  ANALYSE DÉTAILLÉE')
-    lines.push('───────────────────────────────────────────────────────────')
-    lines.push('')
-    lignes.forEach(l => {
-      const verdictIcon = l.verdict === 'ok' ? '✅' : l.verdict === 'eleve' ? '⚠️' : '🚨'
-      lines.push(`${verdictIcon} ${l.designation}`)
-      lines.push(`   Facturé: ${l.totalTTC.toFixed(2)}€ | Marché: ~${l.prixMarche.moyenne.toFixed(2)}€ | Écart: ${l.ecart > 0 ? '+' : ''}${l.ecart}%`)
-      lines.push('')
-    })
-
-    lines.push('───────────────────────────────────────────────────────────')
-    lines.push('                COMPARATIF FINANCIER')
-    lines.push('───────────────────────────────────────────────────────────')
-    lines.push('')
-    lines.push(`Prix facturé (TTC): ${totaux.totalFacture.toFixed(2)}€`)
-    lines.push(`Prix marché estimé: ~${totaux.totalMarche.toFixed(2)}€`)
-    lines.push(`Différence: ${economiesPotentielles.montant > 0 ? '+' : ''}${economiesPotentielles.montant.toFixed(2)}€ (${economiesPotentielles.pourcentage}%)`)
-    lines.push('')
-    lines.push('═══════════════════════════════════════════════════════════')
-    lines.push('         Rapport généré par MECA-IA - mymecai.com')
-    lines.push('═══════════════════════════════════════════════════════════')
-
-    return lines.filter(l => l !== '').join('\n')
-  }
-
-  // Télécharger le rapport
+  // Télécharger le rapport en PDF
   const handleDownload = () => {
     try {
-      const report = generateReport()
-      const blob = new Blob([report], { type: 'text/plain;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `rapport-devis-${new Date().toISOString().split('T')[0]}.txt`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const margin = 20
+      let y = 20
+
+      // Helper function to add text with word wrap
+      const addText = (text: string, size: number = 10, style: 'normal' | 'bold' = 'normal') => {
+        doc.setFontSize(size)
+        doc.setFont('helvetica', style)
+        const lines = doc.splitTextToSize(text, pageWidth - margin * 2)
+
+        // Check if we need a new page
+        if (y + lines.length * (size * 0.5) > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage()
+          y = 20
+        }
+
+        doc.text(lines, margin, y)
+        y += lines.length * (size * 0.5) + 3
+      }
+
+      const addLine = () => {
+        y += 2
+        doc.setDrawColor(200)
+        doc.line(margin, y, pageWidth - margin, y)
+        y += 5
+      }
+
+      // Header
+      doc.setFillColor(37, 99, 235) // Blue
+      doc.rect(0, 0, pageWidth, 35, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(20)
+      doc.setFont('helvetica', 'bold')
+      doc.text('RAPPORT D\'ANALYSE DE DEVIS', pageWidth / 2, 15, { align: 'center' })
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'normal')
+      doc.text('MECA-IA - Analyse Professionnelle', pageWidth / 2, 25, { align: 'center' })
+
+      y = 45
+      doc.setTextColor(0, 0, 0)
+
+      // Date and Garage
+      addText(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 10)
+      addText(`Garage: ${data.garage.nom}`, 12, 'bold')
+      if (data.garage.adresse) addText(`Adresse: ${data.garage.adresse}`, 10)
+
+      addLine()
+
+      // Verdict
+      const verdictEmoji = verdict.statut === 'honnete' ? '[OK]' : verdict.statut === 'reserve' ? '[!]' : '[X]'
+      const verdictText = verdict.statut === 'honnete' ? 'HONNETE' : verdict.statut === 'reserve' ? 'AVEC RESERVES' : 'ARNAQUE DETECTEE'
+
+      doc.setFontSize(16)
+      doc.setFont('helvetica', 'bold')
+
+      if (verdict.statut === 'honnete') doc.setTextColor(16, 185, 129)
+      else if (verdict.statut === 'reserve') doc.setTextColor(245, 158, 11)
+      else doc.setTextColor(239, 68, 68)
+
+      doc.text(`${verdictEmoji} ${verdictText}`, pageWidth / 2, y, { align: 'center' })
+      y += 10
+
+      doc.setTextColor(0, 0, 0)
+      doc.setFontSize(24)
+      doc.text(`Note: ${verdict.note}/10`, pageWidth / 2, y, { align: 'center' })
+      y += 12
+
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      addText(`Recommandation: ${verdict.recommandation}`, 10)
+
+      if (verdict.commentaireExpert) {
+        addText(`Commentaire expert: "${verdict.commentaireExpert}"`, 9)
+      }
+
+      y += 3
+      addText(`Prix corrects: ${verdict.lignesOk} | Prix eleves: ${verdict.lignesElevees} | Surfactures: ${verdict.lignesArnaques}`, 10)
+
+      addLine()
+
+      // Alertes graves
+      if (alertes.graves.length > 0) {
+        doc.setTextColor(239, 68, 68)
+        addText('ALERTES GRAVES', 12, 'bold')
+        doc.setTextColor(0, 0, 0)
+        alertes.graves.forEach(a => addText(`• ${a}`, 10))
+        y += 5
+      }
+
+      // Alertes moyennes
+      if (alertes.moyennes.length > 0) {
+        doc.setTextColor(245, 158, 11)
+        addText('POINTS D\'ATTENTION', 12, 'bold')
+        doc.setTextColor(0, 0, 0)
+        alertes.moyennes.forEach(a => addText(`• ${a}`, 10))
+        y += 5
+      }
+
+      addLine()
+
+      // Analyse détaillée
+      addText('ANALYSE DETAILLEE', 12, 'bold')
+      y += 3
+
+      lignes.forEach(l => {
+        const verdictIcon = l.verdict === 'ok' ? '[OK]' : l.verdict === 'eleve' ? '[!]' : '[X]'
+
+        if (l.verdict === 'ok') doc.setTextColor(16, 185, 129)
+        else if (l.verdict === 'eleve') doc.setTextColor(245, 158, 11)
+        else doc.setTextColor(239, 68, 68)
+
+        doc.setFont('helvetica', 'bold')
+        addText(`${verdictIcon} ${l.designation}`, 10, 'bold')
+
+        doc.setTextColor(0, 0, 0)
+        doc.setFont('helvetica', 'normal')
+        addText(`   Facture: ${l.totalTTC.toFixed(2)}EUR | Marche: ~${l.prixMarche.moyenne.toFixed(2)}EUR | Ecart: ${l.ecart > 0 ? '+' : ''}${l.ecart}%`, 9)
+      })
+
+      addLine()
+
+      // Comparatif financier
+      addText('COMPARATIF FINANCIER', 12, 'bold')
+      y += 3
+      addText(`Prix facture (TTC): ${totaux.totalFacture.toFixed(2)} EUR`, 11, 'bold')
+      addText(`Prix marche estime: ~${totaux.totalMarche.toFixed(2)} EUR`, 11)
+
+      const diff = economiesPotentielles.montant
+      if (diff > 0) {
+        doc.setTextColor(239, 68, 68)
+        addText(`Surfacturation: +${diff.toFixed(2)} EUR (${economiesPotentielles.pourcentage}%)`, 12, 'bold')
+      } else {
+        doc.setTextColor(16, 185, 129)
+        addText(`Prix correct: ${Math.abs(diff).toFixed(2)} EUR en dessous du marche`, 12, 'bold')
+      }
+
+      // Footer
+      doc.setTextColor(128, 128, 128)
+      doc.setFontSize(8)
+      doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+
+      // Save
+      doc.save(`rapport-devis-${new Date().toISOString().split('T')[0]}.pdf`)
+
       setDownloadSuccess(true)
       setTimeout(() => setDownloadSuccess(false), 2000)
     } catch (err) {
@@ -538,8 +608,8 @@ export default function ResultatAnalysePro({ data }: Props) {
                 exit={{ scale: 0 }}
                 className="flex items-center"
               >
-                <Download className="h-5 w-5 mr-2" />
-                Télécharger le rapport
+                <FileText className="h-5 w-5 mr-2" />
+                Télécharger le PDF
               </motion.div>
             )}
           </AnimatePresence>
