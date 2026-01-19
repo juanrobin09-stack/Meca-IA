@@ -5,6 +5,50 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY
+
+// Recherche web pour trouver les infos du véhicule depuis la plaque
+async function searchPlateInfo(plate: string): Promise<string> {
+  if (!BRAVE_API_KEY) {
+    return ''
+  }
+
+  try {
+    // Rechercher les infos du véhicule avec la plaque
+    const queries = [
+      `"${plate}" véhicule marque modèle`,
+      `immatriculation ${plate} france voiture`,
+    ]
+
+    let allResults = ''
+
+    for (const query of queries) {
+      const response = await fetch(
+        `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&country=fr`,
+        {
+          headers: {
+            'Accept': 'application/json',
+            'X-Subscription-Token': BRAVE_API_KEY
+          }
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        const results = data.web?.results || []
+        allResults += results.map((r: { title: string; description: string }) =>
+          `${r.title}: ${r.description}`
+        ).join('\n')
+      }
+    }
+
+    return allResults
+  } catch (error) {
+    console.error('Search error:', error)
+    return ''
+  }
+}
+
 export const handler: Handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -44,8 +88,77 @@ export const handler: Handler = async (event) => {
       }
     }
 
-    // Extraire la plaque ET identifier le véhicule
-    const response = await client.messages.create({
+    // ÉTAPE 1: Extraire la plaque de l'image
+    const plateResponse = await client.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 100,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType || 'image/jpeg',
+              data: imageBase64,
+            },
+          },
+          {
+            type: 'text',
+            text: `Lis la plaque d'immatriculation sur cette image. Format français: AA-123-BB.
+RÉPONDS UNIQUEMENT avec la plaque, rien d'autre. Exemple: EH-723-DM
+Si tu ne vois pas de plaque, réponds: NON_DETECTE`,
+          },
+        ],
+      }],
+    })
+
+    const plateText = (plateResponse.content[0] as { type: 'text'; text: string }).text.trim().toUpperCase()
+
+    if (!plateText || plateText === 'NON_DETECTE' || plateText.length < 5) {
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ plate: 'NON_DETECTE' }),
+      }
+    }
+
+    // Nettoyer la plaque (enlever les espaces, garder le format)
+    const cleanPlate = plateText.replace(/[^A-Z0-9-]/g, '')
+
+    // ÉTAPE 2: Rechercher les infos du véhicule sur internet
+    const webResults = await searchPlateInfo(cleanPlate)
+
+    // ÉTAPE 3: Analyser l'image + résultats web pour identifier le véhicule
+    const analysisPrompt = webResults
+      ? `Tu es un expert automobile. Analyse cette image ET les résultats de recherche web pour identifier le véhicule.
+
+PLAQUE DÉTECTÉE: ${cleanPlate}
+
+RÉSULTATS WEB (peuvent contenir les infos du véhicule):
+${webResults}
+
+INSTRUCTIONS:
+1. Si les résultats web mentionnent la marque/modèle pour cette plaque, utilise ces infos
+2. Sinon, identifie visuellement le véhicule (logo, design, silhouette)
+3. Estime l'année selon la génération
+
+RÉPONDS UNIQUEMENT en JSON valide:
+{"plate":"${cleanPlate}","brand":"Marque","model":"Modèle","year":2020,"fuel":"Essence","color":"Couleur"}`
+      : `Tu es un expert automobile. Identifie ce véhicule visuellement.
+
+PLAQUE DÉTECTÉE: ${cleanPlate}
+
+INSTRUCTIONS:
+1. Identifie la MARQUE par le logo, la calandre
+2. Identifie le MODÈLE par la silhouette, les phares
+3. Estime l'ANNÉE selon la génération
+4. Devine le CARBURANT
+
+RÉPONDS UNIQUEMENT en JSON valide:
+{"plate":"${cleanPlate}","brand":"Marque","model":"Modèle","year":2020,"fuel":"Essence","color":"Couleur"}`
+
+    const vehicleResponse = await client.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 300,
       messages: [{
@@ -61,47 +174,29 @@ export const handler: Handler = async (event) => {
           },
           {
             type: 'text',
-            text: `Tu es un expert automobile. Analyse cette image et identifie le véhicule.
-
-INSTRUCTIONS IMPORTANTES:
-1. Lis la plaque d'immatriculation (format français AA-123-BB)
-2. Identifie la MARQUE par le logo, la calandre, le design
-3. Identifie le MODÈLE par la forme, les phares, la silhouette
-4. Estime l'ANNÉE selon la génération du modèle
-5. Devine le CARBURANT (diesel si SUV/berline, essence si citadine)
-
-RÉPONDS UNIQUEMENT en JSON valide :
-{"plate":"EH-723-DM","brand":"Peugeot","model":"308","year":2021,"fuel":"Diesel","color":"Gris"}
-
-Si tu vois une Peugeot, identifie si c'est 208, 308, 2008, 3008, 508, etc.
-Si tu vois une Renault, identifie si c'est Clio, Megane, Captur, Arkana, etc.
-ESSAIE TOUJOURS de deviner le modèle même si tu n'es pas sûr à 100%.`,
+            text: analysisPrompt,
           },
         ],
       }],
     })
 
-    const responseText = (response.content[0] as { type: 'text'; text: string }).text.trim()
+    const responseText = (vehicleResponse.content[0] as { type: 'text'; text: string }).text.trim()
 
     // Parser le JSON
     let vehicleInfo
     try {
-      // Essayer de trouver le JSON dans la réponse
       const jsonMatch = responseText.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         vehicleInfo = JSON.parse(jsonMatch[0])
       } else {
-        vehicleInfo = { plate: 'NON_DETECTE' }
+        vehicleInfo = { plate: cleanPlate }
       }
     } catch {
-      // Si le parsing échoue, extraire juste la plaque
-      vehicleInfo = { plate: responseText.toUpperCase() }
+      vehicleInfo = { plate: cleanPlate }
     }
 
-    // Normaliser la plaque
-    if (vehicleInfo.plate) {
-      vehicleInfo.plate = vehicleInfo.plate.toUpperCase().trim()
-    }
+    // S'assurer que la plaque est correcte
+    vehicleInfo.plate = cleanPlate
 
     return {
       statusCode: 200,
