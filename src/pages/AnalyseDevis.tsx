@@ -47,23 +47,29 @@ export default function AnalyseDevis() {
   const [currentRemaining, setCurrentRemaining] = useState<number>(devisRemaining as number)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Check limit on page load
+  // Check limit on page load - wait for profile to be loaded
   useEffect(() => {
     async function checkLimit() {
-      // Premium users don't need limit check
-      if (isPremium) {
+      // Wait for profile to be loaded
+      if (!profile) return
+
+      // Always check from database to get fresh status
+      const status = await checkDevisLimit()
+
+      // Only show paywall if user is NOT premium and can't analyze
+      if (status.isPremium) {
         setCurrentRemaining(Infinity)
+        setShowPaywall(false) // Ensure paywall is hidden for premium
         return
       }
 
-      const status = await checkDevisLimit()
-      if (!status.canAnalyze && !status.isPremium) {
+      if (!status.canAnalyze) {
         setShowPaywall(true)
       }
       setCurrentRemaining(status.remaining as number)
     }
     checkLimit()
-  }, [isPremium, checkDevisLimit])
+  }, [profile, checkDevisLimit])
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
