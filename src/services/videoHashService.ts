@@ -42,11 +42,11 @@ export class VideoHashService {
   ): Promise<VideoAnalysisCache | null> {
     try {
       const { data, error } = await supabase
-        .from('video_diagnoses')
+        .from('video_diagnostics')
         .select('*')
-        .eq('user_id', userId)
+        .eq('utilisateur_id', userId)
         .eq('video_hash', videoHash)
-        .order('created_at', { ascending: false })
+        .order('cree_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
@@ -55,7 +55,20 @@ export class VideoHashService {
         return null
       }
 
-      return data as VideoAnalysisCache | null
+      if (data) {
+        // Map French column names to English interface
+        return {
+          id: data.id,
+          user_id: data.utilisateur_id,
+          video_hash: data.video_hash,
+          video_url: data.video_url,
+          analysis_result: data.analyse_resultat,
+          confidence_score: data.confiance_score,
+          created_at: data.cree_at
+        } as VideoAnalysisCache
+      }
+
+      return null
     } catch (err) {
       console.error('Error in checkExistingAnalysis:', err)
       return null
@@ -73,16 +86,16 @@ export class VideoHashService {
   ): Promise<void> {
     try {
       const { error } = await supabase
-        .from('video_diagnoses')
+        .from('video_diagnostics')
         .upsert({
-          user_id: userId,
+          utilisateur_id: userId,
           video_hash: videoHash,
           video_url: videoUrl,
-          analysis_result: analysisResult,
-          confidence_score: analysisResult.confiance,
-          created_at: new Date().toISOString()
+          analyse_resultat: analysisResult,
+          confiance_score: analysisResult.confiance,
+          cree_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id,video_hash'
+          onConflict: 'utilisateur_id,video_hash'
         })
 
       if (error) {
@@ -99,10 +112,10 @@ export class VideoHashService {
   static async getUserVideoAnalyses(userId: string, limit = 10): Promise<VideoAnalysisCache[]> {
     try {
       const { data, error } = await supabase
-        .from('video_diagnoses')
+        .from('video_diagnostics')
         .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .eq('utilisateur_id', userId)
+        .order('cree_at', { ascending: false })
         .limit(limit)
 
       if (error) {
@@ -110,7 +123,16 @@ export class VideoHashService {
         return []
       }
 
-      return (data as VideoAnalysisCache[]) || []
+      // Map French column names to English interface
+      return (data || []).map(item => ({
+        id: item.id,
+        user_id: item.utilisateur_id,
+        video_hash: item.video_hash,
+        video_url: item.video_url,
+        analysis_result: item.analyse_resultat,
+        confidence_score: item.confiance_score,
+        created_at: item.cree_at
+      })) as VideoAnalysisCache[]
     } catch (err) {
       console.error('Error in getUserVideoAnalyses:', err)
       return []
