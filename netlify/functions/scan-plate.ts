@@ -1,50 +1,6 @@
 import type { Handler } from '@netlify/functions'
 import Anthropic from '@anthropic-ai/sdk'
 
-const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY
-
-// Recherche web pour trouver les infos du véhicule depuis la plaque
-async function searchPlateInfo(plate: string): Promise<string> {
-  if (!BRAVE_API_KEY) {
-    return ''
-  }
-
-  try {
-    // Rechercher les infos du véhicule avec la plaque
-    const queries = [
-      `"${plate}" véhicule marque modèle`,
-      `immatriculation ${plate} france voiture`,
-    ]
-
-    let allResults = ''
-
-    for (const query of queries) {
-      const response = await fetch(
-        `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&country=fr`,
-        {
-          headers: {
-            'Accept': 'application/json',
-            'X-Subscription-Token': BRAVE_API_KEY
-          }
-        }
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        const results = data.web?.results || []
-        allResults += results.map((r: { title: string; description: string }) =>
-          `${r.title}: ${r.description}`
-        ).join('\n')
-      }
-    }
-
-    return allResults
-  } catch (error) {
-    console.error('Search error:', error)
-    return ''
-  }
-}
-
 export const handler: Handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -53,115 +9,48 @@ export const handler: Handler = async (event) => {
     'Content-Type': 'application/json',
   }
 
+  // CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' }
   }
 
   if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' }),
-    }
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) }
   }
 
+  // Vérifier la clé API
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    console.error('ANTHROPIC_API_KEY not configured')
+    console.error('ANTHROPIC_API_KEY is missing')
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'API key not configured' }),
+      body: JSON.stringify({ error: 'API key not configured', plate: 'NON_DETECTE' })
     }
   }
 
-  // Initialiser le client ici pour s'assurer que la clé API est disponible
-  const client = new Anthropic({ apiKey })
-
   try {
-    const { imageBase64, mediaType } = JSON.parse(event.body || '{}')
+    // Parser le body
+    let body
+    try {
+      body = JSON.parse(event.body || '{}')
+    } catch {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid JSON', plate: 'NON_DETECTE' }) }
+    }
+
+    const { imageBase64, mediaType } = body
 
     if (!imageBase64) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Image required' }),
-      }
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Image required', plate: 'NON_DETECTE' }) }
     }
 
-    console.log('Starting plate scan...')
+    console.log('Scan started, image length:', imageBase64.length)
 
-    // ÉTAPE 1: Extraire la plaque de l'image
-    const plateResponse = await client.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 100,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: mediaType || 'image/jpeg',
-              data: imageBase64,
-            },
-          },
-          {
-            type: 'text',
-            text: `Lis la plaque d'immatriculation sur cette image. Format français: AA-123-BB.
-RÉPONDS UNIQUEMENT avec la plaque, rien d'autre. Exemple: EH-723-DM
-Si tu ne vois pas de plaque, réponds: NON_DETECTE`,
-          },
-        ],
-      }],
-    })
+    // Créer le client Anthropic
+    const client = new Anthropic({ apiKey })
 
-    const plateText = (plateResponse.content[0] as { type: 'text'; text: string }).text.trim().toUpperCase()
-
-    if (!plateText || plateText === 'NON_DETECTE' || plateText.length < 5) {
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ plate: 'NON_DETECTE' }),
-      }
-    }
-
-    // Nettoyer la plaque (enlever les espaces, garder le format)
-    const cleanPlate = plateText.replace(/[^A-Z0-9-]/g, '')
-
-    // ÉTAPE 2: Rechercher les infos du véhicule sur internet
-    const webResults = await searchPlateInfo(cleanPlate)
-
-    // ÉTAPE 3: Analyser l'image + résultats web pour identifier le véhicule
-    const analysisPrompt = webResults
-      ? `Tu es un expert automobile. Analyse cette image ET les résultats de recherche web pour identifier le véhicule.
-
-PLAQUE DÉTECTÉE: ${cleanPlate}
-
-RÉSULTATS WEB (peuvent contenir les infos du véhicule):
-${webResults}
-
-INSTRUCTIONS:
-1. Si les résultats web mentionnent la marque/modèle pour cette plaque, utilise ces infos
-2. Sinon, identifie visuellement le véhicule (logo, design, silhouette)
-3. Estime l'année selon la génération
-
-RÉPONDS UNIQUEMENT en JSON valide:
-{"plate":"${cleanPlate}","brand":"Marque","model":"Modèle","year":2020,"fuel":"Essence","color":"Couleur"}`
-      : `Tu es un expert automobile. Identifie ce véhicule visuellement.
-
-PLAQUE DÉTECTÉE: ${cleanPlate}
-
-INSTRUCTIONS:
-1. Identifie la MARQUE par le logo, la calandre
-2. Identifie le MODÈLE par la silhouette, les phares
-3. Estime l'ANNÉE selon la génération
-4. Devine le CARBURANT
-
-RÉPONDS UNIQUEMENT en JSON valide:
-{"plate":"${cleanPlate}","brand":"Marque","model":"Modèle","year":2020,"fuel":"Essence","color":"Couleur"}`
-
-    const vehicleResponse = await client.messages.create({
+    // Analyser l'image
+    const response = await client.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 300,
       messages: [{
@@ -171,48 +60,69 @@ RÉPONDS UNIQUEMENT en JSON valide:
             type: 'image',
             source: {
               type: 'base64',
-              media_type: mediaType || 'image/jpeg',
+              media_type: (mediaType || 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
               data: imageBase64,
             },
           },
           {
             type: 'text',
-            text: analysisPrompt,
+            text: `Analyse cette image de véhicule.
+
+1. Lis la plaque d'immatriculation (format français AA-123-BB)
+2. Identifie la marque (Peugeot, Renault, Citroën, etc.)
+3. Identifie le modèle (208, Clio, C3, etc.)
+4. Estime l'année
+5. Devine le carburant
+
+RÉPONDS UNIQUEMENT en JSON valide:
+{"plate":"XX-123-XX","brand":"Marque","model":"Modele","year":2020,"fuel":"Essence","color":"Couleur"}
+
+Si pas de plaque visible: {"plate":"NON_DETECTE"}`,
           },
         ],
       }],
     })
 
-    const responseText = (vehicleResponse.content[0] as { type: 'text'; text: string }).text.trim()
+    console.log('Claude response received')
+
+    const responseText = (response.content[0] as { type: 'text'; text: string }).text.trim()
+    console.log('Response text:', responseText)
 
     // Parser le JSON
-    let vehicleInfo
+    let vehicleInfo = { plate: 'NON_DETECTE' }
     try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+      const jsonMatch = responseText.match(/\{[\s\S]*?\}/)
       if (jsonMatch) {
         vehicleInfo = JSON.parse(jsonMatch[0])
-      } else {
-        vehicleInfo = { plate: cleanPlate }
       }
-    } catch {
-      vehicleInfo = { plate: cleanPlate }
+    } catch (e) {
+      console.error('JSON parse error:', e)
     }
 
-    // S'assurer que la plaque est correcte
-    vehicleInfo.plate = cleanPlate
+    // Normaliser la plaque
+    if (vehicleInfo.plate && vehicleInfo.plate !== 'NON_DETECTE') {
+      vehicleInfo.plate = vehicleInfo.plate.toUpperCase().replace(/[^A-Z0-9-]/g, '')
+    }
+
+    console.log('Final result:', vehicleInfo)
 
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify(vehicleInfo),
     }
+
   } catch (error) {
-    console.error('Scan plate error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+    console.error('Scan error:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error'
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Erreur lors du scan', details: errorMessage }),
+      body: JSON.stringify({
+        error: 'Scan failed',
+        details: message,
+        plate: 'NON_DETECTE'
+      }),
     }
   }
 }
