@@ -1,10 +1,6 @@
 import type { Handler } from '@netlify/functions'
 import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY
 
 // Recherche web pour trouver les infos du véhicule depuis la plaque
@@ -69,13 +65,18 @@ export const handler: Handler = async (event) => {
     }
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    console.error('ANTHROPIC_API_KEY not configured')
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ error: 'API key not configured' }),
     }
   }
+
+  // Initialiser le client ici pour s'assurer que la clé API est disponible
+  const client = new Anthropic({ apiKey })
 
   try {
     const { imageBase64, mediaType } = JSON.parse(event.body || '{}')
@@ -87,6 +88,8 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({ error: 'Image required' }),
       }
     }
+
+    console.log('Starting plate scan...')
 
     // ÉTAPE 1: Extraire la plaque de l'image
     const plateResponse = await client.messages.create({
@@ -205,10 +208,11 @@ RÉPONDS UNIQUEMENT en JSON valide:
     }
   } catch (error) {
     console.error('Scan plate error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Erreur lors du scan' }),
+      body: JSON.stringify({ error: 'Erreur lors du scan', details: errorMessage }),
     }
   }
 }
