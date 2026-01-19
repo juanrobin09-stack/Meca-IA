@@ -55,7 +55,7 @@ const defaultContent: Record<PaywallMode, {
     subtitle: 'Passe Premium pour analyser tous tes devis en illimité.',
     unitLabel: '1 analyse de devis',
     unitButton: 'Acheter 1 analyse',
-    unitPrice: '2.99€',
+    unitPrice: '1.99€',
     priceId: STRIPE_PRICES.PAY_PER_DEVIS,
     productType: 'devis',
     features: [
