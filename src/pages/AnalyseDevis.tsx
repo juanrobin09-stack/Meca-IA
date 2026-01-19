@@ -266,7 +266,6 @@ export default function AnalyseDevis() {
       try {
         const saved = await saveDevis({
           analysis_result: JSON.stringify(result),
-          image_url: selectedFile.dataUrl,
           verdict_type: verdictType,
           potential_savings: result.economiesPotentielles?.montant,
           is_fair_price: verdictType === 'good',

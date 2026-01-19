@@ -43,7 +43,6 @@ export function useDevis(userId: string | undefined) {
   const saveDevis = useCallback(
     async (analysisData: {
       analysis_result: string
-      image_url?: string
       garage_name?: string
       original_amount?: number
       potential_savings?: number
