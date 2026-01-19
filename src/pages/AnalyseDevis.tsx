@@ -145,10 +145,7 @@ export default function AnalyseDevis() {
     setIsAnalyzing(true)
     setError(null)
     setFromCache(false)
-    setAnalysisStep('Extraction du devis...')
-
-    const maxRetries = 3
-    let lastError: Error | null = null
+    setAnalysisStep('Vérification...')
 
     try {
       // Générer hash pour vérifier si déjà analysé
@@ -166,97 +163,46 @@ export default function AnalyseDevis() {
         return
       }
 
-      setAnalysisStep('Analyse IA professionnelle...')
+      setAnalysisStep('Analyse IA en cours...')
 
-      // Nouvelle analyse avec retry logic
-      let result = null
+      // Créer un AbortController pour le timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 secondes timeout
 
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          console.log(`🔄 Tentative d'analyse ${attempt}/${maxRetries}...`)
-          setAnalysisStep(`Analyse en cours... (tentative ${attempt}/${maxRetries})`)
+      const response = await fetch('/.netlify/functions/analyze-devis-pro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: selectedFile.base64,
+          userId: user.id
+        }),
+        signal: controller.signal
+      })
 
-          // Créer un AbortController pour le timeout
-          const controller = new AbortController()
-          const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 secondes timeout
+      clearTimeout(timeoutId)
 
-          const response = await fetch('/.netlify/functions/analyze-devis-pro', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              imageBase64: selectedFile.base64,
-              userId: user.id
-            }),
-            signal: controller.signal
-          })
+      // Vérifier si la réponse est du JSON
+      const contentType = response.headers.get('content-type')
 
-          clearTimeout(timeoutId)
-
-          // Vérifier si la réponse est du JSON
-          const contentType = response.headers.get('content-type')
-
-          if (!response.ok) {
-            if (contentType && contentType.includes('text/html')) {
-              throw new Error('SERVICE_UNAVAILABLE')
-            }
-            const errorData = await response.json().catch(() => ({}))
-
-            if (response.status === 429) {
-              throw new Error('RATE_LIMIT')
-            } else if (response.status === 401 || response.status === 403) {
-              throw new Error('AUTH_ERROR')
-            } else if (response.status >= 500) {
-              throw new Error('SERVER_ERROR')
-            }
-
-            throw new Error(errorData.error || 'UNKNOWN_ERROR')
-          }
-
-          result = await response.json()
-          console.log('✅ Analyse réussie')
-          break // Succès, sortir de la boucle
-
-        } catch (err: any) {
-          console.error(`❌ Erreur tentative ${attempt}:`, err)
-          lastError = err
-
-          // Erreurs non-récupérables, ne pas réessayer
-          if (err.message === 'AUTH_ERROR') {
-            throw new Error('Erreur d\'authentification. Reconnecte-toi et réessaie.')
-          }
-
-          if (err.name === 'AbortError') {
-            lastError = new Error('TIMEOUT')
-          }
-
-          // Si ce n'est pas la dernière tentative, attendre avant de réessayer
-          if (attempt < maxRetries) {
-            const waitTime = attempt * 2000 // 2s, 4s, 6s
-            console.log(`⏳ Attente ${waitTime/1000}s avant nouvelle tentative...`)
-            setAnalysisStep(`Nouvelle tentative dans ${waitTime/1000}s...`)
-            await new Promise(resolve => setTimeout(resolve, waitTime))
-          }
+      if (!response.ok) {
+        if (contentType && contentType.includes('text/html')) {
+          throw new Error('Service temporairement indisponible. Réessaie dans quelques minutes.')
         }
-      }
+        const errorData = await response.json().catch(() => ({}))
 
-      // Si on n'a pas de résultat après toutes les tentatives
-      if (!result) {
-        const errorMessage = lastError?.message || 'UNKNOWN_ERROR'
-
-        if (errorMessage === 'TIMEOUT') {
-          throw new Error('L\'analyse prend trop de temps. Essaie avec une photo plus petite ou réessaie plus tard.')
-        } else if (errorMessage === 'SERVICE_UNAVAILABLE') {
-          throw new Error('Le service d\'analyse est temporairement indisponible. Réessaie dans quelques minutes.')
-        } else if (errorMessage === 'RATE_LIMIT') {
+        if (response.status === 429) {
           throw new Error('Trop de requêtes. Attends 1 minute et réessaie.')
-        } else if (errorMessage === 'SERVER_ERROR') {
-          throw new Error('Erreur serveur. Nos équipes sont informées. Réessaie dans quelques minutes.')
-        } else if (errorMessage.includes('Impossible de lire')) {
-          throw new Error('Impossible de lire le devis. Assure-toi que la photo est nette et bien éclairée.')
-        } else {
-          throw new Error(`Erreur lors de l'analyse après ${maxRetries} tentatives. Réessaie plus tard.`)
+        } else if (response.status === 401 || response.status === 403) {
+          throw new Error('Erreur d\'authentification. Reconnecte-toi et réessaie.')
+        } else if (response.status >= 500) {
+          throw new Error('Erreur serveur. Réessaie dans quelques minutes.')
         }
+
+        throw new Error(errorData.error || 'Erreur lors de l\'analyse. Réessaie.')
       }
+
+      const result = await response.json()
+      console.log('✅ Analyse réussie')
 
       setAnalysisResult(result)
       celebrateSuccess()
@@ -296,8 +242,12 @@ export default function AnalyseDevis() {
         setCurrentRemaining(prev => Math.max(0, prev - 1))
       }
     } catch (err: any) {
-      console.error('❌ Erreur finale analyse:', err)
-      setError(err.message || "Erreur lors de l'analyse. Réessaie.")
+      console.error('❌ Erreur analyse:', err)
+      if (err.name === 'AbortError') {
+        setError('L\'analyse prend trop de temps. Réessaie avec une photo plus nette.')
+      } else {
+        setError(err.message || "Erreur lors de l'analyse. Réessaie.")
+      }
     } finally {
       setIsAnalyzing(false)
       setAnalysisStep('')
