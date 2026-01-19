@@ -13,7 +13,6 @@ import {
   History,
   Sparkles,
   Car,
-  Crown,
   Wrench,
   AlertTriangle,
   CheckCircle,
@@ -121,13 +120,13 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             ) : (
-              <Card className="mb-6 border-amber-500/30 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
+              <Card className="mb-6 border-indigo-500/30 bg-gradient-to-r from-blue-50 to-violet-50 dark:from-blue-950/20 dark:to-violet-950/20">
                 <CardContent className="flex items-center p-4 gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center shrink-0">
-                    <Crown className="h-5 w-5 text-white" />
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500 flex items-center justify-center shrink-0">
+                    <Sparkles className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm">Premium actif</h3>
+                    <h3 className="font-semibold text-sm">✨ Premium actif</h3>
                     <p className="text-xs text-muted-foreground">
                       Toutes les fonctionnalités sont débloquées
                     </p>

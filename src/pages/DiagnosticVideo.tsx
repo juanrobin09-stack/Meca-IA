@@ -322,7 +322,7 @@ export default function DiagnosticVideo() {
               <div className="flex items-center gap-3 mb-2">
                 <Video className="h-8 w-8 text-primary" />
                 <h1 className="text-2xl md:text-3xl font-bold">Diagnostic Vidéo IA</h1>
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">Premium</Badge>
+                <Badge variant="premium">✨ Premium</Badge>
               </div>
               <p className="text-muted-foreground">
                 Filmez le problème (bruit, fumée, voyant...) et notre IA l'analyse

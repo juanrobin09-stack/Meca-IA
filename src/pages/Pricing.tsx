@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, X, Zap, Star, ArrowLeft, Loader2, Crown, Sparkles } from 'lucide-react'
+import { Check, X, Zap, Star, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -62,8 +62,8 @@ export default function Pricing() {
         <div className="container mx-auto px-4 py-6 pb-24">
           {/* Title Section */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-4">
-              <Crown className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 text-primary px-4 py-2 rounded-full mb-4">
+              <Sparkles className="h-4 w-4" />
               <span className="text-sm font-medium">Plans MECAI</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold mb-3 dark:text-white">
@@ -151,7 +151,7 @@ export default function Pricing() {
                   </>
                 ) : (
                   <>
-                    <Crown className="h-5 w-5 mr-2" />
+                    <Sparkles className="h-5 w-5 mr-2" />
                     Passer Premium
                   </>
                 )}
@@ -266,11 +266,6 @@ export default function Pricing() {
                       <td className="p-3">Support</td>
                       <td className="p-3 text-center">Standard</td>
                       <td className="p-3 text-center font-medium text-primary">Prioritaire</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3">Publicité</td>
-                      <td className="p-3 text-center">Oui</td>
-                      <td className="p-3 text-center font-medium text-primary">Sans pub</td>
                     </tr>
                   </tbody>
                 </table>

@@ -402,7 +402,7 @@ export default function MechanicChat() {
                           MECAI
                         </span>
                         {isPremium && (
-                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] sm:text-xs shrink-0 shadow-sm">
+                          <Badge variant="premium" className="text-[10px] sm:text-xs shrink-0">
                             ✨ Premium
                           </Badge>
                         )}
@@ -459,9 +459,9 @@ export default function MechanicChat() {
                   {/* Messages counter */}
                   <div className="flex items-center gap-2 flex-wrap">
                     {isPremium ? (
-                      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                      <Badge variant="premium">
                         <MessageSquare className="h-3 w-3 mr-1" />
-                        Illimité
+                        ✨ Illimité
                       </Badge>
                     ) : messagesRemaining !== null ? (
                       <>

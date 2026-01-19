@@ -27,7 +27,6 @@ import {
   Settings,
   Menu,
   X,
-  Crown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -100,8 +99,7 @@ export default function Sidebar() {
           <div className="px-4 py-4">
             {isPremium ? (
               <Badge variant="premium" className="w-full justify-center py-1">
-                <Sparkles className="h-3 w-3 mr-1" />
-                Premium
+                ✨ Premium
               </Badge>
             ) : (
               <Tooltip content="Passe Premium pour des diagnostics illimités !">
@@ -154,8 +152,8 @@ export default function Sidebar() {
           {!isPremium && (
             <div className="px-3 pb-2">
               <Link to="/pricing">
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  <Crown className="h-4 w-4 mr-2" />
+                <Button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700">
+                  <Sparkles className="h-4 w-4 mr-2" />
                   Passer Premium
                 </Button>
               </Link>
@@ -259,8 +257,7 @@ export default function Sidebar() {
               <div className="px-4 py-4">
                 {isPremium ? (
                   <Badge variant="premium" className="w-full justify-center py-2 text-sm">
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Premium Actif
+                    ✨ Premium Actif
                   </Badge>
                 ) : (
                   <div className="space-y-2">
@@ -268,10 +265,10 @@ export default function Sidebar() {
                       Gratuit: {diagnosticsRemaining}/2 restants
                     </Badge>
                     <Button
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600"
+                      className="w-full bg-gradient-to-r from-blue-600 to-violet-600"
                       onClick={() => handleNavClick('/pricing', false)}
                     >
-                      <Crown className="h-4 w-4 mr-2" />
+                      <Sparkles className="h-4 w-4 mr-2" />
                       Passer Premium - 9,99€/mois
                     </Button>
                   </div>

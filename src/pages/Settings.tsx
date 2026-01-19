@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import {
   Loader2,
-  Sparkles,
   ExternalLink,
   CreditCard,
   User,
@@ -105,8 +104,7 @@ export default function Settings() {
                 </div>
                 {isPremium ? (
                   <Badge variant="premium">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Premium
+                    ✨ Premium
                   </Badge>
                 ) : (
                   <Badge variant="secondary">Gratuit</Badge>

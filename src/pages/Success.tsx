@@ -37,7 +37,7 @@ const paymentMessages: Record<PaymentType, {
   buttonPath: string
 }> = {
   subscription: {
-    icon: <Sparkles className="h-5 w-5 text-amber-500" />,
+    icon: <Sparkles className="h-5 w-5 text-indigo-500" />,
     title: 'Bienvenue en Premium !',
     description: 'Tu as maintenant accès à toutes les fonctionnalités en illimité.',
     buttonText: 'Nouveau diagnostic',

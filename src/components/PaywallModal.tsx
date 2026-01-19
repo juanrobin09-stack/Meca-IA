@@ -179,7 +179,7 @@ export default function PaywallModal({
           <Card className="border-primary ring-2 ring-primary">
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500" />
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
                 <CardTitle className="text-base sm:text-lg">Premium</CardTitle>
                 <span className="text-[10px] sm:text-xs bg-primary text-primary-foreground px-1.5 sm:px-2 py-0.5 rounded-full ml-auto">
                   Recommandé

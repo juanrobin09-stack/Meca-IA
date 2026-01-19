@@ -194,7 +194,7 @@ export default function AnalyseDevis() {
                     </Button>
                   </Link>
                 )}
-                <Badge variant={isPremium ? "default" : "secondary"} className="text-sm">
+                <Badge variant={isPremium ? "premium" : "secondary"} className="text-sm">
                   {isPremium ? (
                     <>✨ Illimité</>
                   ) : (

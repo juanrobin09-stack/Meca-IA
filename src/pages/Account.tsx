@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Loader2, Sparkles, ExternalLink, Trash2, CheckCircle2, RefreshCw } from 'lucide-react'
+import { Loader2, ExternalLink, Trash2, CheckCircle2, RefreshCw } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default function Account() {
@@ -155,8 +155,7 @@ export default function Account() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <Badge variant="premium">
-                      <Sparkles className="h-3 w-3 mr-1" />
-                      Premium
+                      ✨ Premium
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">

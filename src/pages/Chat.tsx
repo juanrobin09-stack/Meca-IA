@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip } from '@/components/ui/tooltip'
-import { ArrowLeft, Send, Loader2, Wrench, Sparkles, Camera, X, Car, CheckCircle2, HelpCircle, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Send, Loader2, Wrench, Camera, X, Car, CheckCircle2, HelpCircle, AlertTriangle } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
 
@@ -305,8 +305,7 @@ export default function Chat() {
               )}
               {isPremium ? (
                 <Badge variant="premium">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  Premium
+                  ✨ Illimité
                 </Badge>
               ) : (
                 <div className="flex items-center gap-1.5">

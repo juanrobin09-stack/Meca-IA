@@ -292,7 +292,7 @@ export default function PrevisionPannes() {
               <div className="flex items-center gap-3 mb-2">
                 <TrendingUp className="h-8 w-8 text-primary" />
                 <h1 className="text-2xl md:text-3xl font-bold">Prévision de Pannes</h1>
-                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500">Premium</Badge>
+                <Badge variant="premium">✨ Premium</Badge>
               </div>
               <p className="text-muted-foreground">
                 Anticipe les réparations de ton véhicule grâce à l'IA prédictive
