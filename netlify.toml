@@ -20,6 +20,14 @@
 [functions]
   node_bundler = "esbuild"
 
+  # Timeout étendu pour les fonctions d'analyse (max 26s sur plan gratuit)
+  [functions."analyze-devis-pro"]
+    external_node_modules = ["@anthropic-ai/sdk"]
+
+  [functions."*"]
+    # 26 secondes max sur plan gratuit Netlify
+    timeout = 26
+
 # Security Headers
 [[headers]]
   for = "/*"
