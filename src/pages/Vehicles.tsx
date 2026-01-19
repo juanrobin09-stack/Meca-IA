@@ -177,13 +177,14 @@ export default function Vehicles() {
   }
 
   const handleScanComplete = (scannedVehicle: { plate: string; brand: string; model: string; year: string; fuel: string }) => {
-    // Save vehicle from scanner
+    // Save vehicle from scanner - convert fuel to lowercase for DB constraint
+    const fuelLower = scannedVehicle.fuel.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     handleSaveVehicle({
       name: `${scannedVehicle.brand} ${scannedVehicle.model}`,
       brand: scannedVehicle.brand,
       model: scannedVehicle.model,
       year: parseInt(scannedVehicle.year) || new Date().getFullYear(),
-      fuel_type: scannedVehicle.fuel,
+      fuel_type: fuelLower,
       plate: scannedVehicle.plate,
       mileage: 0,
     })

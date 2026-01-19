@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import PaywallModal from '@/components/PaywallModal'
 import { supabase } from '@/lib/supabase'
-import { TrendingUp, Car, AlertTriangle, Calendar, Gauge, Euro, Loader2, ChevronRight, Wrench, Shield, Clock } from 'lucide-react'
+import { TrendingUp, Car, AlertTriangle, Calendar, Gauge, Euro, Loader2, ChevronRight, Wrench, Shield, Clock, Search, Star, Info } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 interface Vehicle {
@@ -42,6 +42,14 @@ interface ForecastResult {
   prochainEntretien: string
 }
 
+interface RealTimeData {
+  rappels: Array<{ titre: string; description: string; urgence: string }>
+  problemes_connus: Array<{ piece: string; description: string; km_apparition: number }>
+  prix_actuels: Record<string, { min: number; max: number }>
+  conseil_prioritaire: string
+  fiabilite_score: number
+}
+
 // Base de connaissances des pièces automobiles avec durée de vie moyenne
 const PIECES_DATABASE: Record<string, { kmMoyen: number; prixMin: number; prixMax: number; signes: string[] }> = {
   'Courroie de distribution': { kmMoyen: 100000, prixMin: 400, prixMax: 700, signes: ['Sifflement moteur', 'Claquement au démarrage', 'Voyant moteur'] },
@@ -70,6 +78,7 @@ export default function PrevisionPannes() {
   const [selectedVehicle, setSelectedVehicle] = useState<string>('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState<ForecastResult | null>(null)
+  const [realTimeData, setRealTimeData] = useState<RealTimeData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -107,9 +116,36 @@ export default function PrevisionPannes() {
     if (!vehicle) return
 
     setIsAnalyzing(true)
+    setRealTimeData(null)
 
-    // Simulation d'analyse avec logique basée sur les données réelles
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Fetch real-time data from API in parallel with local analysis
+    const fetchRealTimeData = async () => {
+      try {
+        const response = await fetch('/.netlify/functions/predict-issues', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brand: vehicle.brand,
+            model: vehicle.model,
+            year: vehicle.year,
+            fuel_type: vehicle.fuel_type,
+            mileage: vehicle.mileage,
+          }),
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setRealTimeData(data.analysis)
+        }
+      } catch (error) {
+        console.error('Error fetching real-time data:', error)
+      }
+    }
+
+    // Run both in parallel
+    await Promise.all([
+      fetchRealTimeData(),
+      new Promise(resolve => setTimeout(resolve, 1500)), // Minimum wait for UX
+    ])
 
     const predictions = generatePredictions(vehicle)
     const entretiensUrgents = predictions
@@ -460,6 +496,104 @@ export default function PrevisionPannes() {
                   </Card>
                 )}
 
+                {/* Real-time Data Section */}
+                {realTimeData && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    {/* AI Conseil + Fiabilité */}
+                    <Card className="border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                            <Info className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Search className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Analyse temps réel</span>
+                            </div>
+                            <p className="text-sm mb-3">{realTimeData.conseil_prioritaire}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">Fiabilité:</span>
+                              <div className="flex gap-1">
+                                {[...Array(10)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`h-4 w-4 ${i < realTimeData.fiabilite_score ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-sm font-bold">{realTimeData.fiabilite_score}/10</span>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Rappels Constructeur */}
+                    {realTimeData.rappels.length > 0 && (
+                      <Card className="border-orange-200 dark:border-orange-800">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-base">
+                            <AlertTriangle className="h-5 w-5 text-orange-500" />
+                            Rappels constructeur
+                            <Badge variant="outline" className="ml-2">Temps réel</Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {realTimeData.rappels.map((rappel, i) => (
+                              <div key={i} className="p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className="font-medium">{rappel.titre}</span>
+                                  <Badge className={
+                                    rappel.urgence === 'haute' ? 'bg-red-500' :
+                                    rappel.urgence === 'moyenne' ? 'bg-orange-500' : 'bg-yellow-500'
+                                  }>
+                                    {rappel.urgence}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-muted-foreground">{rappel.description}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Problèmes Connus */}
+                    {realTimeData.problemes_connus.length > 0 && (
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="flex items-center gap-2 text-base">
+                            <Search className="h-5 w-5 text-primary" />
+                            Problèmes fréquents sur ce modèle
+                            <Badge variant="outline" className="ml-2">Web</Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-3 md:grid-cols-2">
+                            {realTimeData.problemes_connus.map((prob, i) => (
+                              <div key={i} className="p-3 border rounded-lg">
+                                <div className="font-medium text-sm">{prob.piece}</div>
+                                <p className="text-sm text-muted-foreground mt-1">{prob.description}</p>
+                                {prob.km_apparition > 0 && (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Apparition vers {prob.km_apparition.toLocaleString()} km
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </motion.div>
+                )}
+
                 {/* Predictions List */}
                 <Card>
                   <CardHeader>
@@ -530,7 +664,7 @@ export default function PrevisionPannes() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-3 justify-center">
-                  <Button variant="outline" onClick={() => setResult(null)}>
+                  <Button variant="outline" onClick={() => { setResult(null); setRealTimeData(null); }}>
                     <Car className="h-4 w-4 mr-2" />
                     Analyser un autre véhicule
                   </Button>

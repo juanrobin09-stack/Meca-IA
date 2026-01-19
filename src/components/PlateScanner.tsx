@@ -27,8 +27,28 @@ interface PlateScannerProps {
   onVehicleConfirmed: (vehicle: VehicleInfo) => void
 }
 
-const BRANDS = ['Peugeot', 'Renault', 'Citroën', 'Dacia', 'Volkswagen', 'Toyota', 'Ford', 'Opel', 'Fiat', 'Autre']
+const BRANDS = ['Peugeot', 'Renault', 'Citroën', 'Dacia', 'Volkswagen', 'Toyota', 'Ford', 'Opel', 'Fiat', 'BMW', 'Mercedes', 'Audi', 'Nissan', 'Hyundai', 'Kia', 'Autre']
 const FUELS = ['Essence', 'Diesel', 'Hybride', 'Électrique', 'GPL']
+
+// Normaliser la marque pour correspondre à notre liste
+function normalizeBrand(brand: string | null): string {
+  if (!brand) return 'Autre'
+  const normalized = brand.trim()
+  // Chercher une correspondance dans BRANDS (insensible à la casse)
+  const found = BRANDS.find(b => b.toLowerCase() === normalized.toLowerCase())
+  return found || 'Autre'
+}
+
+// Normaliser le carburant
+function normalizeFuel(fuel: string | null): string {
+  if (!fuel) return 'Essence'
+  const lower = fuel.toLowerCase()
+  if (lower.includes('diesel')) return 'Diesel'
+  if (lower.includes('electri')) return 'Électrique'
+  if (lower.includes('hybrid')) return 'Hybride'
+  if (lower.includes('gpl')) return 'GPL'
+  return 'Essence'
+}
 
 export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }: PlateScannerProps) {
   const [step, setStep] = useState<'upload' | 'confirm'>('upload')
@@ -79,13 +99,22 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
       const data = await response.json()
       const extractedPlate = data.plate
 
-      if (extractedPlate === 'NON_DETECTE' || extractedPlate.length < 5) {
+      if (!extractedPlate || extractedPlate === 'NON_DETECTE' || extractedPlate.length < 5) {
         setError("Plaque non détectée. Réessaie avec une photo plus nette.")
         return
       }
 
       setPlateNumber(extractedPlate)
-      setVehicle((prev) => ({ ...prev, plate: extractedPlate }))
+
+      // Pré-remplir toutes les infos détectées
+      setVehicle({
+        plate: extractedPlate,
+        brand: normalizeBrand(data.brand),
+        model: data.model || '',
+        year: data.year?.toString() || new Date().getFullYear().toString(),
+        fuel: normalizeFuel(data.fuel),
+      })
+
       setStep('confirm')
     } catch (err) {
       console.error('Scan error:', err)
@@ -128,8 +157,8 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
           </DialogTitle>
           <DialogDescription>
             {step === 'upload'
-              ? 'Prends une photo de ta plaque pour identifier ton véhicule'
-              : 'Vérifie et complète les informations'
+              ? 'Prends une photo de ton véhicule - on détecte la plaque ET le modèle'
+              : 'Vérifie les informations détectées et complète si nécessaire'
             }
           </DialogDescription>
         </DialogHeader>
@@ -170,14 +199,21 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Plate detected */}
+            {/* Plate & vehicle detected */}
             <Card className="bg-green-50 border-green-200">
-              <CardContent className="flex items-center gap-3 py-4">
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-sm text-green-800">Plaque détectée</p>
-                  <p className="font-mono font-bold text-lg">{plateNumber}</p>
+              <CardContent className="py-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-sm text-green-800">Plaque détectée</p>
+                    <p className="font-mono font-bold text-lg">{plateNumber}</p>
+                  </div>
                 </div>
+                {vehicle.model && (
+                  <div className="mt-2 pt-2 border-t border-green-200 text-sm text-green-700">
+                    ✨ Véhicule identifié : <strong>{vehicle.brand} {vehicle.model}</strong>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
