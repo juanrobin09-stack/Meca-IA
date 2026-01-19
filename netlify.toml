@@ -20,8 +20,11 @@
 [functions]
   node_bundler = "esbuild"
 
-  # Timeout étendu pour les fonctions d'analyse (max 26s sur plan gratuit)
+  # External modules pour les fonctions d'analyse
   [functions."analyze-devis-pro"]
+    external_node_modules = ["@anthropic-ai/sdk"]
+
+  [functions."analyze-video-pro"]
     external_node_modules = ["@anthropic-ai/sdk"]
 
   [functions."*"]
