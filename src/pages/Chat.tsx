@@ -14,10 +14,23 @@ import PlateScanner from '@/components/PlateScanner'
 import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip } from '@/components/ui/tooltip'
-import { ArrowLeft, Send, Loader2, Wrench, Camera, X, Car, CheckCircle2, HelpCircle, AlertTriangle } from 'lucide-react'
+import {
+  ArrowLeft,
+  Send,
+  Loader2,
+  Camera,
+  X,
+  Car,
+  CheckCircle2,
+  AlertTriangle,
+  Sparkles,
+  Cpu,
+  ChevronRight,
+  Zap,
+  Shield,
+  Clock
+} from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
 
@@ -30,15 +43,33 @@ interface VehicleInfo {
 }
 
 const MAX_PHOTOS_PER_CONVERSATION = 2
-const MAX_MESSAGES_PER_DIAGNOSTIC = 15 // Limit per diagnostic session (for non-premium users)
+const MAX_MESSAGES_PER_DIAGNOSTIC = 15
 
-// Detect if diagnostic is complete (has all key sections)
+// Premium animation variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } }
+}
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+}
+
+// Detect if diagnostic is complete
 function isDiagnosticComplete(content: string): boolean {
   const hasEstimation = content.includes('Estimation') || content.includes('estimation')
   const hasDiagnostic = content.includes('Diagnostic') || content.includes('diagnostic')
   const hasPieces = content.includes('pièce') || content.includes('Pièce')
   return (hasEstimation && hasDiagnostic) || hasPieces
 }
+
+// Example questions
+const EXAMPLE_QUESTIONS = [
+  { text: 'Ma 208 fait un bruit au freinage', emoji: '🔊', category: 'Bruit suspect' },
+  { text: 'Voyant moteur allumé sur ma Clio', emoji: '🚨', category: 'Voyant allumé' },
+  { text: "Fuite d'huile sous ma voiture", emoji: '💧', category: 'Fuite liquide' }
+]
 
 export default function Chat() {
   const { id } = useParams<{ id: string }>()
@@ -75,20 +106,13 @@ export default function Chat() {
   // Check limit on page load for new conversations
   useEffect(() => {
     async function checkLimitOnLoad() {
-      // Only check for new conversations (no ID in URL)
-      if (id) {
-        return
-      }
+      if (id) return
 
-      console.log('[Chat] Checking limit on page load...')
       const limitStatus = await checkDiagnosticLimit()
-      console.log('[Chat] Limit status:', limitStatus)
-
       setCurrentRemaining(limitStatus.remaining)
       setCurrentPurchasedCredits(limitStatus.purchasedCredits || 0)
 
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
-        console.log('[Chat] User has no remaining diagnostics, showing paywall')
         setShowPaywall(true)
       }
     }
@@ -104,12 +128,10 @@ export default function Chat() {
       if (!user?.id || memoryLoadedRef.current) return
 
       try {
-        console.log('[Chat] Loading AI memory for user...')
         const memory = await AIMemoryService.loadUserMemory(user.id)
         const memoryContext = AIMemoryService.generateContextForAI(memory)
         setMemoryContext(memoryContext)
         memoryLoadedRef.current = true
-        console.log('[Chat] AI memory loaded successfully')
       } catch (err) {
         console.warn('[Chat] Failed to load AI memory:', err)
       }
@@ -164,18 +186,15 @@ export default function Chat() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
 
-    // Check if max photos reached
     if (photosUsed >= MAX_PHOTOS_PER_CONVERSATION) {
       setImageError(`Maximum ${MAX_PHOTOS_PER_CONVERSATION} photos par conversation`)
       return
     }
 
-    // Validate file
     const validation = validateImageFile(file)
     if (!validation.valid) {
       setImageError(validation.error || 'Fichier invalide')
@@ -205,7 +224,6 @@ export default function Chat() {
     e.preventDefault()
     if ((!input.trim() && !selectedImage) || isLoading) return
 
-    // Check message limit for existing conversations (non-premium only)
     if (isAtMessageLimit) {
       setShowPaywall(true)
       return
@@ -216,14 +234,12 @@ export default function Chat() {
     setInput('')
     setSelectedImage(null)
 
-    // Check limits for new conversations (double-check before sending)
     if (isNewConversation) {
       const limitStatus = await checkDiagnosticLimit()
-      console.log('[Chat] handleSubmit - Limit check:', limitStatus)
 
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
         setShowPaywall(true)
-        setInput(messageContent) // Restore input
+        setInput(messageContent)
         return
       }
     }
@@ -231,36 +247,27 @@ export default function Chat() {
     try {
       let diagnosticId = currentDiagnostic?.id
 
-      // Create new diagnostic if needed
       if (!diagnosticId) {
         const diag = await createDiagnostic(messageContent)
         diagnosticId = diag.id
         setIsNewConversation(false)
 
-        // Increment counter for free users after first message
         if (!isPremium) {
-          console.log('[Chat] Incrementing diagnostic counter...')
-          const success = await incrementDiagnosticCount()
-          console.log('[Chat] Increment result:', success)
+          await incrementDiagnosticCount()
 
-          // Refresh profile to get updated counter
           if (refreshProfile) {
             await refreshProfile()
           }
 
-          // Update local remaining count
           setCurrentRemaining(prev => Math.max(0, prev - 1))
         }
 
-        // Update URL without triggering navigation
         window.history.replaceState(null, '', `/app/chat/${diagnosticId}`)
       }
 
-      // Send message and get response (with optional image)
       const assistantMessage = await sendMessage(messageContent, imageBase64)
 
       if (assistantMessage && diagnosticId) {
-        // Save user message
         const userMessage: Message = {
           role: 'user',
           content: messageContent,
@@ -284,474 +291,409 @@ export default function Chat() {
 
   function handleVehicleConfirmed(vehicle: VehicleInfo) {
     setScannedVehicle(vehicle)
-    // Pre-fill input with vehicle context
     if (!input.trim()) {
       setInput(`Ma ${vehicle.brand} ${vehicle.model} ${vehicle.year} (${vehicle.fuel}) a un problème: `)
     }
   }
 
-  // Display remaining from fresh check if available, otherwise from profile
   const displayRemaining = currentRemaining
 
   return (
     <PageTransition>
-    <div className="min-h-screen bg-background flex flex-col">
-      <Sidebar />
+      <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a]">
+        <Sidebar />
 
-      <div className="md:pl-64 flex-1 flex flex-col">
-        {/* Header */}
-        <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/50">
-          <div className="flex items-center justify-between h-16 px-4">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate('/app')}
-                className="md:hidden rounded-xl"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <Wrench className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <span className="font-bold text-lg">MECAI</span>
-                  <p className="text-xs text-muted-foreground -mt-0.5">Diagnostic Auto IA</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {photosUsed > 0 && (
-                <Badge variant="outline" className="text-xs rounded-lg px-2 py-1">
-                  <Camera className="h-3 w-3 mr-1" />
-                  {photosUsed}/{MAX_PHOTOS_PER_CONVERSATION}
-                </Badge>
-              )}
-              {isPremium ? (
-                <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg shadow-amber-500/30 px-3 py-1 rounded-lg">
-                  ✨ Illimité
-                </Badge>
-              ) : (
-                <div className="flex items-center gap-2">
-                  {/* Show messages remaining during active diagnostic */}
-                  {!isNewConversation && (
-                    <Tooltip content={`${messagesRemaining} messages restants pour ce diagnostic`}>
-                      <Badge
-                        variant={messagesRemaining <= 3 ? "destructive" : "outline"}
-                        className={`cursor-help text-xs rounded-lg px-2 py-1 ${messagesRemaining <= 3 ? 'bg-red-500 text-white border-0' : 'border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950'}`}
-                      >
-                        {messagesRemaining <= 3 && <AlertTriangle className="h-3 w-3 mr-1" />}
-                        {messagesRemaining}/{MAX_MESSAGES_PER_DIAGNOSTIC} msg
-                      </Badge>
-                    </Tooltip>
-                  )}
-                  {isNewConversation && (
-                    <Tooltip content="Tu as 2 diagnostics gratuits par mois. Passe Premium pour illimité !">
-                      <Badge variant="secondary" className="cursor-help flex items-center gap-1.5 rounded-lg px-3 py-1 bg-gray-100 dark:bg-gray-800">
-                        <span className="font-semibold">{displayRemaining}/2</span>
-                        <span className="text-muted-foreground">restants</span>
-                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
-                      </Badge>
-                    </Tooltip>
-                  )}
-                  {currentPurchasedCredits > 0 && (
-                    <Badge className="bg-gradient-to-r from-green-400 to-emerald-500 text-white border-0 shadow-md rounded-lg px-2 py-1">
-                      +{currentPurchasedCredits} crédit{currentPurchasedCredits > 1 ? 's' : ''}
-                    </Badge>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* Disclaimer - discret */}
-        <div className="px-4 py-2 bg-gradient-to-r from-blue-50/50 via-transparent to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20 border-b border-border/30">
-          <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1.5">
-            <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 text-[10px]">i</span>
-            Diagnostics à titre indicatif uniquement
-          </p>
-        </div>
-
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 pb-32">
-          {messages.length === 0 && !streamingContent && (
-            <div className="flex flex-col items-center justify-center min-h-[70vh] text-center py-8 px-4">
-              {/* Background decorative elements */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl" />
-                <div className="absolute bottom-40 right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-blue-500/3 to-purple-500/3 rounded-full blur-3xl" />
-              </div>
-
-              {/* Scanned vehicle card */}
-              {scannedVehicle ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-8 w-full max-w-md z-10"
-                >
-                  <Card className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/50 dark:to-emerald-950/50 border-green-200 dark:border-green-800 shadow-lg shadow-green-500/10">
-                    <CardContent className="flex items-center gap-4 py-5 px-6">
-                      <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                        <CheckCircle2 className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div className="text-left flex-1">
-                        <p className="text-xs font-medium text-green-600 dark:text-green-400 uppercase tracking-wide">Véhicule identifié</p>
-                        <p className="font-bold text-lg">{scannedVehicle.brand} {scannedVehicle.model}</p>
-                        <p className="text-sm text-muted-foreground">{scannedVehicle.year} • {scannedVehicle.plate} • {scannedVehicle.fuel}</p>
-                      </div>
+        <main className="md:pl-64 pb-20 md:pb-0">
+          <div className="h-screen md:h-[calc(100vh-0px)] flex flex-col">
+            {/* Premium Minimalist Header */}
+            <header className="relative border-b border-neutral-200/60 dark:border-neutral-800/60 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl">
+              <div className="px-4 sm:px-6 lg:px-8 py-4">
+                <div className="max-w-4xl mx-auto">
+                  <div className="flex items-center justify-between">
+                    {/* Left - Back & Logo */}
+                    <div className="flex items-center gap-4">
                       <Button
                         variant="ghost"
-                        size="sm"
-                        className="text-green-600 hover:text-green-700 hover:bg-green-100"
-                        onClick={() => setScannedVehicle(null)}
+                        size="icon"
+                        onClick={() => navigate('/app')}
+                        className="md:hidden h-9 w-9 rounded-xl text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                       >
-                        Changer
+                        <ArrowLeft className="h-5 w-5" />
                       </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-8 z-10"
-                >
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="rounded-full px-6 py-6 border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-all duration-300 group"
-                    onClick={() => setShowPlateScanner(true)}
-                  >
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3 group-hover:bg-primary/20 transition-colors">
-                      <Car className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold">Scanner ma plaque</p>
-                      <p className="text-xs text-muted-foreground">Optionnel - Pour un diagnostic plus précis</p>
-                    </div>
-                  </Button>
-                </motion.div>
-              )}
 
-              {/* Main hero section */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                className="relative z-10"
-              >
-                {/* Animated logo */}
-                <motion.div
-                  className="relative mx-auto mb-6"
-                  animate={{
-                    boxShadow: ['0 0 0 0 rgba(59, 130, 246, 0.4)', '0 0 0 20px rgba(59, 130, 246, 0)', '0 0 0 0 rgba(59, 130, 246, 0)']
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center shadow-xl shadow-blue-500/30">
-                    <motion.div
-                      animate={{ rotate: [0, -10, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                    >
-                      <Wrench className="h-12 w-12 text-white" />
-                    </motion.div>
-                  </div>
-                  {/* Floating particles */}
-                  <motion.div
-                    className="absolute -top-2 -right-2 h-4 w-4 rounded-full bg-yellow-400"
-                    animate={{ y: [-5, 5, -5], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                  <motion.div
-                    className="absolute -bottom-1 -left-3 h-3 w-3 rounded-full bg-green-400"
-                    animate={{ y: [5, -5, 5], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2.5, repeat: Infinity }}
-                  />
-                </motion.div>
-
-                <motion.h1
-                  className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  Salut !
-                </motion.h1>
-                <motion.p
-                  className="text-lg md:text-xl text-muted-foreground max-w-md mx-auto mb-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  Décris-moi ton problème de voiture
-                </motion.p>
-                <motion.p
-                  className="text-base text-muted-foreground/80"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  et je t'aide à diagnostiquer
-                </motion.p>
-
-                {/* Photo hint */}
-                <motion.div
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 border border-blue-100 dark:border-blue-900"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <div className="h-6 w-6 rounded-full bg-blue-500/20 flex items-center justify-center">
-                    <Camera className="h-3 w-3 text-blue-600" />
-                  </div>
-                  <span className="text-sm text-blue-700 dark:text-blue-300">Tu peux aussi envoyer une photo !</span>
-                </motion.div>
-              </motion.div>
-
-              {/* Example suggestions */}
-              <motion.div
-                className="mt-10 w-full max-w-2xl z-10"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <p className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wider">Exemples de questions</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {[
-                    { text: 'Ma 208 fait un bruit au freinage', icon: '🔊', color: 'from-orange-500/10 to-red-500/10 hover:from-orange-500/20 hover:to-red-500/20 border-orange-200 dark:border-orange-900' },
-                    { text: 'Voyant moteur allumé sur ma Clio', icon: '🚨', color: 'from-yellow-500/10 to-orange-500/10 hover:from-yellow-500/20 hover:to-orange-500/20 border-yellow-200 dark:border-yellow-900' },
-                    { text: "Fuite d'huile sous ma voiture", icon: '💧', color: 'from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 border-blue-200 dark:border-blue-900' }
-                  ].map((example, index) => (
-                    <motion.button
-                      key={example.text}
-                      className={`group relative p-4 rounded-2xl bg-gradient-to-br ${example.color} border backdrop-blur-sm transition-all duration-300 text-left hover:scale-[1.02] hover:shadow-lg`}
-                      onClick={() => setInput(example.text)}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 + index * 0.1 }}
-                      whileHover={{ y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <span className="text-2xl mb-2 block">{example.icon}</span>
-                      <span className="text-sm font-medium text-foreground/90 group-hover:text-foreground transition-colors">
-                        {example.text}
-                      </span>
-                      <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Send className="h-4 w-4 text-primary" />
+                      {/* Premium Avatar */}
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                          <Cpu className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-950" />
                       </div>
-                    </motion.button>
-                  ))}
+
+                      <div>
+                        <h1 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                          Diagnostic IA
+                          {isPremium && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              PRO
+                            </span>
+                          )}
+                        </h1>
+                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                          Expert automobile intelligent
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right - Status Badges */}
+                    <div className="flex items-center gap-2">
+                      {photosUsed > 0 && (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                          <Camera className="h-3 w-3" />
+                          {photosUsed}/{MAX_PHOTOS_PER_CONVERSATION}
+                        </div>
+                      )}
+
+                      {isPremium ? (
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 text-amber-600 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
+                          <Sparkles className="h-3 w-3" />
+                          Illimité
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          {!isNewConversation && (
+                            <Tooltip content={`${messagesRemaining} messages restants`}>
+                              <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg cursor-help ${
+                                messagesRemaining <= 3
+                                  ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400'
+                                  : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                              }`}>
+                                {messagesRemaining <= 3 && <AlertTriangle className="h-3 w-3" />}
+                                {messagesRemaining} msg
+                              </div>
+                            </Tooltip>
+                          )}
+                          {isNewConversation && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                              {displayRemaining}/2 restants
+                            </div>
+                          )}
+                          {currentPurchasedCredits > 0 && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">
+                              +{currentPurchasedCredits}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </motion.div>
-
-              {/* Features highlight */}
-              <motion.div
-                className="mt-10 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground z-10"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <span>Réponse instantanée</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-blue-500" />
-                  <span>Estimation des coûts</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-purple-500" />
-                  <span>Conseils personnalisés</span>
-                </div>
-              </motion.div>
-            </div>
-          )}
-
-          {messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
-          ))}
-
-          {streamingContent && (
-            <ChatMessage
-              message={{
-                role: 'assistant',
-                content: streamingContent,
-                timestamp: new Date().toISOString(),
-              }}
-              isStreaming
-            />
-          )}
-
-          {isLoading && !streamingContent && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 rounded-2xl border border-blue-100 dark:border-blue-900 max-w-sm"
-            >
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
-                <Loader2 className="h-5 w-5 animate-spin text-white" />
               </div>
-              <div>
-                <p className="font-medium text-sm">MECAI analyse...</p>
-                <p className="text-xs text-muted-foreground">Diagnostic en cours</p>
+
+              {/* Disclaimer - Subtle */}
+              <div className="border-t border-neutral-100 dark:border-neutral-900 bg-neutral-50/50 dark:bg-neutral-900/50 px-4 py-2">
+                <p className="text-[11px] text-neutral-500 text-center flex items-center justify-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400 text-[9px] font-bold">i</span>
+                  Diagnostics à titre indicatif uniquement
+                </p>
               </div>
-            </motion.div>
-          )}
+            </header>
 
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-4 text-sm bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/50 dark:to-pink-950/50 border border-red-200 dark:border-red-900 rounded-2xl flex items-center gap-3"
-            >
-              <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center shrink-0">
-                <X className="h-4 w-4 text-red-600" />
-              </div>
-              <span className="text-red-700 dark:text-red-400">{error}</span>
-            </motion.div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        <div className="fixed bottom-0 left-0 right-0 md:left-64 bg-gradient-to-t from-background via-background to-background/80 backdrop-blur-xl border-t border-border/50 p-4 pb-20 md:pb-4">
-          {/* Message limit reached warning */}
-          {isAtMessageLimit && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="max-w-3xl mx-auto mb-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/50 dark:to-orange-950/50 border border-amber-200 dark:border-amber-800 rounded-2xl shadow-lg shadow-amber-500/10"
-            >
-              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center">
-                  <AlertTriangle className="h-4 w-4" />
-                </div>
-                <span className="font-semibold">Limite de messages atteinte</span>
-              </div>
-              <p className="text-sm text-amber-600 dark:text-amber-500 mt-2 ml-10">
-                Tu as atteint les {MAX_MESSAGES_PER_DIAGNOSTIC} messages pour ce diagnostic.{' '}
-                <button
-                  className="underline font-semibold hover:text-amber-700"
-                  onClick={() => setShowPaywall(true)}
-                >
-                  Passe Premium
-                </button>{' '}
-                ou{' '}
-                <button
-                  className="underline font-semibold hover:text-amber-700"
-                  onClick={() => navigate('/app/chat')}
-                >
-                  commence un nouveau diagnostic
-                </button>
-                .
-              </p>
-            </motion.div>
-          )}
-
-          {/* Image preview */}
-          {selectedImage && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="max-w-3xl mx-auto mb-3"
-            >
-              <div className="relative inline-block">
-                <img
-                  src={selectedImage.dataUrl}
-                  alt="Preview"
-                  className="max-h-32 rounded-xl border-2 border-primary/20 shadow-lg"
-                />
-                <motion.button
-                  type="button"
-                  onClick={removeSelectedImage}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg hover:bg-red-600 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <X className="h-3 w-3" />
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Image error */}
-          {imageError && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="max-w-3xl mx-auto mb-3"
-            >
-              <p className="text-sm text-red-600 bg-red-50 dark:bg-red-950/50 px-4 py-2 rounded-xl">{imageError}</p>
-            </motion.div>
-          )}
-
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-            <div className="flex gap-3 items-end p-2 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-gray-900/50 transition-all duration-300 focus-within:border-primary/50 focus-within:shadow-primary/10">
-              {/* Photo upload button */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleImageSelect}
-                className="hidden"
-              />
-              <Tooltip content={isAtMessageLimit ? 'Limite de messages atteinte' : (photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Envoie une photo pour un diagnostic plus précis')}>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
-                    className="shrink-0 h-10 w-10 rounded-xl hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="max-w-3xl mx-auto px-4 py-8">
+                {messages.length === 0 && !streamingContent ? (
+                  /* Empty State - Premium Hero */
+                  <motion.div
+                    className="text-center py-8"
+                    initial="hidden"
+                    animate="visible"
+                    variants={staggerContainer}
                   >
-                    <Camera className="h-5 w-5" />
-                  </Button>
-                </motion.div>
-              </Tooltip>
+                    {/* Scanned Vehicle Card */}
+                    {scannedVehicle ? (
+                      <motion.div
+                        variants={fadeInUp}
+                        className="mb-10 max-w-md mx-auto"
+                      >
+                        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 rounded-2xl">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div className="flex-1 text-left">
+                              <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Véhicule identifié</p>
+                              <p className="text-base font-semibold text-neutral-900 dark:text-white">{scannedVehicle.brand} {scannedVehicle.model}</p>
+                              <p className="text-sm text-neutral-500">{scannedVehicle.year} • {scannedVehicle.plate}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 rounded-lg"
+                              onClick={() => setScannedVehicle(null)}
+                            >
+                              Changer
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div variants={fadeInUp} className="mb-8">
+                        <button
+                          className="inline-flex items-center gap-3 px-5 py-3 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-2xl hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-lg transition-all duration-300 group"
+                          onClick={() => setShowPlateScanner(true)}
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+                            <Car className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          <div className="text-left">
+                            <p className="text-sm font-medium text-neutral-900 dark:text-white">Scanner ma plaque</p>
+                            <p className="text-xs text-neutral-500">Optionnel • Diagnostic plus précis</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-neutral-400 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                      </motion.div>
+                    )}
 
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
-                className="min-h-[44px] max-h-32 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-base placeholder:text-muted-foreground/60"
-                rows={1}
-                disabled={isLoading || isAtMessageLimit}
-              />
+                    {/* Hero Section */}
+                    <motion.div variants={fadeInUp} className="mb-12">
+                      {/* Premium Logo */}
+                      <div className="relative inline-block mb-6">
+                        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-2xl shadow-blue-500/30">
+                          <Cpu className="h-10 w-10 text-white" />
+                        </div>
+                        <motion.div
+                          className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-4 border-[#fafafa] dark:border-[#0a0a0a] flex items-center justify-center"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.5, type: 'spring' }}
+                        >
+                          <span className="text-white text-[10px]">✓</span>
+                        </motion.div>
+                      </div>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
-                  className="shrink-0 h-10 w-10 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg shadow-blue-500/30 disabled:opacity-50 disabled:shadow-none transition-all duration-300"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Send className="h-5 w-5" />
-                  )}
-                </Button>
-              </motion.div>
+                      <h2 className="text-2xl sm:text-3xl font-semibold text-neutral-900 dark:text-white mb-2">
+                        Diagnostic Intelligent
+                      </h2>
+                      <p className="text-neutral-500 dark:text-neutral-400 text-lg max-w-md mx-auto">
+                        Décris ton problème, je t'aide à comprendre.
+                      </p>
+
+                      {/* Photo hint */}
+                      <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/60 rounded-full">
+                        <Camera className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm text-blue-700 dark:text-blue-300">Tu peux aussi envoyer une photo</span>
+                      </div>
+                    </motion.div>
+
+                    {/* Example Questions - Premium Grid */}
+                    <motion.div variants={fadeInUp} className="mb-12">
+                      <p className="text-xs font-medium text-neutral-400 uppercase tracking-wider mb-4">Exemples</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto">
+                        {EXAMPLE_QUESTIONS.map((example, i) => (
+                          <motion.button
+                            key={i}
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="group relative p-4 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 text-left hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-lg hover:shadow-neutral-200/50 dark:hover:shadow-neutral-900/50 transition-all duration-300"
+                            onClick={() => setInput(example.text)}
+                          >
+                            <span className="text-2xl mb-2 block">{example.emoji}</span>
+                            <p className="text-xs text-neutral-400 mb-1">{example.category}</p>
+                            <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300 line-clamp-2">
+                              {example.text}
+                            </p>
+                            <ChevronRight className="absolute bottom-4 right-4 h-4 w-4 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    {/* Features - Minimal */}
+                    <motion.div
+                      variants={fadeInUp}
+                      className="flex flex-wrap justify-center gap-6 text-sm text-neutral-500"
+                    >
+                      {[
+                        { icon: Zap, label: 'Réponse instantanée' },
+                        { icon: Shield, label: 'Estimation des coûts' },
+                        { icon: Clock, label: 'Conseils personnalisés' },
+                      ].map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <feature.icon className="h-4 w-4 text-neutral-400" />
+                          <span>{feature.label}</span>
+                        </div>
+                      ))}
+                    </motion.div>
+                  </motion.div>
+                ) : (
+                  /* Messages List */
+                  <div className="space-y-1">
+                    {messages.map((message, index) => (
+                      <ChatMessage key={index} message={message} />
+                    ))}
+
+                    {streamingContent && (
+                      <ChatMessage
+                        message={{
+                          role: 'assistant',
+                          content: streamingContent,
+                          timestamp: new Date().toISOString(),
+                        }}
+                        isStreaming
+                      />
+                    )}
+
+                    {isLoading && !streamingContent && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-3"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
+                          <Cpu className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="px-4 py-3 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800/60 rounded-2xl">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                            <span className="text-sm text-neutral-600 dark:text-neutral-400">Analyse en cours...</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl flex items-center gap-3 text-sm text-red-700 dark:text-red-400"
+                      >
+                        <X className="h-4 w-4 shrink-0" />
+                        {error}
+                      </motion.div>
+                    )}
+
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </div>
             </div>
-          </form>
-        </div>
-      </div>
 
-      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
-      <PlateScanner
-        open={showPlateScanner}
-        onOpenChange={setShowPlateScanner}
-        onVehicleConfirmed={handleVehicleConfirmed}
-      />
-    </div>
+            {/* Input Area - Premium Minimal */}
+            <div className="border-t border-neutral-200/60 dark:border-neutral-800/60 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl p-4 pb-20 md:pb-4">
+              <div className="max-w-3xl mx-auto">
+                {/* Message Limit Warning */}
+                {isAtMessageLimit && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl"
+                  >
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Limite de messages atteinte</span>
+                    </div>
+                    <p className="text-xs text-amber-600 dark:text-amber-500 mt-1 ml-6">
+                      <button className="underline font-medium" onClick={() => setShowPaywall(true)}>Passe Premium</button>
+                      {' '}ou{' '}
+                      <button className="underline font-medium" onClick={() => navigate('/app/chat')}>nouveau diagnostic</button>
+                    </p>
+                  </motion.div>
+                )}
+
+                {/* Image Preview */}
+                {selectedImage && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mb-3"
+                  >
+                    <div className="relative inline-block">
+                      <img
+                        src={selectedImage.dataUrl}
+                        alt="Preview"
+                        className="max-h-24 rounded-xl border border-neutral-200 dark:border-neutral-800"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeSelectedImage}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Image Error */}
+                {imageError && (
+                  <div className="mb-3 text-sm text-red-600 bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg">
+                    {imageError}
+                  </div>
+                )}
+
+                {/* Input */}
+                <form onSubmit={handleSubmit}>
+                  <div className="flex gap-3 items-end p-2 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl focus-within:border-neutral-300 dark:focus-within:border-neutral-700 transition-colors duration-200">
+                    {/* Photo Button */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <Tooltip content={isAtMessageLimit ? 'Limite atteinte' : (photosUsed >= MAX_PHOTOS_PER_CONVERSATION ? 'Maximum de photos atteint' : 'Ajouter une photo')}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
+                        className="h-10 w-10 rounded-xl text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/50 dark:hover:bg-neutral-800 transition-colors"
+                      >
+                        <Camera className="h-5 w-5" />
+                      </Button>
+                    </Tooltip>
+
+                    <Textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
+                      className="min-h-[44px] max-h-32 resize-none border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-neutral-400"
+                      rows={1}
+                      disabled={isLoading || isAtMessageLimit}
+                    />
+
+                    <Button
+                      type="submit"
+                      size="icon"
+                      disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
+                      className="h-10 w-10 shrink-0 rounded-xl bg-neutral-900 dark:bg-white hover:bg-neutral-800 dark:hover:bg-neutral-100 text-white dark:text-neutral-900 disabled:opacity-40 transition-all duration-200"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Send className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </main>
+
+        <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
+        <PlateScanner
+          open={showPlateScanner}
+          onOpenChange={setShowPlateScanner}
+          onVehicleConfirmed={handleVehicleConfirmed}
+        />
+      </div>
     </PageTransition>
   )
 }
