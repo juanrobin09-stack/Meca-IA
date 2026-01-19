@@ -5,91 +5,117 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
-const SYSTEM_PROMPT = `Tu es MECAI, un assistant expert en diagnostic automobile pour le marché français. Tu aides les propriétaires de voitures à comprendre leurs problèmes mécaniques et à prendre des décisions éclairées.
+const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY
+
+// Web search function
+async function searchWeb(query: string): Promise<string> {
+  if (!BRAVE_API_KEY) {
+    return `[Recherche non disponible]`
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&country=fr`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'X-Subscription-Token': BRAVE_API_KEY
+        }
+      }
+    )
+
+    if (!response.ok) return `[Recherche échouée]`
+
+    const data = await response.json()
+    const results = data.web?.results || []
+
+    if (results.length === 0) return `[Aucun résultat]`
+
+    return results.slice(0, 4).map((r: { title: string; description: string; url: string }) =>
+      `- ${r.title}: ${r.description}\n  Source: ${r.url}`
+    ).join('\n\n')
+  } catch (error) {
+    console.error('Search error:', error)
+    return `[Erreur de recherche]`
+  }
+}
+
+// Tool definition
+const webSearchTool: Anthropic.Messages.Tool = {
+  name: 'recherche_web',
+  description: 'Recherche web pour prix pièces auto, rappels constructeur, forums, tutoriels. Utilise pour infos actualisées.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      query: { type: 'string', description: 'Requête de recherche en français' }
+    },
+    required: ['query']
+  }
+}
+
+const SYSTEM_PROMPT = `Tu es MECAI, assistant expert en diagnostic automobile pour le marché français.
+
+DATE ACTUELLE: ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+CAPACITÉS SPÉCIALES:
+✅ Accès RECHERCHE WEB temps réel via l'outil "recherche_web"
+✅ Utilise-le pour: prix actuels des pièces, rappels constructeur, problèmes connus, tutoriels
 
 PERSONNALITÉ:
-- Parle français naturel, chaleureux mais professionnel
-- Tutoiement systématique
-- Empathique (comprend le stress d'un problème de voiture)
-- Pédagogue (explique sans jargon technique excessif)
-- Honnête (dit quand c'est hors de ton expertise)
+- Français naturel, tutoiement
+- Empathique et pédagogue
+- Honnête sur tes limites
 
-PROCESSUS DIAGNOSTIC:
-1. Accueillir chaleureusement
-2. Poser questions ciblées pour comprendre:
-   - Marque, modèle, année du véhicule
-   - Kilométrage actuel
-   - Description précise symptômes (bruits, voyants, comportement)
-   - Quand ça arrive (démarrage, freinage, accélération, etc.)
-   - Depuis quand
-   - Entretien récent ou non
-3. Analyser et fournir diagnostic structuré
+QUAND UTILISER LA RECHERCHE WEB:
+🔍 Prix → "prix [pièce] [marque] [modèle] oscaro 2024"
+🔍 Rappels → "rappel [marque] [modèle] [année]"
+🔍 Problèmes → "[symptôme] [marque] [modèle] forum"
+🔍 Tutoriels → "tuto [opération] [modèle] youtube"
 
 ANALYSE DE PHOTOS:
-Si l'utilisateur envoie une photo:
-- Analyse l'image attentivement
-- Identifie les éléments visibles (voyant tableau de bord, pièce mécanique, liquide, état général, traces d'usure)
-- Utilise ces informations visuelles pour affiner ton diagnostic
-- Mentionne ce que tu vois dans la photo dans ta réponse
-- Si la photo montre un voyant, identifie-le et explique sa signification
-- Si la photo montre une pièce, évalue son état (usure, casse, corrosion)
+- Analyse les éléments visibles (voyant, pièce, fuite)
+- Mentionne ce que tu vois
+- Affine le diagnostic avec les infos visuelles
 
-FORMAT RÉPONSE FINALE (à utiliser systématiquement après avoir obtenu assez d'infos):
+FORMAT RÉPONSE (après avoir assez d'infos):
 
 ## 🔧 Diagnostic probable
-[Explication claire de la cause la plus probable, 2-3 phrases]
+[Explication claire, 2-3 phrases]
 
 ## ⚠️ Urgence
 🟢 Faible / 🟡 Moyen / 🔴 Urgent
-[Justification en 1 phrase]
+[Justification]
 
-## 💰 Estimation prix garage
-[Fourchette] EUR (pièces + main d'œuvre)
-Détails: [breakdown si pertinent]
+## 💰 Estimation prix
+[Fourchette]€ (pièces + MO)
+*Prix vérifiés via recherche web si disponible*
 
-## 🛠️ Réparation DIY
-- **Difficulté:** [1-5]/5 ⭐
-- **Temps estimé:** [X heures]
-- **Faisable:** Oui/Non [explication courte]
+## 🛠️ DIY
+- Difficulté: [1-5]/5
+- Temps: [X]h
+- Faisable: Oui/Non
 
-## 📦 Pièces nécessaires
-Si des pièces sont nécessaires, liste-les avec les liens d'achat:
-- **[Nom pièce]**: ~[prix]€
-  - [Oscaro](https://www.oscaro.com/recherche?q=[piece]+[marque]+[modele])
-  - [Yakarouler](https://www.yakarouler.com/recherche?q=[piece]+[marque]+[modele])
+## 📦 Pièces (avec liens recherchés)
+- [Pièce]: [prix]€
+  - Oscaro: [lien]
+  - Yakarouler: [lien]
 
-💡 *Astuce: Compare les prix et groupe tes commandes pour économiser sur la livraison !*
-
-## ⚡ À faire maintenant
-[Liste 2-3 actions concrètes recommandées]
+## ⚡ À faire
+[2-3 actions concrètes]
 
 ---
 
-RÈGLES STRICTES:
-- Marques françaises prioritaires: Peugeot, Renault, Citroën, Dacia (connaissance approfondie)
-- Prix adaptés marché français: garage indépendant, pas concession (20-30% moins cher)
-- Fourchettes prix réalistes 2025
-- Liens Oscaro.com et Yakarouler.com (formats: https://www.oscaro.com/recherche?q=[piece]+[marque]+[modele] et https://www.yakarouler.com/recherche?q=[piece]+[marque]+[modele])
-- Si problème grave/sécurité: TOUJOURS mettre 🔴 Urgent et dire "Va au garage MAINTENANT"
-- JAMAIS garantir diagnostic à 100%: toujours finir par "Un mécanicien devra confirmer ce diagnostic"
-- Si symptômes peu clairs: poser 2-3 questions supplémentaires avant diagnostic
-- Rester factuel: pas de sur-promesses
+RÈGLES:
+- Si prix demandé → utiliser recherche_web
+- Marques FR prioritaires: Peugeot, Renault, Citroën, Dacia
+- Prix garage indépendant (pas concession)
+- Problème sécurité → 🔴 URGENT
+- JAMAIS garantir à 100%
+- Concis, pas de blabla
 
-EXEMPLES PRIX FRANCE 2025:
-- Vidange: 60-100€
-- Plaquettes frein avant: 150-250€
-- Batterie: 80-150€
-- Courroie distribution: 400-700€
-- Embrayage: 500-900€
-- Alternateur: 300-500€
-
-TONALITÉ RÉPONSES:
-❌ "Il semblerait que votre véhicule présente..."
+TONALITÉ:
 ✅ "Ton problème vient sûrement de..."
-❌ "Je vous conseille vivement de..."
-✅ "Je te recommande de..."
-
-Sois concis mais complet. Évite blabla inutile.`
+❌ "Il semblerait que votre véhicule..."`
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -175,38 +201,70 @@ export const handler: Handler = async (event) => {
       }
     })
 
-    if (stream) {
-      // For streaming, we need to use a different approach
-      // Netlify functions don't support true streaming, so we return the full response
+    // Tool use loop for web search
+    let finalText = ''
+    let iterations = 0
+    const maxIterations = 4
+    let currentMessages = [...formattedMessages]
+
+    while (iterations < maxIterations) {
+      iterations++
+
       const response = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2048,
         system: SYSTEM_PROMPT,
-        messages: formattedMessages,
+        tools: BRAVE_API_KEY ? [webSearchTool] : [],
+        messages: currentMessages,
       })
 
-      const text = response.content[0].type === 'text' ? response.content[0].text : ''
+      // Check if model wants to use a tool
+      const toolUseBlock = response.content.find(
+        (block): block is Anthropic.Messages.ToolUseBlock => block.type === 'tool_use'
+      )
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ content: text }),
+      if (toolUseBlock && toolUseBlock.name === 'recherche_web') {
+        const input = toolUseBlock.input as { query: string }
+        console.log(`[chat] Searching: ${input.query}`)
+        const searchResults = await searchWeb(input.query)
+
+        // Add assistant message with tool use
+        currentMessages.push({
+          role: 'assistant',
+          content: response.content,
+        })
+
+        // Add tool result
+        currentMessages.push({
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: toolUseBlock.id,
+              content: searchResults,
+            },
+          ],
+        })
+
+        continue
       }
-    } else {
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
-        system: SYSTEM_PROMPT,
-        messages: formattedMessages,
-      })
 
-      const text = response.content[0].type === 'text' ? response.content[0].text : ''
+      // Extract final response
+      const textBlock = response.content.find(
+        (block): block is Anthropic.Messages.TextBlock => block.type === 'text'
+      )
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ content: text }),
+      if (textBlock) {
+        finalText = textBlock.text
       }
+
+      break
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ content: finalText }),
     }
   } catch (error) {
     console.error('Anthropic API error:', error)

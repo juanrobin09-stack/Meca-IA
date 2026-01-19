@@ -6,6 +6,7 @@ import type { Handler } from '@netlify/functions'
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
+const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY
 
 // Only create clients if env vars exist
 const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
@@ -17,6 +18,59 @@ const anthropic = ANTHROPIC_KEY
   : null
 
 const FREE_MESSAGES_LIMIT_PER_DAY = 10
+
+// Web search function
+async function searchWeb(query: string): Promise<string> {
+  if (!BRAVE_API_KEY) {
+    return `[Recherche non disponible]`
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&country=fr`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'X-Subscription-Token': BRAVE_API_KEY
+        }
+      }
+    )
+
+    if (!response.ok) {
+      return `[Recherche échouée]`
+    }
+
+    const data = await response.json()
+    const results = data.web?.results || []
+
+    if (results.length === 0) {
+      return `[Aucun résultat]`
+    }
+
+    return results.slice(0, 4).map((r: { title: string; description: string; url: string }) =>
+      `- ${r.title}: ${r.description}\n  Source: ${r.url}`
+    ).join('\n\n')
+  } catch (error) {
+    console.error('Search error:', error)
+    return `[Erreur de recherche]`
+  }
+}
+
+// Tool definition for web search
+const webSearchTool: Anthropic.Messages.Tool = {
+  name: 'recherche_web',
+  description: 'Recherche sur le web français pour: prix pièces auto (Oscaro, Yakarouler, Mister Auto), rappels constructeur, problèmes connus sur forums, garages recommandés, tutoriels YouTube. Utilise cet outil quand tu as besoin d\'informations actualisées.',
+  input_schema: {
+    type: 'object' as const,
+    properties: {
+      query: {
+        type: 'string',
+        description: 'La requête de recherche en français'
+      }
+    },
+    required: ['query']
+  }
+}
 
 interface RequestBody {
   userId: string
@@ -198,53 +252,52 @@ export const handler: Handler = async (event) => {
       .limit(20)
 
     // 5. Build system prompt
-    const systemPrompt = `Tu es un mécanicien automobile expert français, sympathique et pédagogue.
-Tu t'appelles MECAI et tu es disponible 24h/24 pour aider les automobilistes.
+    const systemPrompt = `Tu es MECAI, mécanicien automobile expert français disponible 24h/24.
+
+DATE ACTUELLE: ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+
+CAPACITÉS SPÉCIALES:
+✅ Accès RECHERCHE WEB temps réel via l'outil "recherche_web"
+✅ Utilise-le pour: prix actuels, rappels constructeur, forums, tutoriels
 
 ${context.vehicle ? `
 VÉHICULE DE L'UTILISATEUR :
-- Marque : ${context.vehicle.brand}
-- Modèle : ${context.vehicle.model}
-- Année : ${context.vehicle.year}
-- Carburant : ${context.vehicle.fuel_type || 'Non spécifié'}
-- Kilométrage : ${context.vehicle.mileage?.toLocaleString() || 'Non spécifié'} km
-` : 'Aucun véhicule sélectionné - demande à l\'utilisateur les infos sur son véhicule si nécessaire.'}
+- ${context.vehicle.brand} ${context.vehicle.model} ${context.vehicle.year}
+- Carburant: ${context.vehicle.fuel_type || 'Non spécifié'}
+- Kilométrage: ${context.vehicle.mileage?.toLocaleString() || '?'} km
+` : 'Aucun véhicule sélectionné.'}
 
 ${context.recent_diagnostics && context.recent_diagnostics.length > 0 ? `
 HISTORIQUE RÉCENT :
 ${context.recent_diagnostics.map(d => `- ${d.problem_description} (${new Date(d.created_at).toLocaleDateString('fr-FR')})`).join('\n')}
 ` : ''}
 
+QUAND UTILISER LA RECHERCHE WEB:
+🔍 Prix pièces → "prix [pièce] [marque] [modèle] oscaro 2024"
+🔍 Rappels → "rappel [marque] [modèle] [année] 2024"
+🔍 Problèmes connus → "[symptôme] [marque] [modèle] forum"
+🔍 Tutoriels → "tuto [opération] [modèle] youtube"
+🔍 Garages → "garage [ville] avis"
+
 TON RÔLE :
-- Répondre aux questions sur les problèmes automobiles
-- Expliquer de manière simple et claire
-- Donner des estimations de coûts réalistes (marché français 2026)
-- Indiquer l'urgence (pas urgent / à surveiller / urgent / critique)
-- Recommander des pièces ou des actions si pertinent
+- Diagnostic automobile précis
+- Prix RÉELS via recherche web
+- Conseils pratiques et urgence
+- Liens vers sources (Oscaro, Yakarouler, forums)
 
 RÈGLES :
-- Réponds TOUJOURS en français
-- Tutoie l'utilisateur (on est entre passionnés !)
-- Sois concis mais complet (max 300 mots)
-- Utilise des emojis pour rendre ça vivant 🔧🚗
-- Si tu ne sais pas, dis-le honnêtement
-- Pour les coûts, donne une fourchette min-max réaliste
-- Structure tes réponses avec des paragraphes courts
-- Finis toujours par une question ou une suggestion d'action
-
-ESTIMATIONS PRIX FRANCE 2026 :
-- Vidange : 60-100€
-- Plaquettes frein avant : 150-250€
-- Batterie : 80-150€
-- Courroie distribution : 400-700€
-- Embrayage : 500-900€
-- Amortisseurs (paire) : 400-600€
+- Tutoiement systématique
+- Concis (max 300 mots)
+- Emojis modérés 🔧🚗
+- Si prix demandé → TOUJOURS utiliser recherche_web
+- Fourchettes de prix réalistes
+- Finir par question ou action
 
 TONALITÉ :
-✅ "Salut ! Ah, le voyant moteur, c'est souvent stressant..."
-✅ "Pas de panique, on va regarder ça ensemble !"
-❌ "Veuillez nous indiquer plus de détails concernant..."
-❌ "Il semblerait que votre véhicule présente..."`
+✅ "Salut ! Ah, ce bruit au freinage..."
+✅ "Je vais chercher les prix actuels pour toi..."
+❌ "Veuillez nous indiquer..."
+❌ "Il semblerait que votre véhicule..."`
 
     // 6. Build messages array
     const messages: Anthropic.Messages.MessageParam[] = [
@@ -258,15 +311,64 @@ TONALITÉ :
       }
     ]
 
-    // 7. Call Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages
-    })
+    // 7. Call Claude with tool use loop
+    let aiResponse = ''
+    let iterations = 0
+    const maxIterations = 4 // Limit tool use iterations
 
-    const aiResponse = response.content[0].type === 'text' ? response.content[0].text : ''
+    while (iterations < maxIterations) {
+      iterations++
+
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: systemPrompt,
+        tools: BRAVE_API_KEY ? [webSearchTool] : [],
+        messages
+      })
+
+      // Check if model wants to use a tool
+      const toolUseBlock = response.content.find(
+        (block): block is Anthropic.Messages.ToolUseBlock => block.type === 'tool_use'
+      )
+
+      if (toolUseBlock && toolUseBlock.name === 'recherche_web') {
+        const input = toolUseBlock.input as { query: string }
+        console.log(`[mechanic-chat] Searching: ${input.query}`)
+        const searchResults = await searchWeb(input.query)
+
+        // Add assistant message with tool use
+        messages.push({
+          role: 'assistant',
+          content: response.content,
+        })
+
+        // Add tool result
+        messages.push({
+          role: 'user',
+          content: [
+            {
+              type: 'tool_result',
+              tool_use_id: toolUseBlock.id,
+              content: searchResults,
+            },
+          ],
+        })
+
+        continue
+      }
+
+      // Extract final response
+      const textBlock = response.content.find(
+        (block): block is Anthropic.Messages.TextBlock => block.type === 'text'
+      )
+
+      if (textBlock) {
+        aiResponse = textBlock.text
+      }
+
+      break
+    }
 
     // 8. Save messages to database
     await supabase.from('chat_messages').insert([
