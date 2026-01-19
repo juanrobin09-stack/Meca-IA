@@ -42,7 +42,7 @@ export class VideoHashService {
   ): Promise<VideoAnalysisCache | null> {
     try {
       const { data, error } = await supabase
-        .from('video_diagnostics')
+        .from('video_diagnostic')
         .select('*')
         .eq('utilisateur_id', userId)
         .eq('video_hash', videoHash)
@@ -86,7 +86,7 @@ export class VideoHashService {
   ): Promise<void> {
     try {
       const { error } = await supabase
-        .from('video_diagnostics')
+        .from('video_diagnostic')
         .upsert({
           utilisateur_id: userId,
           video_hash: videoHash,
@@ -112,7 +112,7 @@ export class VideoHashService {
   static async getUserVideoAnalyses(userId: string, limit = 10): Promise<VideoAnalysisCache[]> {
     try {
       const { data, error } = await supabase
-        .from('video_diagnostics')
+        .from('video_diagnostic')
         .select('*')
         .eq('utilisateur_id', userId)
         .order('cree_at', { ascending: false })
