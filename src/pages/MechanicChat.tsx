@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import Sidebar from '@/components/Sidebar'
+import Logo from '@/components/Logo'
 import PageTransition from '@/components/PageTransition'
 import PaywallModal from '@/components/PaywallModal'
 import { Button } from '@/components/ui/button'
@@ -394,12 +395,12 @@ export default function MechanicChat() {
                     <div className="flex items-center gap-4">
                       {/* Animated Avatar */}
                       <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-2xl blur-lg opacity-60 group-hover:opacity-80 transition-opacity animate-pulse" />
-                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-xl">
-                          <span className="text-3xl sm:text-4xl drop-shadow-lg">🤖</span>
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+                        <div className="relative">
+                          <Logo size="lg" showText={false} />
                         </div>
                         {/* Online indicator */}
-                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-3 border-background shadow-lg">
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-background shadow-lg">
                           <span className="absolute inset-0.5 rounded-full bg-emerald-400 animate-ping opacity-75" />
                         </div>
                       </div>
@@ -585,20 +586,20 @@ export default function MechanicChat() {
                   <div className="container mx-auto max-w-3xl space-y-6">
                     {messages.length === 0 && !loading ? (
                       <div className="text-center py-8 sm:py-16 px-4">
-                        {/* Hero Bot Avatar */}
+                        {/* Hero Logo */}
                         <motion.div
                           className="relative inline-block mb-8"
                           initial={{ scale: 0.8, opacity: 0 }}
                           animate={{ scale: 1, opacity: 1 }}
                           transition={{ type: 'spring', duration: 0.8 }}
                         >
-                          <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-[32px] blur-2xl opacity-30 animate-pulse" />
-                          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-2xl mx-auto">
-                            <span className="text-6xl sm:text-7xl drop-shadow-lg">🤖</span>
+                          <div className="absolute -inset-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 rounded-full blur-2xl opacity-20 animate-pulse" />
+                          <div className="relative mx-auto">
+                            <Logo size="lg" showText={false} className="w-24 h-24 sm:w-28 sm:h-28 [&_svg]:w-full [&_svg]:h-full" />
                           </div>
-                          <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-background shadow-lg flex items-center justify-center">
+                          <div className="absolute -bottom-1 right-0 w-7 h-7 bg-emerald-500 rounded-full border-3 border-background shadow-lg flex items-center justify-center">
                             <span className="absolute inset-1 rounded-full bg-emerald-400 animate-ping opacity-75" />
-                            <span className="relative w-3 h-3 rounded-full bg-emerald-300" />
+                            <span className="relative w-2.5 h-2.5 rounded-full bg-emerald-300" />
                           </div>
                         </motion.div>
 
@@ -660,9 +661,7 @@ export default function MechanicChat() {
                             {/* Avatar */}
                             {msg.sender === 'ai' ? (
                               <div className="relative shrink-0">
-                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
-                                  <span className="text-lg">🤖</span>
-                                </div>
+                                <Logo size="sm" showText={false} className="w-10 h-10 [&_svg]:w-10 [&_svg]:h-10" />
                               </div>
                             ) : (
                               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center shrink-0 shadow-sm">
@@ -710,9 +709,7 @@ export default function MechanicChat() {
                             animate={{ opacity: 1, y: 0 }}
                             className="flex gap-4"
                           >
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 flex items-center justify-center shadow-lg">
-                              <span className="text-lg">🤖</span>
-                            </div>
+                            <Logo size="sm" showText={false} className="w-10 h-10 [&_svg]:w-10 [&_svg]:h-10 shrink-0" />
                             <Card className="bg-card border-2 shadow-md">
                               <CardContent className="p-4">
                                 <div className="flex gap-1.5">
