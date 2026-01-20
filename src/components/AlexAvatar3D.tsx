@@ -12,8 +12,8 @@ function MechanicAvatar({ isSpeaking, isListening = false }: AvatarProps) {
   const avatarRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Object3D | null>(null)
 
-  // Avatar HOMME mecanicien
-  const { scene } = useGLTF('https://models.readyplayer.me/6508e35e0b33c63548f51b28.glb')
+  // Avatar Alex mecanicien
+  const { scene } = useGLTF('https://models.readyplayer.me/64bfa15f0e72c63d7c3934a6.glb')
 
   useEffect(() => {
     if (scene) {
@@ -191,4 +191,4 @@ export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
   )
 }
 
-useGLTF.preload('https://models.readyplayer.me/6508e35e0b33c63548f51b28.glb')
+useGLTF.preload('https://models.readyplayer.me/64bfa15f0e72c63d7c3934a6.glb')
