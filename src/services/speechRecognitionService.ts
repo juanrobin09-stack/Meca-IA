@@ -125,6 +125,6 @@ class SpeechRecognitionService {
   }
 }
 
+// Export simple compatible
 const speechRecognitionService = new SpeechRecognitionService()
-export { speechRecognitionService }
 export default speechRecognitionService

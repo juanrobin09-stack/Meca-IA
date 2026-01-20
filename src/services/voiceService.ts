@@ -128,6 +128,6 @@ class VoiceService {
   }
 }
 
-const voiceServiceInstance = new VoiceService()
-export { voiceServiceInstance as voiceService }
-export default voiceServiceInstance
+// Export simple compatible
+const voiceService = new VoiceService()
+export default voiceService

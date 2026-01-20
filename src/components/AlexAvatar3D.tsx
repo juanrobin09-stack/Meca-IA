@@ -7,15 +7,19 @@ interface AvatarProps {
   isSpeaking: boolean
   isListening?: boolean
   speechIntensity?: number
+  isMobile?: boolean
 }
 
-function LiveAvatar({ isSpeaking, isListening = false, speechIntensity = 0 }: AvatarProps) {
+function LiveAvatar({ isSpeaking, isListening = false, speechIntensity = 0, isMobile = false }: AvatarProps) {
   const groupRef = useRef<THREE.Group>(null)
   const headRef = useRef<THREE.Object3D | null>(null)
   const meshesRef = useRef<THREE.SkinnedMesh[]>([])
 
   // Avatar HOMME Ready Player Me - URL valide
   const { scene } = useGLTF('https://models.readyplayer.me/638df693d72bffc6fa17fec1.glb')
+
+  // Position Y de base selon device
+  const baseY = isMobile ? -1.6 : -1.8
 
   // Trouver les parties du visage pour animations
   useEffect(() => {
@@ -45,7 +49,7 @@ function LiveAvatar({ isSpeaking, isListening = false, speechIntensity = 0 }: Av
     if (!groupRef.current) return
 
     // === RESPIRATION SUBTILE ===
-    groupRef.current.position.y = -1.8 + Math.sin(time * 1.2) * 0.01
+    groupRef.current.position.y = baseY + Math.sin(time * 1.2) * 0.01
 
     if (headRef.current) {
       // === QUAND IL PARLE ===
@@ -122,8 +126,8 @@ function LiveAvatar({ isSpeaking, isListening = false, speechIntensity = 0 }: Av
     <primitive
       ref={groupRef}
       object={scene}
-      scale={2.2}
-      position={[0, -1.8, 0]}
+      scale={isMobile ? 2.0 : 2.2}
+      position={[0, baseY, 0]}
       rotation={[0, Math.PI * 0.1, 0]}
     />
   )
@@ -191,6 +195,19 @@ function LoadingAvatar() {
 
 export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
   const [speechIntensity, setSpeechIntensity] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detection mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Simuler intensite parole pour lip sync
   useEffect(() => {
@@ -208,19 +225,19 @@ export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
     <div className="relative w-full h-full">
       {/* Glow effect quand il parle */}
       {isSpeaking && (
-        <div className="absolute inset-0 bg-blue-500/30 rounded-3xl blur-3xl animate-pulse pointer-events-none"></div>
+        <div className="absolute inset-0 bg-blue-500/30 rounded-2xl md:rounded-3xl blur-3xl animate-pulse pointer-events-none"></div>
       )}
 
-      {/* Status badge moderne */}
-      <div className="absolute top-3 left-3 z-10">
-        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-xl border transition-all duration-300 ${
+      {/* Status badge moderne - plus petit sur mobile */}
+      <div className="absolute top-2 left-2 md:top-3 md:left-3 z-10">
+        <div className={`flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full backdrop-blur-xl border transition-all duration-300 ${
           isSpeaking
             ? 'bg-green-500/30 border-green-400/40'
             : isListening
             ? 'bg-blue-500/30 border-blue-400/40'
             : 'bg-white/10 border-white/20'
         }`}>
-          <div className={`relative w-2.5 h-2.5 rounded-full ${
+          <div className={`relative w-2 h-2 md:w-2.5 md:h-2.5 rounded-full ${
             isSpeaking ? 'bg-green-400' :
             isListening ? 'bg-blue-400' :
             'bg-gray-400'
@@ -231,7 +248,7 @@ export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
               }`}></div>
             )}
           </div>
-          <span className="text-white text-xs font-semibold">
+          <span className="text-white text-[10px] md:text-xs font-semibold">
             {isSpeaking ? 'Parle' : isListening ? 'Ecoute' : 'En ligne'}
           </span>
         </div>
@@ -245,13 +262,13 @@ export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
           alpha: true,
           powerPreference: 'high-performance'
         }}
-        className="rounded-3xl"
+        className="rounded-2xl md:rounded-3xl"
         style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)' }}
       >
         <PerspectiveCamera
           makeDefault
-          position={[0, 0.5, 2.8]}
-          fov={45}
+          position={isMobile ? [0, 0.3, 2.5] : [0, 0.5, 2.8]}
+          fov={isMobile ? 50 : 45}
         />
 
         {/* Eclairage dynamique cinematique */}
@@ -288,6 +305,7 @@ export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
             isSpeaking={isSpeaking}
             isListening={isListening}
             speechIntensity={speechIntensity}
+            isMobile={isMobile}
           />
         </Suspense>
 
@@ -299,7 +317,7 @@ export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
       </Canvas>
 
       {/* Ring glow autour */}
-      <div className={`absolute inset-0 rounded-3xl pointer-events-none transition-all duration-500 ${
+      <div className={`absolute inset-0 rounded-2xl md:rounded-3xl pointer-events-none transition-all duration-500 ${
         isSpeaking
           ? 'ring-2 ring-blue-400/60 shadow-2xl shadow-blue-500/40'
           : isListening
