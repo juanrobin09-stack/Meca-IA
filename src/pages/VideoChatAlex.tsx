@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { AlexAvatar3D } from '@/components/AlexAvatar3D'
 import { voiceService } from '@/services/voiceService'
 import { speechRecognitionService } from '@/services/speechRecognitionService'
@@ -183,24 +183,28 @@ export default function VideoChatAlex() {
   // Premium gate
   if (!isPremium) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-blue-950/30 to-slate-950 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="text-7xl mb-6">🎥</div>
+      <div className="fixed inset-0 bg-black flex items-center justify-center p-6">
+        <div className="text-center max-w-sm">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+            <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </div>
           <h2 className="text-2xl font-bold mb-3 text-white">Feature Premium</h2>
-          <p className="text-white/60 mb-6">
+          <p className="text-white/60 mb-8 text-sm">
             Le chat video avec Alex est reserve aux membres Premium.
           </p>
-          <Link
-            to="/pricing"
-            className="inline-block px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-2xl hover:scale-105 transition-transform"
+          <button
+            onClick={() => navigate('/pricing')}
+            className="w-full py-4 bg-white text-black rounded-2xl font-semibold text-lg hover:bg-white/90 transition-colors"
           >
-            Passer a Premium
-          </Link>
+            Passer Premium
+          </button>
           <button
             onClick={() => navigate('/app')}
-            className="block mx-auto mt-6 text-white/60 hover:text-white text-sm"
+            className="w-full mt-4 py-3 text-white/60 hover:text-white text-sm transition-colors"
           >
-            ← Retour
+            Retour
           </button>
         </div>
       </div>
@@ -208,9 +212,9 @@ export default function VideoChatAlex() {
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-950 via-blue-950/30 to-slate-950">
+    <div className="fixed inset-0 bg-black">
 
-      {/* VIDEO PRINCIPALE (FULL SCREEN) */}
+      {/* VIDEO FULLSCREEN */}
       <div className="absolute inset-0">
         {streaming ? (
           <video
@@ -221,10 +225,10 @@ export default function VideoChatAlex() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-black">
             <button
               onClick={startCamera}
-              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-bold text-lg shadow-2xl hover:scale-105 active:scale-95 transition-transform"
+              className="px-8 py-4 bg-white text-black rounded-2xl font-semibold text-lg hover:bg-white/90 transition-colors"
             >
               Activer Camera
             </button>
@@ -232,60 +236,65 @@ export default function VideoChatAlex() {
         )}
       </div>
 
-      {/* OVERLAY GRADIENT TOP */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/80 to-transparent pointer-events-none"></div>
+      {/* GRADIENT OVERLAYS */}
+      <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 right-0 h-44 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
 
-      {/* OVERLAY GRADIENT BOTTOM */}
-      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none"></div>
-
-      {/* HEADER */}
-      <div className="absolute top-0 left-0 right-0 px-6 py-4 flex items-center justify-between z-20 safe-area-top">
+      {/* HEADER MINIMAL */}
+      <div className="absolute top-0 left-0 right-0 px-4 py-3 flex items-center justify-between z-20 safe-area-top">
         <button
           onClick={() => navigate('/app')}
-          className="w-12 h-12 flex items-center justify-center rounded-xl bg-black/40 backdrop-blur-xl border border-white/10 hover:bg-black/60 active:scale-95 transition-all"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-xl hover:bg-white/20 transition-colors"
         >
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
         <div className="text-center">
-          <h1 className="text-white font-bold text-xl drop-shadow-lg">Alex</h1>
-          <p className="text-white/80 text-sm font-medium drop-shadow">Mecanicien Expert</p>
+          <h1 className="text-white font-semibold text-base">Alex</h1>
+          <div className="flex items-center justify-center gap-1.5 mt-0.5">
+            <div className={`w-1.5 h-1.5 rounded-full ${
+              isSpeaking ? 'bg-green-400' : isListening ? 'bg-blue-400' : 'bg-white/40'
+            }`} />
+            <span className="text-white/60 text-xs">
+              {isSpeaking ? 'Parle' : isListening ? 'Ecoute' : 'En ligne'}
+            </span>
+          </div>
         </div>
 
-        <div className="w-12"></div>
+        <div className="w-10" />
       </div>
 
       {/* ERREUR */}
       {error && (
-        <div className="absolute top-20 left-6 right-6 z-30 p-4 bg-red-500/90 backdrop-blur-xl rounded-2xl border border-red-400/30">
-          <p className="text-white text-sm font-medium">{error}</p>
+        <div className="absolute top-16 left-4 right-4 z-30 p-3 bg-red-500/90 backdrop-blur-xl rounded-xl">
+          <p className="text-white text-sm">{error}</p>
         </div>
       )}
 
-      {/* AVATAR ALEX - BAS DROITE (COMME COACH) */}
-      <div className="absolute bottom-32 right-4 w-64 h-80 md:w-72 md:h-96 z-10">
+      {/* AVATAR ALEX - BAS DROITE */}
+      <div className="absolute bottom-36 right-3 w-80 h-96 z-10 rounded-3xl overflow-hidden shadow-2xl">
         <AlexAvatar3D
           isSpeaking={isSpeaking}
           isListening={isListening || analyzing}
         />
       </div>
 
-      {/* TRANSCRIPTION LIVE (BAS GAUCHE) */}
+      {/* TRANSCRIPTION - BAS GAUCHE */}
       {(conversation.length > 0 || currentTranscript) && (
-        <div className="absolute bottom-32 left-4 right-72 md:right-80 z-10 max-w-lg">
-          <div className="bg-black/70 backdrop-blur-2xl rounded-2xl p-4 border border-white/20 shadow-2xl">
+        <div className="absolute bottom-36 left-3 right-[340px] z-10">
+          <div className="bg-black/60 backdrop-blur-2xl rounded-2xl p-4 max-h-40 overflow-y-auto">
             {currentTranscript && (
-              <p className="text-blue-400 text-sm font-semibold mb-2 flex items-center gap-2">
-                <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-                Toi: {currentTranscript}
+              <p className="text-blue-400 text-sm mb-2 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse" />
+                {currentTranscript}
               </p>
             )}
 
             {conversation.length > 0 && (
               <p className="text-white text-sm leading-relaxed">
-                <span className="text-green-400 font-semibold">Alex: </span>
+                <span className="text-green-400 font-medium">Alex: </span>
                 {conversation[conversation.length - 1].text}
               </p>
             )}
@@ -295,66 +304,68 @@ export default function VideoChatAlex() {
 
       {/* INDICATEUR ANALYSE */}
       {analyzing && !conversation.length && (
-        <div className="absolute bottom-32 left-4 z-10">
-          <div className="flex items-center gap-3 px-5 py-3 bg-purple-500/90 backdrop-blur-xl rounded-full">
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-white text-sm font-semibold">Analyse en cours...</span>
+        <div className="absolute bottom-36 left-3 z-10">
+          <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/80 backdrop-blur-xl rounded-full">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span className="text-white text-sm">Analyse...</span>
           </div>
         </div>
       )}
 
       {/* CONTROLES - BAS CENTER */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 safe-area-bottom">
-        <div className="flex items-center gap-4 px-6 py-4 bg-black/60 backdrop-blur-2xl rounded-full border border-white/10 shadow-2xl">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 safe-area-bottom">
+        <div className="flex items-center gap-6">
 
           {/* Micro */}
-          <button
-            onClick={handleVoiceInput}
-            disabled={analyzing || isSpeaking || !streaming}
-            className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all shadow-lg ${
-              isListening
-                ? 'bg-gradient-to-br from-red-500 to-pink-600 animate-pulse scale-110'
-                : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:scale-110'
-            } disabled:bg-gray-600 disabled:cursor-not-allowed active:scale-95`}
-          >
-            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-          </button>
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={handleVoiceInput}
+              disabled={analyzing || isSpeaking || !streaming}
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-xl ${
+                isListening
+                  ? 'bg-red-500 scale-110'
+                  : 'bg-white/20 backdrop-blur-xl hover:bg-white/30'
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+            <span className="text-white/70 text-xs">
+              {isListening ? 'Ecoute...' : 'Parler'}
+            </span>
+          </div>
 
           {/* Analyser */}
-          <button
-            onClick={() => handleAnalyze()}
-            disabled={!streaming || analyzing || isSpeaking}
-            className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 hover:scale-110 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-lg active:scale-95"
-          >
-            {analyzing ? (
-              <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            )}
-          </button>
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => handleAnalyze()}
+              disabled={!streaming || analyzing || isSpeaking}
+              className="w-16 h-16 rounded-full bg-white flex items-center justify-center transition-all shadow-xl hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {analyzing ? (
+                <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-7 h-7 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              )}
+            </button>
+            <span className="text-white/70 text-xs">Analyser</span>
+          </div>
 
           {/* Quitter */}
-          <button
-            onClick={stopCamera}
-            className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:scale-110 flex items-center justify-center transition-all shadow-lg active:scale-95"
-          >
-            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Labels */}
-        <div className="flex items-center justify-center gap-4 mt-3">
-          <span className="w-14 md:w-16 text-center text-white/80 text-xs font-semibold drop-shadow">
-            {isListening ? 'Ecoute...' : 'Parler'}
-          </span>
-          <span className="w-14 md:w-16 text-center text-white/80 text-xs font-semibold drop-shadow">Analyser</span>
-          <span className="w-14 md:w-16 text-center text-white/80 text-xs font-semibold drop-shadow">Quitter</span>
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={stopCamera}
+              className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center transition-all shadow-xl hover:scale-105"
+            >
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <span className="text-white/70 text-xs">Quitter</span>
+          </div>
         </div>
       </div>
 
