@@ -187,8 +187,13 @@ export default function VideoChatAlex() {
   // Cleanup
   useEffect(() => {
     return () => {
-      stopCamera()
-      voiceService.stop()
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream
+        stream.getTracks().forEach(track => track.stop())
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
     }
   }, [])
 

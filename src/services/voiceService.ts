@@ -1,7 +1,6 @@
 class VoiceService {
   private synth: SpeechSynthesis | null = null
   private voice: SpeechSynthesisVoice | null = null
-  private initialized = false
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -10,15 +9,15 @@ class VoiceService {
     }
   }
 
-  private initVoice() {
+  private initVoice(): void {
     if (!this.synth) return
 
-    const loadVoices = () => {
+    const loadVoices = (): void => {
       const voices = this.synth!.getVoices()
 
       // Préférence voix française masculine
       this.voice = voices.find(v =>
-        v.lang.startsWith('fr') && v.name.toLowerCase().includes('thomas')
+        v.lang.startsWith('fr') && (v.name.includes('Thomas') || v.name.includes('Paul'))
       ) || voices.find(v =>
         v.lang.startsWith('fr') && !v.name.toLowerCase().includes('female') && !v.name.toLowerCase().includes('amelie')
       ) || voices.find(v =>
@@ -26,16 +25,17 @@ class VoiceService {
       ) || voices[0]
 
       if (this.voice) {
-        console.log('Voix sélectionnée:', this.voice.name)
-        this.initialized = true
+        console.log('Voix Alex:', this.voice.name)
       }
     }
 
     // Load voices immediately if available
-    loadVoices()
+    if (this.synth.getVoices().length > 0) {
+      loadVoices()
+    }
 
     // Also listen for voices changed event (needed for some browsers)
-    this.synth.onvoiceschanged = loadVoices
+    this.synth.addEventListener('voiceschanged', loadVoices)
   }
 
   speak(text: string, onStart?: () => void, onEnd?: () => void): void {
@@ -55,21 +55,21 @@ class VoiceService {
     }
 
     utterance.lang = 'fr-FR'
-    utterance.rate = 1.0  // Vitesse normale
-    utterance.pitch = 0.9 // Légèrement grave (mécanicien)
+    utterance.rate = 1.0
+    utterance.pitch = 0.85 // Voix plus grave
     utterance.volume = 1.0
 
-    utterance.onstart = () => {
+    utterance.onstart = (): void => {
       console.log('Alex parle...')
       onStart?.()
     }
 
-    utterance.onend = () => {
+    utterance.onend = (): void => {
       console.log('Alex a fini')
       onEnd?.()
     }
 
-    utterance.onerror = (err) => {
+    utterance.onerror = (err): void => {
       console.error('Erreur voix:', err)
       onEnd?.()
     }
@@ -82,10 +82,8 @@ class VoiceService {
       this.synth.cancel()
     }
   }
-
-  isAvailable(): boolean {
-    return !!this.synth && this.initialized
-  }
 }
 
-export const voiceService = new VoiceService()
+const voiceServiceInstance = new VoiceService()
+export { voiceServiceInstance as voiceService }
+export default voiceServiceInstance
