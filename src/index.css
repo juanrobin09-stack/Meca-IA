@@ -332,6 +332,14 @@ img {
   .safe-area-bottom {
     padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
   }
+
+  .pt-safe-top {
+    padding-top: max(env(safe-area-inset-top), 12px);
+  }
+
+  .pb-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 20px);
+  }
 }
 
 /* Scrollbar hide utility */

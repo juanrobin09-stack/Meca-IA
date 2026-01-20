@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
@@ -11,20 +10,6 @@ import Sidebar from '@/components/Sidebar'
 import ChatMessage from '@/components/ChatMessage'
 import PaywallModal from '@/components/PaywallModal'
 import PlateScanner from '@/components/PlateScanner'
-import PageTransition from '@/components/PageTransition'
-import { Button } from '@/components/ui/button'
-import {
-  ArrowLeft,
-  Send,
-  Loader2,
-  Plus,
-  X,
-  Car,
-  CheckCircle2,
-  Sparkles,
-  Cpu,
-  ChevronRight
-} from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
 
@@ -39,7 +24,6 @@ interface VehicleInfo {
 const MAX_PHOTOS_PER_CONVERSATION = 2
 const MAX_MESSAGES_PER_DIAGNOSTIC = 15
 
-// Detect if diagnostic is complete
 function isDiagnosticComplete(content: string): boolean {
   const hasEstimation = content.includes('Estimation') || content.includes('estimation')
   const hasDiagnostic = content.includes('Diagnostic') || content.includes('diagnostic')
@@ -47,7 +31,6 @@ function isDiagnosticComplete(content: string): boolean {
   return (hasEstimation && hasDiagnostic) || hasPieces
 }
 
-// Example questions - simples
 const EXAMPLE_QUESTIONS = [
   { text: 'Ma voiture fait un bruit au freinage', icon: '🔊' },
   { text: 'Voyant moteur allumé', icon: '🚨' },
@@ -78,15 +61,11 @@ export default function Chat() {
   const [showPlateScanner, setShowPlateScanner] = useState(false)
   const [scannedVehicle, setScannedVehicle] = useState<VehicleInfo | null>(null)
 
-  // Count photos used in this conversation
   const photosUsed = messages.filter(m => m.image).length
-
-  // Count user messages in this conversation
   const userMessagesCount = messages.filter(m => m.role === 'user').length
   const messagesRemaining = MAX_MESSAGES_PER_DIAGNOSTIC - userMessagesCount
   const isAtMessageLimit = !isPremium && userMessagesCount >= MAX_MESSAGES_PER_DIAGNOSTIC && !isNewConversation
 
-  // Check limit on page load for new conversations
   useEffect(() => {
     async function checkLimitOnLoad() {
       if (id) return
@@ -105,7 +84,6 @@ export default function Chat() {
     }
   }, [id, user, profile, checkDiagnosticLimit])
 
-  // Load AI memory context for the user
   useEffect(() => {
     async function loadMemory() {
       if (!user?.id || memoryLoadedRef.current) return
@@ -123,7 +101,6 @@ export default function Chat() {
     loadMemory()
   }, [user?.id, setMemoryContext])
 
-  // Load existing diagnostic if ID provided
   useEffect(() => {
     if (id) {
       loadDiagnostic(id).then((diag) => {
@@ -141,12 +118,10 @@ export default function Chat() {
     }
   }, [id])
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, streamingContent])
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
@@ -154,7 +129,6 @@ export default function Chat() {
     }
   }, [input])
 
-  // Trigger confetti when diagnostic is complete
   useEffect(() => {
     if (hasConfettiedRef.current) return
 
@@ -282,267 +256,267 @@ export default function Chat() {
   const displayRemaining = currentRemaining
 
   return (
-    <PageTransition>
-      <div className="min-h-screen bg-white dark:bg-neutral-950">
-        <Sidebar />
+    <div className="h-[100dvh] flex flex-col bg-white dark:bg-neutral-950 overflow-hidden">
+      <Sidebar />
 
-        <main className="md:pl-64">
-          <div className="h-[100dvh] md:h-screen flex flex-col">
-            {/* Header - Style Claude/ChatGPT */}
-            <header className="flex-shrink-0 border-b border-neutral-100 dark:border-neutral-900 bg-white dark:bg-neutral-950">
-              <div className="px-4 py-3">
-                <div className="max-w-3xl mx-auto flex items-center justify-between">
-                  {/* Left */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => navigate('/app')}
-                      className="md:hidden p-2 -ml-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
-                    >
-                      <ArrowLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
-                        <Cpu className="h-4 w-4 text-white" />
-                      </div>
-                      <span className="font-medium text-neutral-900 dark:text-white">Diagnostic IA</span>
-                      {isPremium && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gradient-to-r from-amber-400 to-orange-500 text-white rounded-full">
-                          PRO
-                        </span>
-                      )}
-                    </div>
-                  </div>
+      <div className="md:pl-64 flex-1 flex flex-col overflow-hidden">
+        {/* HEADER - Fixed top with safe area */}
+        <header className="flex-shrink-0 bg-white dark:bg-neutral-950 border-b border-gray-200 dark:border-neutral-800 px-4 pt-safe-top pb-3">
+          <div className="flex items-center justify-between h-12 max-w-3xl mx-auto">
+            {/* Left: Back + Avatar + Name */}
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <button
+                onClick={() => navigate('/app')}
+                className="md:hidden w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 -ml-1"
+              >
+                <svg className="w-5 h-5 text-gray-600 dark:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
 
-                  {/* Right - Counter */}
-                  <div className="flex items-center gap-2">
-                    {!isPremium && (
-                      <span className="text-xs text-neutral-500">
-                        {isNewConversation ? `${displayRemaining}/2` : `${messagesRemaining} msg`}
-                        {currentPurchasedCredits > 0 && <span className="text-emerald-600"> +{currentPurchasedCredits}</span>}
-                      </span>
-                    )}
-                    {isPremium && (
-                      <span className="text-xs text-amber-600 flex items-center gap-1">
-                        <Sparkles className="h-3 w-3" /> Illimité
-                      </span>
-                    )}
-                  </div>
+              <div className="relative flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
+                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
                 </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-neutral-950 rounded-full"></div>
               </div>
-            </header>
 
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="max-w-3xl mx-auto px-4 py-6 pb-36 md:pb-32">
-                {messages.length === 0 && !streamingContent ? (
-                  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-                    {/* Scanned Vehicle */}
-                    {scannedVehicle && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/60 rounded-xl inline-flex items-center gap-3"
-                      >
-                        <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                        <span className="text-sm text-emerald-800 dark:text-emerald-300">
-                          {scannedVehicle.brand} {scannedVehicle.model} • {scannedVehicle.year}
-                        </span>
-                        <button onClick={() => setScannedVehicle(null)} className="text-emerald-600 hover:text-emerald-800">
-                          <X className="h-4 w-4" />
-                        </button>
-                      </motion.div>
-                    )}
-
-                    {/* Logo */}
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20"
-                    >
-                      <Cpu className="h-8 w-8 text-white" />
-                    </motion.div>
-
-                    <motion.h1
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="text-xl font-semibold text-neutral-900 dark:text-white mb-2"
-                    >
-                      Comment puis-je t'aider ?
-                    </motion.h1>
-                    <motion.p
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="text-neutral-500 text-sm mb-8"
-                    >
-                      Décris ton problème auto
-                    </motion.p>
-
-                    {/* Quick scan button */}
-                    {!scannedVehicle && (
-                      <motion.button
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        onClick={() => setShowPlateScanner(true)}
-                        className="mb-8 px-4 py-2 text-sm text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-900 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2"
-                      >
-                        <Car className="h-4 w-4" />
-                        Scanner ma plaque
-                      </motion.button>
-                    )}
-
-                    {/* Example Questions - Style ChatGPT */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                      className="w-full max-w-md space-y-2"
-                    >
-                      {EXAMPLE_QUESTIONS.map((q, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setInput(q.text)}
-                          className="w-full p-3 text-left text-sm text-neutral-700 dark:text-neutral-300 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-3 group"
-                        >
-                          <span className="text-lg">{q.icon}</span>
-                          <span className="flex-1">{q.text}</span>
-                          <ChevronRight className="h-4 w-4 text-neutral-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      ))}
-                    </motion.div>
-                  </div>
-                ) : (
-                  /* Messages */
-                  <div className="space-y-4">
-                    {messages.map((message, index) => (
-                      <ChatMessage key={index} message={message} />
-                    ))}
-
-                    {streamingContent && (
-                      <ChatMessage
-                        message={{
-                          role: 'assistant',
-                          content: streamingContent,
-                          timestamp: new Date().toISOString(),
-                        }}
-                        isStreaming
-                      />
-                    )}
-
-                    {isLoading && !streamingContent && (
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center flex-shrink-0">
-                          <Cpu className="h-4 w-4 text-white" />
-                        </div>
-                        <div className="px-4 py-3 bg-neutral-100 dark:bg-neutral-900 rounded-2xl">
-                          <div className="flex gap-1">
-                            <span className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <span className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <span className="w-2 h-2 rounded-full bg-neutral-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {error && (
-                      <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl text-sm text-red-600 dark:text-red-400">
-                        {error}
-                      </div>
-                    )}
-
-                    <div ref={messagesEndRef} />
-                  </div>
-                )}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate">Diagnostic IA</h1>
+                <p className="text-xs text-gray-500 dark:text-neutral-400 truncate">Expert auto • En ligne</p>
               </div>
             </div>
 
-            {/* Input Area - Floating Style Claude/ChatGPT */}
-            <div className="fixed bottom-0 left-0 right-0 md:left-64 pb-[72px] md:pb-4 px-4 bg-gradient-to-t from-white via-white dark:from-neutral-950 dark:via-neutral-950 to-transparent pt-6 z-40">
-              <div className="max-w-3xl mx-auto">
-                {/* Image Preview */}
-                {selectedImage && (
-                  <div className="mb-2 flex justify-start">
-                    <div className="relative inline-block">
-                      <img src={selectedImage.dataUrl} alt="Preview" className="h-16 rounded-lg" />
-                      <button
-                        onClick={removeSelectedImage}
-                        className="absolute -top-2 -right-2 w-5 h-5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-full flex items-center justify-center"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {imageError && (
-                  <div className="mb-2 text-xs text-red-500">{imageError}</div>
-                )}
-
-                {/* Limit Warning */}
-                {isAtMessageLimit && (
-                  <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-950/30 rounded-lg text-xs text-amber-700 dark:text-amber-400 text-center">
-                    Limite atteinte · <button onClick={() => setShowPaywall(true)} className="underline font-medium">Passer Premium</button>
-                  </div>
-                )}
-
-                {/* Input Bar - Style Claude */}
-                <form onSubmit={handleSubmit}>
-                  <div className="relative flex items-end gap-2 p-2 bg-neutral-100 dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-lg shadow-neutral-200/50 dark:shadow-neutral-900/50">
-                    {/* Photo Button */}
-                    <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
-                      className="p-2 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-xl transition-colors disabled:opacity-40"
-                    >
-                      <Plus className="h-5 w-5" />
-                    </button>
-
-                    {/* Textarea */}
-                    <textarea
-                      ref={textareaRef}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={isAtMessageLimit ? "Limite atteinte" : "Message..."}
-                      disabled={isLoading || isAtMessageLimit}
-                      rows={1}
-                      className="flex-1 bg-transparent border-0 resize-none text-sm text-neutral-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-0 py-2 px-1 max-h-32"
-                      style={{ minHeight: '40px' }}
-                    />
-
-                    {/* Send Button */}
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
-                      className="h-10 w-10 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-neutral-900 dark:disabled:hover:bg-white flex-shrink-0"
-                    >
-                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                </form>
-
-                {/* Disclaimer */}
-                <p className="text-[10px] text-neutral-400 text-center mt-2">
-                  Diagnostics à titre indicatif uniquement
-                </p>
+            {/* Right: Counter */}
+            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+              <div className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 text-xs font-medium text-gray-700 dark:text-neutral-300 whitespace-nowrap">
+                {isPremium ? '∞' : isNewConversation ? `${displayRemaining}/2` : `${messagesRemaining} msg`}
+                {currentPurchasedCredits > 0 && <span className="text-emerald-600"> +{currentPurchasedCredits}</span>}
               </div>
             </div>
           </div>
-        </main>
 
-        <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
-        <PlateScanner
-          open={showPlateScanner}
-          onOpenChange={setShowPlateScanner}
-          onVehicleConfirmed={handleVehicleConfirmed}
-        />
+          {/* Scanned vehicle badge */}
+          {scannedVehicle && (
+            <div className="mt-2 max-w-3xl mx-auto">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-full">
+                <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-xs text-emerald-800 dark:text-emerald-300">
+                  {scannedVehicle.brand} {scannedVehicle.model} • {scannedVehicle.year}
+                </span>
+                <button onClick={() => setScannedVehicle(null)} className="text-emerald-600 hover:text-emerald-800">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Warning near limit */}
+          {!isPremium && !isNewConversation && messagesRemaining <= 3 && messagesRemaining > 0 && (
+            <div className="mt-2 max-w-3xl mx-auto px-3 py-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
+              <p className="text-xs text-orange-800 dark:text-orange-300">
+                ⚠️ Plus que {messagesRemaining} message{messagesRemaining > 1 ? 's' : ''} pour ce diagnostic
+              </p>
+            </div>
+          )}
+        </header>
+
+        {/* MESSAGES - Scrollable middle */}
+        <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+            {messages.length === 0 && !streamingContent ? (
+              /* Empty State */
+              <div className="flex flex-col items-center justify-center min-h-[50vh] text-center py-8">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4 shadow-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
+                  Comment puis-je t'aider ?
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
+                  Décris ton problème auto
+                </p>
+
+                {/* Scan plate button */}
+                {!scannedVehicle && (
+                  <button
+                    onClick={() => setShowPlateScanner(true)}
+                    className="mb-6 px-4 py-2 text-sm text-gray-600 dark:text-neutral-400 bg-gray-100 dark:bg-neutral-900 rounded-full hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2 active:scale-98"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Scanner ma plaque
+                  </button>
+                )}
+
+                {/* Quick actions */}
+                <div className="w-full max-w-sm space-y-2">
+                  {EXAMPLE_QUESTIONS.map((q, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setInput(q.text)}
+                      className="w-full p-3 text-left text-sm bg-gray-50 dark:bg-neutral-900 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-3 active:scale-98"
+                    >
+                      <span className="text-lg">{q.icon}</span>
+                      <span className="text-gray-700 dark:text-neutral-300">{q.text}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              /* Messages */
+              <>
+                {messages.map((message, index) => (
+                  <ChatMessage key={index} message={message} />
+                ))}
+
+                {streamingContent && (
+                  <ChatMessage
+                    message={{
+                      role: 'assistant',
+                      content: streamingContent,
+                      timestamp: new Date().toISOString(),
+                    }}
+                    isStreaming
+                  />
+                )}
+
+                {isLoading && !streamingContent && (
+                  <div className="flex justify-start">
+                    <div className="flex gap-2.5 max-w-[85%]">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm flex-shrink-0">
+                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="bg-gray-100 dark:bg-neutral-800 rounded-2xl px-4 py-3">
+                        <div className="flex gap-1.5">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl text-sm text-red-600 dark:text-red-400">
+                    {error}
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* INPUT BAR - Fixed bottom with safe area */}
+        <div className="flex-shrink-0 bg-white dark:bg-neutral-950 border-t border-gray-200 dark:border-neutral-800 px-4 pt-3 pb-safe-bottom">
+          <div className="max-w-3xl mx-auto">
+            {/* Image preview */}
+            {selectedImage && (
+              <div className="mb-2">
+                <div className="relative inline-block">
+                  <img src={selectedImage.dataUrl} alt="Preview" className="h-16 rounded-lg" />
+                  <button
+                    onClick={removeSelectedImage}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full flex items-center justify-center"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {imageError && (
+              <div className="mb-2 text-xs text-red-500">{imageError}</div>
+            )}
+
+            {/* Limit warning */}
+            {isAtMessageLimit && (
+              <div className="mb-2 px-3 py-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg text-xs text-orange-700 dark:text-orange-400 text-center">
+                Limite atteinte · <button onClick={() => setShowPaywall(true)} className="underline font-medium">Passer Premium</button>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div className="flex items-end gap-2">
+                {/* Photo button */}
+                <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
+                  className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-700 active:scale-95 transition-all disabled:opacity-40 flex-shrink-0"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+
+                {/* Textarea */}
+                <div className="flex-1 relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
+                    disabled={isLoading || isAtMessageLimit}
+                    rows={1}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-base text-gray-900 dark:text-white placeholder-gray-500 disabled:opacity-50"
+                    style={{
+                      minHeight: '48px',
+                      maxHeight: '120px',
+                      fontSize: '16px'
+                    }}
+                  />
+                </div>
+
+                {/* Send button */}
+                <button
+                  type="submit"
+                  disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
+                  className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none flex-shrink-0"
+                >
+                  {isLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            <p className="text-[10px] text-gray-400 text-center mt-2">
+              Diagnostics à titre indicatif uniquement
+            </p>
+          </div>
+        </div>
       </div>
-    </PageTransition>
+
+      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
+      <PlateScanner
+        open={showPlateScanner}
+        onOpenChange={setShowPlateScanner}
+        onVehicleConfirmed={handleVehicleConfirmed}
+      />
+    </div>
   )
 }
