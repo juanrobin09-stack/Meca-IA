@@ -51,7 +51,7 @@ export default function MechanicChat() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const FREE_MESSAGES_LIMIT = 3
+  const FREE_MESSAGES_LIMIT = 10
   const MAX_PHOTOS_PER_CONVERSATION = 2
   const photosUsed = messages.filter(m => m.content.includes('[IMAGE]')).length
 
@@ -298,7 +298,7 @@ export default function MechanicChat() {
               fontWeight: 500,
               whiteSpace: 'nowrap'
             }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-              {isPremium ? '∞' : messagesRemaining !== null ? `${messagesRemaining}/3` : '...'}
+              {isPremium ? '∞' : messagesRemaining !== null ? `${messagesRemaining}/10` : '...'}
               {purchasedCredits > 0 && <span className="text-emerald-500"> +{purchasedCredits}</span>}
             </div>
 

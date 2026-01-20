@@ -17,7 +17,7 @@ const anthropic = ANTHROPIC_KEY
   ? new Anthropic({ apiKey: ANTHROPIC_KEY })
   : null
 
-const FREE_MESSAGES_LIMIT_PER_DAY = 3
+const FREE_MESSAGES_LIMIT_PER_DAY = 10
 
 // Web search function
 async function searchWeb(query: string): Promise<string> {
@@ -233,7 +233,7 @@ export const handler: Handler = async (event) => {
             headers,
             body: JSON.stringify({
               error: 'LIMIT_REACHED',
-              message: 'Tu as utilisé tes 3 messages gratuits aujourd\'hui. Reviens demain ou passe à Premium pour un accès illimité 24/7 !',
+              message: 'Tu as utilisé tes 10 messages gratuits aujourd\'hui. Reviens demain ou passe à Premium pour un accès illimité 24/7 !',
               upgradeUrl: '/pricing'
             }),
           }
