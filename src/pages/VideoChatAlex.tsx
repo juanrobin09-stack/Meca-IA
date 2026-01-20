@@ -33,6 +33,20 @@ export default function VideoChatAlex() {
     conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [conversation])
 
+  // Cleanup - MUST be before any conditional return
+  useEffect(() => {
+    const videoElement = videoRef.current
+    return () => {
+      if (videoElement?.srcObject) {
+        const stream = videoElement.srcObject as MediaStream
+        stream.getTracks().forEach(track => track.stop())
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
+
   // Premium gate
   if (!isPremium) {
     return (
@@ -183,20 +197,6 @@ export default function VideoChatAlex() {
     setIsSpeaking(false)
     setEmotion('neutral')
   }
-
-  // Cleanup
-  useEffect(() => {
-    const videoElement = videoRef.current
-    return () => {
-      if (videoElement?.srcObject) {
-        const stream = videoElement.srcObject as MediaStream
-        stream.getTracks().forEach(track => track.stop())
-      }
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
-    }
-  }, [])
 
   return (
     <>
