@@ -217,18 +217,15 @@ export default function Chat() {
         right: 0,
         bottom: 0,
         display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#fff'
-      }} className="md:ml-64">
+        flexDirection: 'column'
+      }} className="md:ml-64 bg-white dark:bg-neutral-950">
 
         {/* HEADER */}
         <div style={{
           flexShrink: 0,
-          borderBottom: '1px solid #e5e7eb',
           padding: '12px 16px',
-          paddingTop: 'max(env(safe-area-inset-top), 12px)',
-          backgroundColor: '#fff'
-        }}>
+          paddingTop: 'max(env(safe-area-inset-top), 12px)'
+        }} className="bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '768px', margin: '0 auto' }}>
             {/* Back button (mobile) */}
             <button
@@ -238,14 +235,13 @@ export default function Chat() {
                 height: 36,
                 borderRadius: '50%',
                 border: 'none',
-                backgroundColor: '#f3f4f6',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 16
               }}
-              className="md:hidden"
+              className="md:hidden bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
             >←</button>
 
             {/* Avatar */}
@@ -275,22 +271,20 @@ export default function Chat() {
 
             {/* Name */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600, color: '#111' }}>Diagnostic IA</div>
-              <div style={{ fontSize: 12, color: '#6b7280' }}>Expert auto • En ligne</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }} className="text-neutral-900 dark:text-white">Diagnostic IA</div>
+              <div style={{ fontSize: 12 }} className="text-neutral-500 dark:text-neutral-400">Expert auto • En ligne</div>
             </div>
 
             {/* Counter */}
             <div style={{
               padding: '4px 10px',
               borderRadius: 999,
-              backgroundColor: '#f3f4f6',
               fontSize: 12,
               fontWeight: 500,
-              color: '#374151',
               whiteSpace: 'nowrap'
-            }}>
+            }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
               {isPremium ? '∞' : isNewConversation ? `${currentRemaining}/2` : `${messagesRemaining} msg`}
-              {currentPurchasedCredits > 0 && <span style={{ color: '#10b981' }}> +{currentPurchasedCredits}</span>}
+              {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
             </div>
           </div>
 
@@ -302,14 +296,11 @@ export default function Chat() {
                 alignItems: 'center',
                 gap: 8,
                 padding: '6px 12px',
-                backgroundColor: '#ecfdf5',
-                border: '1px solid #a7f3d0',
                 borderRadius: 999,
-                fontSize: 12,
-                color: '#065f46'
-              }}>
+                fontSize: 12
+              }} className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400">
                 ✓ {scannedVehicle.brand} {scannedVehicle.model} • {scannedVehicle.year}
-                <button onClick={() => setScannedVehicle(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
+                <button onClick={() => setScannedVehicle(null)} className="text-emerald-600 dark:text-emerald-400" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
               </div>
             </div>
           )}
@@ -338,8 +329,8 @@ export default function Chat() {
                   margin: '0 auto 16px',
                   boxShadow: '0 8px 24px rgba(59,130,246,0.3)'
                 }}>🔬</div>
-                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Comment puis-je t'aider ?</h2>
-                <p style={{ color: '#6b7280', marginBottom: 24 }}>Décris ton problème auto</p>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }} className="text-neutral-900 dark:text-white">Comment puis-je t'aider ?</h2>
+                <p style={{ marginBottom: 24 }} className="text-neutral-500 dark:text-neutral-400">Décris ton problème auto</p>
 
                 {/* Scan plate button */}
                 {!scannedVehicle && (
@@ -349,15 +340,14 @@ export default function Chat() {
                       padding: '8px 16px',
                       borderRadius: 999,
                       border: 'none',
-                      backgroundColor: '#f3f4f6',
                       cursor: 'pointer',
                       fontSize: 14,
-                      color: '#374151',
                       marginBottom: 24,
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6
                     }}
+                    className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                   >
                     📷 Scanner ma plaque
                   </button>
@@ -375,16 +365,16 @@ export default function Chat() {
                         marginBottom: 8,
                         border: 'none',
                         borderRadius: 12,
-                        backgroundColor: '#f3f4f6',
                         cursor: 'pointer',
                         textAlign: 'left',
                         display: 'flex',
                         alignItems: 'center',
                         gap: 12
                       }}
+                      className="bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                     >
                       <span style={{ fontSize: 18 }}>{q.icon}</span>
-                      <span style={{ fontSize: 14, color: '#374151' }}>{q.text}</span>
+                      <span style={{ fontSize: 14 }} className="text-neutral-700 dark:text-neutral-300">{q.text}</span>
                     </button>
                   ))}
                 </div>
@@ -415,10 +405,10 @@ export default function Chat() {
                       justifyContent: 'center',
                       fontSize: 14
                     }}>🔬</div>
-                    <div style={{ padding: '12px 16px', borderRadius: 16, backgroundColor: '#f3f4f6', display: 'flex', gap: 4 }}>
-                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af' }}></div>
-                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af', animationDelay: '0.1s' }}></div>
-                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af', animationDelay: '0.2s' }}></div>
+                    <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', gap: 4 }} className="bg-neutral-100 dark:bg-neutral-800">
+                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
+                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
+                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 )}
@@ -438,11 +428,9 @@ export default function Chat() {
         {/* INPUT BAR */}
         <div style={{
           flexShrink: 0,
-          borderTop: '1px solid #e5e7eb',
           padding: '12px 16px',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 12px)',
-          backgroundColor: '#fff'
-        }}>
+          paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
+        }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:pb-4">
           <div style={{ maxWidth: '768px', margin: '0 auto' }}>
             {/* Image preview */}
             {selectedImage && (
@@ -470,21 +458,18 @@ export default function Chat() {
             )}
 
             {imageError && (
-              <div style={{ fontSize: 12, color: '#dc2626', marginBottom: 8 }}>{imageError}</div>
+              <div style={{ fontSize: 12, marginBottom: 8 }} className="text-red-500">{imageError}</div>
             )}
 
             {isAtMessageLimit && (
               <div style={{
                 padding: 8,
-                backgroundColor: '#fef3c7',
-                border: '1px solid #fcd34d',
                 borderRadius: 8,
                 fontSize: 12,
-                color: '#92400e',
                 textAlign: 'center',
                 marginBottom: 8
-              }}>
-                Limite atteinte · <button onClick={() => setShowPaywall(true)} style={{ background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', color: '#92400e', fontWeight: 600 }}>Passer Premium</button>
+              }} className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400">
+                Limite atteinte · <button onClick={() => setShowPaywall(true)} className="text-amber-700 dark:text-amber-400 font-semibold underline" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Passer Premium</button>
               </div>
             )}
 
@@ -501,12 +486,12 @@ export default function Chat() {
                     height: 48,
                     borderRadius: '50%',
                     border: 'none',
-                    backgroundColor: '#f3f4f6',
                     cursor: 'pointer',
                     fontSize: 20,
                     flexShrink: 0,
                     opacity: (isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit) ? 0.4 : 1
                   }}
+                  className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                 >+</button>
 
                 {/* Textarea */}
@@ -527,7 +512,6 @@ export default function Chat() {
                     flex: 1,
                     padding: '12px 16px',
                     borderRadius: 20,
-                    border: '1px solid #e5e7eb',
                     fontSize: 16,
                     resize: 'none',
                     minHeight: 48,
@@ -536,6 +520,7 @@ export default function Chat() {
                     fontFamily: 'inherit',
                     opacity: (isLoading || isAtMessageLimit) ? 0.5 : 1
                   }}
+                  className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
                 />
 
                 {/* Send button */}
@@ -564,7 +549,7 @@ export default function Chat() {
               </div>
             </form>
 
-            <p style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', marginTop: 8 }}>
+            <p style={{ fontSize: 10, textAlign: 'center', marginTop: 8 }} className="text-neutral-400 dark:text-neutral-500">
               Diagnostics à titre indicatif uniquement
             </p>
           </div>

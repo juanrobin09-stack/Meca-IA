@@ -208,19 +208,15 @@ export default function MechanicChat() {
         right: 0,
         bottom: 0,
         display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#fff',
-        marginLeft: 'var(--sidebar-width, 0px)'
-      }} className="md:ml-64">
+        flexDirection: 'column'
+      }} className="md:ml-64 bg-white dark:bg-neutral-950">
 
         {/* HEADER */}
         <div style={{
           flexShrink: 0,
-          borderBottom: '1px solid #e5e7eb',
           padding: '12px 16px',
-          paddingTop: 'max(env(safe-area-inset-top), 12px)',
-          backgroundColor: '#fff'
-        }}>
+          paddingTop: 'max(env(safe-area-inset-top), 12px)'
+        }} className="bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '768px', margin: '0 auto' }}>
             {/* Avatar */}
             <div style={{
@@ -252,22 +248,20 @@ export default function MechanicChat() {
 
             {/* Name */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600, color: '#111' }}>Alex</div>
-              <div style={{ fontSize: 12, color: '#6b7280' }}>Ton mécanicien • En ligne</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }} className="text-neutral-900 dark:text-white">Alex</div>
+              <div style={{ fontSize: 12 }} className="text-neutral-500 dark:text-neutral-400">Ton mécanicien • En ligne</div>
             </div>
 
             {/* Counter */}
             <div style={{
               padding: '4px 10px',
               borderRadius: 999,
-              backgroundColor: '#f3f4f6',
               fontSize: 12,
               fontWeight: 500,
-              color: '#374151',
               whiteSpace: 'nowrap'
-            }}>
+            }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
               {isPremium ? '∞' : messagesRemaining !== null ? `${messagesRemaining}/10` : '...'}
-              {purchasedCredits > 0 && <span style={{ color: '#10b981' }}> +{purchasedCredits}</span>}
+              {purchasedCredits > 0 && <span className="text-emerald-500"> +{purchasedCredits}</span>}
             </div>
 
             {/* History button */}
@@ -278,13 +272,13 @@ export default function MechanicChat() {
                 height: 36,
                 borderRadius: '50%',
                 border: 'none',
-                backgroundColor: '#f3f4f6',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 16
               }}
+              className="bg-neutral-100 dark:bg-neutral-800"
             >🕒</button>
 
             {/* New chat button */}
@@ -295,14 +289,13 @@ export default function MechanicChat() {
                 height: 36,
                 borderRadius: '50%',
                 border: 'none',
-                backgroundColor: '#111',
-                color: '#fff',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 20
               }}
+              className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
             >+</button>
           </div>
 
@@ -317,11 +310,10 @@ export default function MechanicChat() {
                   padding: '0 12px',
                   borderRadius: 999,
                   border: 'none',
-                  backgroundColor: '#f3f4f6',
                   fontSize: 12,
-                  color: '#374151',
                   cursor: 'pointer'
                 }}
+                className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
               >
                 <option value="">Aucun véhicule</option>
                 {vehicles.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} ({v.year})</option>)}
@@ -339,16 +331,14 @@ export default function MechanicChat() {
             bottom: 0,
             width: 280,
             maxWidth: '80vw',
-            backgroundColor: '#fff',
-            borderLeft: '1px solid #e5e7eb',
             zIndex: 50,
             display: 'flex',
             flexDirection: 'column',
             boxShadow: '-4px 0 12px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ padding: 16, borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontWeight: 600 }}>Historique</span>
-              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>×</button>
+          }} className="bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
+            <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-neutral-200 dark:border-neutral-800">
+              <span style={{ fontWeight: 600 }} className="text-neutral-900 dark:text-white">Historique</span>
+              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-600 dark:text-neutral-400">×</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
               {conversations.map(conv => (
@@ -361,12 +351,12 @@ export default function MechanicChat() {
                     textAlign: 'left',
                     border: 'none',
                     borderRadius: 8,
-                    backgroundColor: currentConversation?.id === conv.id ? '#f3f4f6' : 'transparent',
                     cursor: 'pointer',
                     marginBottom: 4
                   }}
+                  className={currentConversation?.id === conv.id ? 'bg-neutral-100 dark:bg-neutral-800' : 'bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800'}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 500, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="text-neutral-900 dark:text-white">
                     {conv.title || 'Nouvelle conversation'}
                   </div>
                 </button>
@@ -398,8 +388,8 @@ export default function MechanicChat() {
                   margin: '0 auto 16px',
                   boxShadow: '0 8px 24px rgba(249,115,22,0.3)'
                 }}>🔧</div>
-                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Salut, c'est Alex !</h2>
-                <p style={{ color: '#6b7280', marginBottom: 24 }}>Ton pote mécanicien, dispo 24h/24</p>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }} className="text-neutral-900 dark:text-white">Salut, c'est Alex !</h2>
+                <p style={{ marginBottom: 24 }} className="text-neutral-500 dark:text-neutral-400">Ton pote mécanicien, dispo 24h/24</p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, maxWidth: 320, margin: '0 auto' }}>
                   {QUICK_ACTIONS.map((action, i) => (
@@ -410,16 +400,16 @@ export default function MechanicChat() {
                         padding: 12,
                         border: 'none',
                         borderRadius: 12,
-                        backgroundColor: '#f3f4f6',
                         cursor: 'pointer',
                         textAlign: 'left',
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8
                       }}
+                      className="bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
                     >
                       <span>{action.icon}</span>
-                      <span style={{ fontSize: 13, color: '#374151' }}>{action.label}</span>
+                      <span style={{ fontSize: 13 }} className="text-neutral-700 dark:text-neutral-300">{action.label}</span>
                     </button>
                   ))}
                 </div>
@@ -458,12 +448,10 @@ export default function MechanicChat() {
                       <div style={{
                         padding: '10px 14px',
                         borderRadius: 16,
-                        backgroundColor: msg.sender === 'user' ? '#3b82f6' : '#f3f4f6',
-                        color: msg.sender === 'user' ? '#fff' : '#111',
                         fontSize: 15,
                         lineHeight: 1.5,
                         wordBreak: 'break-word'
-                      }}>
+                      }} className={msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white'}>
                         {msg.sender === 'ai' ? (
                           <ReactMarkdown
                             components={{
@@ -493,10 +481,10 @@ export default function MechanicChat() {
                       justifyContent: 'center',
                       fontSize: 14
                     }}>🔧</div>
-                    <div style={{ padding: '12px 16px', borderRadius: 16, backgroundColor: '#f3f4f6', display: 'flex', gap: 4 }}>
-                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af' }}></div>
-                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af', animationDelay: '0.1s' }}></div>
-                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af', animationDelay: '0.2s' }}></div>
+                    <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', gap: 4 }} className="bg-neutral-100 dark:bg-neutral-800">
+                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
+                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
+                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 )}
@@ -510,11 +498,9 @@ export default function MechanicChat() {
         {/* INPUT BAR */}
         <div style={{
           flexShrink: 0,
-          borderTop: '1px solid #e5e7eb',
           padding: '12px 16px',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 12px)',
-          backgroundColor: '#fff'
-        }}>
+          paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
+        }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:pb-4">
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', maxWidth: '768px', margin: '0 auto' }}>
             <textarea
               ref={textareaRef}
@@ -533,7 +519,6 @@ export default function MechanicChat() {
                 flex: 1,
                 padding: '12px 16px',
                 borderRadius: 20,
-                border: '1px solid #e5e7eb',
                 fontSize: 16,
                 resize: 'none',
                 minHeight: 48,
@@ -541,6 +526,7 @@ export default function MechanicChat() {
                 outline: 'none',
                 fontFamily: 'inherit'
               }}
+              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
             />
 
             <button
