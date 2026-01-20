@@ -69,35 +69,26 @@ export default function Chat() {
   useEffect(() => {
     async function checkLimitOnLoad() {
       if (id) return
-
       const limitStatus = await checkDiagnosticLimit()
       setCurrentRemaining(limitStatus.remaining)
       setCurrentPurchasedCredits(limitStatus.purchasedCredits || 0)
-
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
         setShowPaywall(true)
       }
     }
-
-    if (user && profile) {
-      checkLimitOnLoad()
-    }
+    if (user && profile) checkLimitOnLoad()
   }, [id, user, profile, checkDiagnosticLimit])
 
   useEffect(() => {
     async function loadMemory() {
       if (!user?.id || memoryLoadedRef.current) return
-
       try {
         const memory = await AIMemoryService.loadUserMemory(user.id)
         const memoryContext = AIMemoryService.generateContextForAI(memory)
         setMemoryContext(memoryContext)
         memoryLoadedRef.current = true
-      } catch (err) {
-        console.warn('[Chat] Failed to load AI memory:', err)
-      }
+      } catch {}
     }
-
     loadMemory()
   }, [user?.id, setMemoryContext])
 
@@ -108,9 +99,7 @@ export default function Chat() {
           loadMessages(diag.conversation as Message[])
           setIsNewConversation(false)
         }
-      }).catch(() => {
-        navigate('/app/chat')
-      })
+      }).catch(() => navigate('/app/chat'))
     } else {
       clearMessages()
       setCurrentDiagnostic(null)
@@ -131,7 +120,6 @@ export default function Chat() {
 
   useEffect(() => {
     if (hasConfettiedRef.current) return
-
     const lastMessage = messages[messages.length - 1]
     if (lastMessage?.role === 'assistant' && isDiagnosticComplete(lastMessage.content)) {
       hasConfettiedRef.current = true
@@ -142,45 +130,28 @@ export default function Chat() {
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-
+    if (fileInputRef.current) fileInputRef.current.value = ''
     if (photosUsed >= MAX_PHOTOS_PER_CONVERSATION) {
       setImageError(`Maximum ${MAX_PHOTOS_PER_CONVERSATION} photos par conversation`)
       return
     }
-
     const validation = validateImageFile(file)
     if (!validation.valid) {
       setImageError(validation.error || 'Fichier invalide')
       return
     }
-
     setImageError(null)
-
     try {
       const compressed = await compressImage(file)
-      setSelectedImage({
-        dataUrl: compressed.dataUrl,
-        base64: compressed.base64,
-      })
-    } catch (err) {
-      console.error('Error compressing image:', err)
+      setSelectedImage({ dataUrl: compressed.dataUrl, base64: compressed.base64 })
+    } catch {
       setImageError('Erreur lors du traitement de l\'image')
     }
-  }
-
-  function removeSelectedImage() {
-    setSelectedImage(null)
-    setImageError(null)
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if ((!input.trim() && !selectedImage) || isLoading) return
-
     if (isAtMessageLimit) {
       setShowPaywall(true)
       return
@@ -193,7 +164,6 @@ export default function Chat() {
 
     if (isNewConversation) {
       const limitStatus = await checkDiagnosticLimit()
-
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
         setShowPaywall(true)
         setInput(messageContent)
@@ -203,27 +173,19 @@ export default function Chat() {
 
     try {
       let diagnosticId = currentDiagnostic?.id
-
       if (!diagnosticId) {
         const diag = await createDiagnostic(messageContent)
         diagnosticId = diag.id
         setIsNewConversation(false)
-
         if (!isPremium) {
           await incrementDiagnosticCount()
-
-          if (refreshProfile) {
-            await refreshProfile()
-          }
-
+          if (refreshProfile) await refreshProfile()
           setCurrentRemaining(prev => Math.max(0, prev - 1))
         }
-
         window.history.replaceState(null, '', `/app/chat/${diagnosticId}`)
       }
 
       const assistantMessage = await sendMessage(messageContent, imageBase64)
-
       if (assistantMessage && diagnosticId) {
         const userMessage: Message = {
           role: 'user',
@@ -234,16 +196,7 @@ export default function Chat() {
         await addMessage(diagnosticId, userMessage)
         await addMessage(diagnosticId, assistantMessage)
       }
-    } catch (err) {
-      console.error('Error sending message:', err)
-    }
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(e)
-    }
+    } catch {}
   }
 
   function handleVehicleConfirmed(vehicle: VehicleInfo) {
@@ -253,122 +206,185 @@ export default function Chat() {
     }
   }
 
-  const displayRemaining = currentRemaining
-
   return (
-    <div className="h-[100dvh] flex flex-col bg-white dark:bg-neutral-950 overflow-hidden">
+    <>
       <Sidebar />
 
-      <div className="md:pl-64 flex-1 flex flex-col overflow-hidden">
-        {/* HEADER - Fixed top with safe area */}
-        <header className="flex-shrink-0 bg-white dark:bg-neutral-950 border-b border-gray-200 dark:border-neutral-800 px-4 pt-safe-top pb-3">
-          <div className="flex items-center justify-between h-12 max-w-3xl mx-auto">
-            {/* Left: Back + Avatar + Name */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <button
-                onClick={() => navigate('/app')}
-                className="md:hidden w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-neutral-800 -ml-1"
-              >
-                <svg className="w-5 h-5 text-gray-600 dark:text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#fff'
+      }} className="md:ml-64">
 
-              <div className="relative flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm">
-                  <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white dark:border-neutral-950 rounded-full"></div>
-              </div>
+        {/* HEADER */}
+        <div style={{
+          flexShrink: 0,
+          borderBottom: '1px solid #e5e7eb',
+          padding: '12px 16px',
+          paddingTop: 'max(env(safe-area-inset-top), 12px)',
+          backgroundColor: '#fff'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '768px', margin: '0 auto' }}>
+            {/* Back button (mobile) */}
+            <button
+              onClick={() => navigate('/app')}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: '#f3f4f6',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 16
+              }}
+              className="md:hidden"
+            >←</button>
 
-              <div className="min-w-0 flex-1">
-                <h1 className="text-base font-semibold text-gray-900 dark:text-white truncate">Diagnostic IA</h1>
-                <p className="text-xs text-gray-500 dark:text-neutral-400 truncate">Expert auto • En ligne</p>
-              </div>
+            {/* Avatar */}
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 18,
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}>🔬</div>
+              <div style={{
+                position: 'absolute',
+                bottom: -2,
+                right: -2,
+                width: 12,
+                height: 12,
+                backgroundColor: '#22c55e',
+                borderRadius: '50%',
+                border: '2px solid #fff'
+              }}></div>
             </div>
 
-            {/* Right: Counter */}
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-              <div className="px-2.5 py-1 rounded-full bg-gray-100 dark:bg-neutral-800 text-xs font-medium text-gray-700 dark:text-neutral-300 whitespace-nowrap">
-                {isPremium ? '∞' : isNewConversation ? `${displayRemaining}/2` : `${messagesRemaining} msg`}
-                {currentPurchasedCredits > 0 && <span className="text-emerald-600"> +{currentPurchasedCredits}</span>}
-              </div>
+            {/* Name */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 600, color: '#111' }}>Diagnostic IA</div>
+              <div style={{ fontSize: 12, color: '#6b7280' }}>Expert auto • En ligne</div>
+            </div>
+
+            {/* Counter */}
+            <div style={{
+              padding: '4px 10px',
+              borderRadius: 999,
+              backgroundColor: '#f3f4f6',
+              fontSize: 12,
+              fontWeight: 500,
+              color: '#374151',
+              whiteSpace: 'nowrap'
+            }}>
+              {isPremium ? '∞' : isNewConversation ? `${currentRemaining}/2` : `${messagesRemaining} msg`}
+              {currentPurchasedCredits > 0 && <span style={{ color: '#10b981' }}> +{currentPurchasedCredits}</span>}
             </div>
           </div>
 
-          {/* Scanned vehicle badge */}
+          {/* Scanned vehicle */}
           {scannedVehicle && (
-            <div className="mt-2 max-w-3xl mx-auto">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-full">
-                <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-xs text-emerald-800 dark:text-emerald-300">
-                  {scannedVehicle.brand} {scannedVehicle.model} • {scannedVehicle.year}
-                </span>
-                <button onClick={() => setScannedVehicle(null)} className="text-emerald-600 hover:text-emerald-800">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+            <div style={{ maxWidth: '768px', margin: '8px auto 0' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 12px',
+                backgroundColor: '#ecfdf5',
+                border: '1px solid #a7f3d0',
+                borderRadius: 999,
+                fontSize: 12,
+                color: '#065f46'
+              }}>
+                ✓ {scannedVehicle.brand} {scannedVehicle.model} • {scannedVehicle.year}
+                <button onClick={() => setScannedVehicle(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
               </div>
             </div>
           )}
+        </div>
 
-          {/* Warning near limit */}
-          {!isPremium && !isNewConversation && messagesRemaining <= 3 && messagesRemaining > 0 && (
-            <div className="mt-2 max-w-3xl mx-auto px-3 py-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg">
-              <p className="text-xs text-orange-800 dark:text-orange-300">
-                ⚠️ Plus que {messagesRemaining} message{messagesRemaining > 1 ? 's' : ''} pour ce diagnostic
-              </p>
-            </div>
-          )}
-        </header>
-
-        {/* MESSAGES - Scrollable middle */}
-        <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+        {/* MESSAGES */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: 16,
+          WebkitOverflowScrolling: 'touch'
+        }}>
+          <div style={{ maxWidth: '768px', margin: '0 auto' }}>
             {messages.length === 0 && !streamingContent ? (
               /* Empty State */
-              <div className="flex flex-col items-center justify-center min-h-[50vh] text-center py-8">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-4 shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                  Comment puis-je t'aider ?
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-neutral-400 mb-6">
-                  Décris ton problème auto
-                </p>
+              <div style={{ textAlign: 'center', paddingTop: '15vh' }}>
+                <div style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 16,
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 32,
+                  margin: '0 auto 16px',
+                  boxShadow: '0 8px 24px rgba(59,130,246,0.3)'
+                }}>🔬</div>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>Comment puis-je t'aider ?</h2>
+                <p style={{ color: '#6b7280', marginBottom: 24 }}>Décris ton problème auto</p>
 
                 {/* Scan plate button */}
                 {!scannedVehicle && (
                   <button
                     onClick={() => setShowPlateScanner(true)}
-                    className="mb-6 px-4 py-2 text-sm text-gray-600 dark:text-neutral-400 bg-gray-100 dark:bg-neutral-900 rounded-full hover:bg-gray-200 dark:hover:bg-neutral-800 transition-colors flex items-center gap-2 active:scale-98"
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: 999,
+                      border: 'none',
+                      backgroundColor: '#f3f4f6',
+                      cursor: 'pointer',
+                      fontSize: 14,
+                      color: '#374151',
+                      marginBottom: 24,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Scanner ma plaque
+                    📷 Scanner ma plaque
                   </button>
                 )}
 
                 {/* Quick actions */}
-                <div className="w-full max-w-sm space-y-2">
+                <div style={{ maxWidth: 320, margin: '0 auto' }}>
                   {EXAMPLE_QUESTIONS.map((q, i) => (
                     <button
                       key={i}
                       onClick={() => setInput(q.text)}
-                      className="w-full p-3 text-left text-sm bg-gray-50 dark:bg-neutral-900 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-3 active:scale-98"
+                      style={{
+                        width: '100%',
+                        padding: 12,
+                        marginBottom: 8,
+                        border: 'none',
+                        borderRadius: 12,
+                        backgroundColor: '#f3f4f6',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12
+                      }}
                     >
-                      <span className="text-lg">{q.icon}</span>
-                      <span className="text-gray-700 dark:text-neutral-300">{q.text}</span>
+                      <span style={{ fontSize: 18 }}>{q.icon}</span>
+                      <span style={{ fontSize: 14, color: '#374151' }}>{q.text}</span>
                     </button>
                   ))}
                 </div>
@@ -382,36 +398,33 @@ export default function Chat() {
 
                 {streamingContent && (
                   <ChatMessage
-                    message={{
-                      role: 'assistant',
-                      content: streamingContent,
-                      timestamp: new Date().toISOString(),
-                    }}
+                    message={{ role: 'assistant', content: streamingContent, timestamp: new Date().toISOString() }}
                     isStreaming
                   />
                 )}
 
                 {isLoading && !streamingContent && (
-                  <div className="flex justify-start">
-                    <div className="flex gap-2.5 max-w-[85%]">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm flex-shrink-0">
-                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div className="bg-gray-100 dark:bg-neutral-800 rounded-2xl px-4 py-3">
-                        <div className="flex gap-1.5">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                      </div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                    <div style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 14
+                    }}>🔬</div>
+                    <div style={{ padding: '12px 16px', borderRadius: 16, backgroundColor: '#f3f4f6', display: 'flex', gap: 4 }}>
+                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af' }}></div>
+                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af', animationDelay: '0.1s' }}></div>
+                      <div className="bounce-dot" style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#9ca3af', animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 )}
 
                 {error && (
-                  <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl text-sm text-red-600 dark:text-red-400">
+                  <div style={{ padding: 12, backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, fontSize: 14, color: '#dc2626', marginBottom: 16 }}>
                     {error}
                   </div>
                 )}
@@ -422,89 +435,136 @@ export default function Chat() {
           </div>
         </div>
 
-        {/* INPUT BAR - Fixed bottom with safe area */}
-        <div className="flex-shrink-0 bg-white dark:bg-neutral-950 border-t border-gray-200 dark:border-neutral-800 px-4 pt-3 pb-safe-bottom">
-          <div className="max-w-3xl mx-auto">
+        {/* INPUT BAR */}
+        <div style={{
+          flexShrink: 0,
+          borderTop: '1px solid #e5e7eb',
+          padding: '12px 16px',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 12px)',
+          backgroundColor: '#fff'
+        }}>
+          <div style={{ maxWidth: '768px', margin: '0 auto' }}>
             {/* Image preview */}
             {selectedImage && (
-              <div className="mb-2">
-                <div className="relative inline-block">
-                  <img src={selectedImage.dataUrl} alt="Preview" className="h-16 rounded-lg" />
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <img src={selectedImage.dataUrl} alt="Preview" style={{ height: 64, borderRadius: 8 }} />
                   <button
-                    onClick={removeSelectedImage}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full flex items-center justify-center"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                    onClick={() => setSelectedImage(null)}
+                    style={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      backgroundColor: '#111',
+                      color: '#fff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 14
+                    }}
+                  >×</button>
                 </div>
               </div>
             )}
 
             {imageError && (
-              <div className="mb-2 text-xs text-red-500">{imageError}</div>
+              <div style={{ fontSize: 12, color: '#dc2626', marginBottom: 8 }}>{imageError}</div>
             )}
 
-            {/* Limit warning */}
             {isAtMessageLimit && (
-              <div className="mb-2 px-3 py-2 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg text-xs text-orange-700 dark:text-orange-400 text-center">
-                Limite atteinte · <button onClick={() => setShowPaywall(true)} className="underline font-medium">Passer Premium</button>
+              <div style={{
+                padding: 8,
+                backgroundColor: '#fef3c7',
+                border: '1px solid #fcd34d',
+                borderRadius: 8,
+                fontSize: 12,
+                color: '#92400e',
+                textAlign: 'center',
+                marginBottom: 8
+              }}>
+                Limite atteinte · <button onClick={() => setShowPaywall(true)} style={{ background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer', color: '#92400e', fontWeight: 600 }}>Passer Premium</button>
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
-              <div className="flex items-end gap-2">
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 {/* Photo button */}
-                <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
+                <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} style={{ display: 'none' }} />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
-                  className="w-12 h-12 flex items-center justify-center rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-400 hover:bg-gray-200 dark:hover:bg-neutral-700 active:scale-95 transition-all disabled:opacity-40 flex-shrink-0"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    border: 'none',
+                    backgroundColor: '#f3f4f6',
+                    cursor: 'pointer',
+                    fontSize: 20,
+                    flexShrink: 0,
+                    opacity: (isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit) ? 0.4 : 1
+                  }}
+                >+</button>
 
                 {/* Textarea */}
-                <div className="flex-1 relative">
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
-                    disabled={isLoading || isAtMessageLimit}
-                    rows={1}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-base text-gray-900 dark:text-white placeholder-gray-500 disabled:opacity-50"
-                    style={{
-                      minHeight: '48px',
-                      maxHeight: '120px',
-                      fontSize: '16px'
-                    }}
-                  />
-                </div>
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSubmit(e)
+                    }
+                  }}
+                  placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
+                  disabled={isLoading || isAtMessageLimit}
+                  rows={1}
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    borderRadius: 20,
+                    border: '1px solid #e5e7eb',
+                    fontSize: 16,
+                    resize: 'none',
+                    minHeight: 48,
+                    maxHeight: 120,
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    opacity: (isLoading || isAtMessageLimit) ? 0.5 : 1
+                  }}
+                />
 
                 {/* Send button */}
                 <button
                   type="submit"
                   disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
-                  className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl active:scale-95 transition-all disabled:opacity-50 disabled:shadow-none flex-shrink-0"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                    border: 'none',
+                    color: '#fff',
+                    fontSize: 18,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    opacity: ((!input.trim() && !selectedImage) || isLoading || isAtMessageLimit) ? 0.5 : 1,
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(59,130,246,0.3)'
+                  }}
                 >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  )}
+                  {isLoading ? '⏳' : '➤'}
                 </button>
               </div>
             </form>
 
-            <p className="text-[10px] text-gray-400 text-center mt-2">
+            <p style={{ fontSize: 10, color: '#9ca3af', textAlign: 'center', marginTop: 8 }}>
               Diagnostics à titre indicatif uniquement
             </p>
           </div>
@@ -512,11 +572,17 @@ export default function Chat() {
       </div>
 
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
-      <PlateScanner
-        open={showPlateScanner}
-        onOpenChange={setShowPlateScanner}
-        onVehicleConfirmed={handleVehicleConfirmed}
-      />
-    </div>
+      <PlateScanner open={showPlateScanner} onOpenChange={setShowPlateScanner} onVehicleConfirmed={handleVehicleConfirmed} />
+
+      <style>{`
+        .bounce-dot {
+          animation: bounce 0.6s ease-in-out infinite;
+        }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+      `}</style>
+    </>
   )
 }
