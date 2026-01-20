@@ -15,8 +15,8 @@ function LiveAvatar({ isSpeaking, isListening = false, speechIntensity = 0, isMo
   const headRef = useRef<THREE.Object3D | null>(null)
   const meshesRef = useRef<THREE.SkinnedMesh[]>([])
 
-  // Avatar HOMME Ready Player Me - URL valide
-  const { scene } = useGLTF('https://models.readyplayer.me/638df693d72bffc6fa17fec1.glb')
+  // Avatar Ready Player Me - URL valide et testee
+  const { scene } = useGLTF('https://models.readyplayer.me/64bfa15f0e72c63d7c3934a6.glb')
 
   // Position Y de base selon device
   const baseY = isMobile ? -1.6 : -1.8
@@ -328,4 +328,4 @@ export function AlexAvatar3D({ isSpeaking, isListening = false }: AvatarProps) {
   )
 }
 
-useGLTF.preload('https://models.readyplayer.me/638df693d72bffc6fa17fec1.glb')
+useGLTF.preload('https://models.readyplayer.me/64bfa15f0e72c63d7c3934a6.glb')
