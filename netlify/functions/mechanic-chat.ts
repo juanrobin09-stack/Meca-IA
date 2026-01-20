@@ -17,7 +17,7 @@ const anthropic = ANTHROPIC_KEY
   ? new Anthropic({ apiKey: ANTHROPIC_KEY })
   : null
 
-const FREE_MESSAGES_LIMIT_PER_DAY = 10
+const FREE_MESSAGES_LIMIT_PER_DAY = 3
 
 // Web search function
 async function searchWeb(query: string): Promise<string> {
@@ -77,6 +77,7 @@ interface RequestBody {
   conversationId: string
   message: string
   vehicleId?: string
+  image?: string // base64 encoded image
 }
 
 interface VehicleContext {
@@ -172,7 +173,7 @@ export const handler: Handler = async (event) => {
       }
     }
 
-    const { userId, conversationId, message, vehicleId } = JSON.parse(event.body) as RequestBody
+    const { userId, conversationId, message, vehicleId, image } = JSON.parse(event.body) as RequestBody
 
     if (!userId || !conversationId || !message) {
       return {
@@ -232,7 +233,7 @@ export const handler: Handler = async (event) => {
             headers,
             body: JSON.stringify({
               error: 'LIMIT_REACHED',
-              message: 'Tu as utilisé tes 10 messages gratuits aujourd\'hui. Reviens demain ou passe à Premium pour un accès illimité 24/7 !',
+              message: 'Tu as utilisé tes 3 messages gratuits aujourd\'hui. Reviens demain ou passe à Premium pour un accès illimité 24/7 !',
               upgradeUrl: '/pricing'
             }),
           }
@@ -381,7 +382,19 @@ Réponds maintenant de manière naturelle et conversationnelle !`
       })),
       {
         role: 'user' as const,
-        content: message
+        content: image
+          ? [
+              {
+                type: 'image' as const,
+                source: {
+                  type: 'base64' as const,
+                  media_type: 'image/jpeg' as const,
+                  data: image
+                }
+              },
+              { type: 'text' as const, text: message }
+            ]
+          : message
       }
     ]
 
@@ -445,12 +458,13 @@ Réponds maintenant de manière naturelle et conversationnelle !`
     }
 
     // 8. Save messages to database
+    const userMessageContent = image ? `[IMAGE]\n${message}` : message
     await supabase.from('chat_messages').insert([
       {
         conversation_id: conversationId,
         user_id: userId,
         sender: 'user',
-        content: message
+        content: userMessageContent
       },
       {
         conversation_id: conversationId,

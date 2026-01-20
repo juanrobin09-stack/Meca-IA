@@ -476,7 +476,7 @@ export default function Chat() {
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 {/* Photo button */}
-                <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} style={{ display: 'none' }} />
+                <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} style={{ display: 'none' }} />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}

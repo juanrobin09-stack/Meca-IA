@@ -5,6 +5,7 @@ import PaywallModal from '@/components/PaywallModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { supabase } from '@/lib/supabase'
+import { compressImage, validateImageFile } from '@/utils/imageCompression'
 
 interface Vehicle {
   id: string
@@ -43,11 +44,16 @@ export default function MechanicChat() {
   const [purchasedCredits, setPurchasedCredits] = useState<number>(0)
   const [showPaywall, setShowPaywall] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<{ dataUrl: string; base64: string } | null>(null)
+  const [imageError, setImageError] = useState<string | null>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const FREE_MESSAGES_LIMIT = 10
+  const FREE_MESSAGES_LIMIT = 3
+  const MAX_PHOTOS_PER_CONVERSATION = 2
+  const photosUsed = messages.filter(m => m.content.includes('[IMAGE]')).length
 
   useEffect(() => {
     if (user) {
@@ -126,16 +132,39 @@ export default function MechanicChat() {
     setMessages(data || [])
   }
 
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (photosUsed >= MAX_PHOTOS_PER_CONVERSATION) {
+      setImageError(`Maximum ${MAX_PHOTOS_PER_CONVERSATION} photos par conversation`)
+      return
+    }
+    const validation = validateImageFile(file)
+    if (!validation.valid) {
+      setImageError(validation.error || 'Fichier invalide')
+      return
+    }
+    setImageError(null)
+    try {
+      const compressed = await compressImage(file)
+      setSelectedImage({ dataUrl: compressed.dataUrl, base64: compressed.base64 })
+    } catch {
+      setImageError('Erreur lors du traitement de l\'image')
+    }
+  }
+
   const sendMessage = useCallback(async (messageText?: string) => {
     const text = messageText || inputMessage.trim()
-    if (!text || isTyping) return
+    const hasImage = !!selectedImage
+    if ((!text && !hasImage) || isTyping) return
 
     let convId = currentConversation?.id
 
     if (!convId) {
       const { data } = await supabase
         .from('chat_conversations')
-        .insert({ user_id: user?.id, vehicle_id: selectedVehicleId || null, title: text.slice(0, 50) })
+        .insert({ user_id: user?.id, vehicle_id: selectedVehicleId || null, title: (text || 'Photo').slice(0, 50) })
         .select()
         .single()
       if (data) {
@@ -147,6 +176,7 @@ export default function MechanicChat() {
 
     if (!convId) return
 
+    const messageContent = hasImage ? `[IMAGE]\n${text || 'Analyse cette image'}` : text
     setInputMessage('')
     setIsTyping(true)
 
@@ -154,7 +184,7 @@ export default function MechanicChat() {
       id: 'temp-' + Date.now(),
       conversation_id: convId,
       sender: 'user',
-      content: text,
+      content: messageContent,
       created_at: new Date().toISOString()
     }
     setMessages(prev => [...prev, tempMsg])
@@ -163,7 +193,13 @@ export default function MechanicChat() {
       const response = await fetch('/.netlify/functions/mechanic-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, conversationId: convId, message: text, vehicleId: selectedVehicleId || null })
+        body: JSON.stringify({
+          userId: user?.id,
+          conversationId: convId,
+          message: text || 'Analyse cette image',
+          vehicleId: selectedVehicleId || null,
+          image: hasImage ? selectedImage.base64 : undefined
+        })
       })
 
       const result = await response.json()
@@ -177,18 +213,20 @@ export default function MechanicChat() {
         throw new Error(result.error)
       }
 
-      setMessages(prev => [...prev, { id: 'ai-' + Date.now(), conversation_id: convId!, sender: 'ai', content: result.response, created_at: new Date().toISOString() }])
+      // Recharger les messages depuis la DB pour garantir la persistance
+      await loadMessages(convId)
+      await loadConversations()
 
       if (result.messagesRemaining !== undefined) setMessagesRemaining(result.messagesRemaining)
       if (result.purchasedCredits !== undefined) setPurchasedCredits(result.purchasedCredits)
 
-      loadConversations()
+      setSelectedImage(null)
     } catch {
       setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
     } finally {
       setIsTyping(false)
     }
-  }, [inputMessage, isTyping, currentConversation, user, selectedVehicleId])
+  }, [inputMessage, isTyping, currentConversation, user, selectedVehicleId, selectedImage])
 
   const QUICK_ACTIONS = [
     { label: 'Voyant moteur', message: 'Pourquoi mon voyant moteur est allumé ?', icon: '💡' },
@@ -260,7 +298,7 @@ export default function MechanicChat() {
               fontWeight: 500,
               whiteSpace: 'nowrap'
             }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-              {isPremium ? '∞' : messagesRemaining !== null ? `${messagesRemaining}/10` : '...'}
+              {isPremium ? '∞' : messagesRemaining !== null ? `${messagesRemaining}/3` : '...'}
               {purchasedCredits > 0 && <span className="text-emerald-500"> +{purchasedCredits}</span>}
             </div>
 
@@ -501,56 +539,107 @@ export default function MechanicChat() {
           padding: '12px 16px',
           paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
         }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:pb-4">
-          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', maxWidth: '768px', margin: '0 auto' }}>
-            <textarea
-              ref={textareaRef}
-              value={inputMessage}
-              onChange={e => setInputMessage(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  sendMessage()
-                }
-              }}
-              placeholder="Message à Alex..."
-              disabled={isTyping}
-              rows={1}
-              style={{
-                flex: 1,
-                padding: '12px 16px',
-                borderRadius: 20,
-                fontSize: 16,
-                resize: 'none',
-                minHeight: 48,
-                maxHeight: 120,
-                outline: 'none',
-                fontFamily: 'inherit'
-              }}
-              className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
-            />
+          <div style={{ maxWidth: '768px', margin: '0 auto' }}>
+            {/* Image preview */}
+            {selectedImage && (
+              <div style={{ marginBottom: 8, position: 'relative', display: 'inline-block' }}>
+                <img src={selectedImage.dataUrl} alt="Preview" style={{ height: 80, borderRadius: 8 }} />
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    border: 'none',
+                    background: '#ef4444',
+                    color: '#fff',
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >×</button>
+              </div>
+            )}
 
-            <button
-              onClick={() => sendMessage()}
-              disabled={!inputMessage.trim() || isTyping}
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 100%)',
-                border: 'none',
-                color: '#fff',
-                fontSize: 18,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                opacity: (!inputMessage.trim() || isTyping) ? 0.5 : 1,
-                flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(249,115,22,0.3)'
-              }}
-            >
-              {isTyping ? '⏳' : '➤'}
-            </button>
+            {imageError && (
+              <div style={{ fontSize: 12, marginBottom: 8 }} className="text-red-500">{imageError}</div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+              {/* Photo button */}
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} style={{ display: 'none' }} />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isTyping || photosUsed >= MAX_PHOTOS_PER_CONVERSATION}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 20,
+                  flexShrink: 0,
+                  opacity: (isTyping || photosUsed >= MAX_PHOTOS_PER_CONVERSATION) ? 0.4 : 1
+                }}
+                className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+              >📷</button>
+
+              <textarea
+                ref={textareaRef}
+                value={inputMessage}
+                onChange={e => setInputMessage(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    sendMessage()
+                  }
+                }}
+                placeholder="Message à Alex..."
+                disabled={isTyping}
+                rows={1}
+                style={{
+                  flex: 1,
+                  padding: '12px 16px',
+                  borderRadius: 20,
+                  fontSize: 16,
+                  resize: 'none',
+                  minHeight: 48,
+                  maxHeight: 120,
+                  outline: 'none',
+                  fontFamily: 'inherit'
+                }}
+                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
+              />
+
+              <button
+                onClick={() => sendMessage()}
+                disabled={(!inputMessage.trim() && !selectedImage) || isTyping}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 100%)',
+                  border: 'none',
+                  color: '#fff',
+                  fontSize: 18,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  opacity: ((!inputMessage.trim() && !selectedImage) || isTyping) ? 0.5 : 1,
+                  flexShrink: 0,
+                  boxShadow: '0 4px 12px rgba(249,115,22,0.3)'
+                }}
+              >
+                {isTyping ? '⏳' : '➤'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
