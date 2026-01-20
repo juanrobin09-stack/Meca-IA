@@ -1,61 +1,79 @@
 class VoiceService {
   private synth: SpeechSynthesis | null = null
   private voice: SpeechSynthesisVoice | null = null
-  private initialized = false
+  private isVoiceReady: boolean = false
+  private initPromise: Promise<void> | null = null
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       this.synth = window.speechSynthesis
-      this.initVoice()
-      console.log('VoiceService: Initialise')
+      this.initPromise = this.initVoice()
     } else {
       console.warn('VoiceService: Speech synthesis non disponible')
     }
   }
 
-  private initVoice(): void {
+  private async initVoice(): Promise<void> {
     if (!this.synth) return
 
-    const loadVoices = (): void => {
-      const voices = this.synth!.getVoices()
-      console.log('VoiceService: Voix disponibles:', voices.length)
+    return new Promise((resolve) => {
+      const loadVoices = () => {
+        const voices = this.synth!.getVoices()
 
-      // Preference voix francaise masculine
-      this.voice = voices.find(v =>
-        v.lang.startsWith('fr') && (v.name.includes('Thomas') || v.name.includes('Paul'))
-      ) || voices.find(v =>
-        v.lang.startsWith('fr') && !v.name.toLowerCase().includes('female') && !v.name.toLowerCase().includes('amelie')
-      ) || voices.find(v =>
-        v.lang.startsWith('fr')
-      ) || voices[0]
+        console.log('VoiceService: Voix disponibles:', voices.length)
+        console.log('VoiceService: Liste:', voices.map(v => `${v.name} (${v.lang})`).join(', '))
 
-      if (this.voice) {
-        console.log('VoiceService: Voix selectionnee:', this.voice.name, this.voice.lang)
-        this.initialized = true
-      } else {
-        console.warn('VoiceService: Aucune voix trouvee')
+        // Chercher voix MASCULINE francaise (ordre de preference)
+        this.voice =
+          voices.find(v => v.lang.startsWith('fr') && v.name.includes('Thomas')) ||
+          voices.find(v => v.lang.startsWith('fr') && v.name.includes('Paul')) ||
+          voices.find(v => v.lang.startsWith('fr') && v.name.toLowerCase().includes('male')) ||
+          voices.find(v => v.lang.startsWith('fr') && !v.name.toLowerCase().includes('female') && !v.name.includes('Hortense') && !v.name.includes('Amelie')) ||
+          voices.find(v => v.lang.startsWith('fr')) ||
+          voices[0]
+
+        if (this.voice) {
+          console.log('VoiceService: Voix selectionnee:', this.voice.name, this.voice.lang)
+          this.isVoiceReady = true
+        } else {
+          console.warn('VoiceService: Aucune voix trouvee')
+        }
+
+        resolve()
       }
-    }
 
-    // Load voices immediately if available
-    if (this.synth.getVoices().length > 0) {
-      loadVoices()
-    }
-
-    // Also listen for voices changed event (needed for some browsers)
-    this.synth.addEventListener('voiceschanged', loadVoices)
+      // Essayer de charger immediatement
+      const voices = this.synth!.getVoices()
+      if (voices.length > 0) {
+        loadVoices()
+      } else {
+        // Attendre l'evenement voiceschanged
+        this.synth!.addEventListener('voiceschanged', loadVoices, { once: true })
+        // Timeout de securite
+        setTimeout(() => {
+          if (!this.isVoiceReady) {
+            loadVoices()
+          }
+        }, 1000)
+      }
+    })
   }
 
-  speak(text: string, onStart?: () => void, onEnd?: () => void): void {
-    console.log('VoiceService.speak() appele avec:', text.substring(0, 50) + '...')
+  async speak(text: string, onStart?: () => void, onEnd?: () => void): Promise<void> {
+    console.log('VoiceService: ALEX PARLE:', text.substring(0, 100) + '...')
 
     if (!this.synth) {
-      console.error('VoiceService: synth est null!')
+      console.error('VoiceService: synth non disponible')
       onEnd?.()
       return
     }
 
-    // Arrete toute voix en cours
+    // Attendre que la voix soit prete
+    if (this.initPromise) {
+      await this.initPromise
+    }
+
+    // Arreter toute voix en cours
     this.synth.cancel()
 
     const utterance = new SpeechSynthesisUtterance(text)
@@ -64,30 +82,31 @@ class VoiceService {
       utterance.voice = this.voice
       console.log('VoiceService: Utilise voix:', this.voice.name)
     } else {
-      console.warn('VoiceService: Pas de voix selectionnee, utilise defaut')
+      console.warn('VoiceService: Pas de voix francaise, utilise voix par defaut')
     }
 
+    // Config voix MASCULINE
     utterance.lang = 'fr-FR'
-    utterance.rate = 1.0
-    utterance.pitch = 0.85
+    utterance.rate = 0.95    // Legerement plus lent (naturel)
+    utterance.pitch = 0.75   // GRAVE (masculin)
     utterance.volume = 1.0
 
-    utterance.onstart = (): void => {
-      console.log('VoiceService: DEBUT parole')
+    utterance.onstart = () => {
+      console.log('VoiceService: VOIX DEMARRE')
       onStart?.()
     }
 
-    utterance.onend = (): void => {
-      console.log('VoiceService: FIN parole')
+    utterance.onend = () => {
+      console.log('VoiceService: VOIX TERMINE')
       onEnd?.()
     }
 
-    utterance.onerror = (err): void => {
-      console.error('VoiceService: ERREUR:', err.error, err)
+    utterance.onerror = (err) => {
+      console.error('VoiceService: ERREUR VOIX:', err.error, err)
       onEnd?.()
     }
 
-    console.log('VoiceService: Appel synth.speak()')
+    console.log('VoiceService: speak() appele')
     this.synth.speak(utterance)
 
     // Chrome bug workaround - resume if paused
@@ -105,7 +124,7 @@ class VoiceService {
   }
 
   isReady(): boolean {
-    return this.initialized && !!this.synth
+    return this.isVoiceReady && !!this.synth
   }
 }
 

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AlexAvatar3D } from '@/components/AlexAvatar3D'
 import { voiceService } from '@/services/voiceService'
+import { speechRecognitionService } from '@/services/speechRecognitionService'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 
@@ -22,9 +23,8 @@ export default function VideoChatAlex() {
   const [analyzing, setAnalyzing] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isListening, setIsListening] = useState(false)
-  const [emotion, setEmotion] = useState<'neutral' | 'happy' | 'thinking' | 'concerned'>('neutral')
   const [conversation, setConversation] = useState<ConversationMessage[]>([])
-  const [userInput, setUserInput] = useState('')
+  const [currentTranscript, setCurrentTranscript] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   // Cleanup - MUST be before any conditional return
@@ -35,21 +35,20 @@ export default function VideoChatAlex() {
         const stream = videoElement.srcObject as MediaStream
         stream.getTracks().forEach(track => track.stop())
       }
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel()
-      }
+      voiceService.stop()
+      speechRecognitionService.stopListening()
     }
   }, [])
 
-  // Start camera
+  // Demarrer camera
   const startCamera = async () => {
     try {
       setError(null)
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
         }
       })
 
@@ -63,20 +62,22 @@ export default function VideoChatAlex() {
     }
   }
 
-  // Stop camera and go back
+  // Arreter camera
   const stopCamera = () => {
-    const stream = videoRef.current?.srcObject as MediaStream
-    stream?.getTracks().forEach(track => track.stop())
-    if (videoRef.current) {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach(track => track.stop())
       videoRef.current.srcObject = null
     }
     setStreaming(false)
     voiceService.stop()
+    speechRecognitionService.stopListening()
     setIsSpeaking(false)
+    setIsListening(false)
     navigate('/app')
   }
 
-  // Capture frame
+  // Capturer frame
   const captureFrame = (): string | null => {
     if (!videoRef.current || !canvasRef.current) return null
 
@@ -89,20 +90,18 @@ export default function VideoChatAlex() {
     const ctx = canvas.getContext('2d')
     ctx?.drawImage(video, 0, 0)
 
-    return canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
+    return canvas.toDataURL('image/jpeg', 0.8).split(',')[1]
   }
 
-  // Analyze frame
-  const handleAnalyze = useCallback(async () => {
+  // Analyser + repondre vocalement
+  const handleAnalyze = useCallback(async (question?: string) => {
     const frameBase64 = captureFrame()
     if (!frameBase64) {
-      setError('Aucune image capturee. Active la camera d\'abord.')
+      setError('Active la camera d\'abord')
       return
     }
 
     setAnalyzing(true)
-    setIsListening(false)
-    setEmotion('thinking')
     setError(null)
 
     try {
@@ -113,7 +112,7 @@ export default function VideoChatAlex() {
         body: JSON.stringify({
           userId: user?.id,
           frameBase64,
-          userQuestion: userInput || undefined,
+          userQuestion: question || undefined,
           conversationHistory: conversation.slice(-10)
         })
       })
@@ -128,18 +127,18 @@ export default function VideoChatAlex() {
         throw new Error(result.error || 'Erreur analyse')
       }
 
-      // Add user question to conversation if provided
-      if (userInput.trim()) {
-        setConversation(prev => [...prev, { role: 'user', text: userInput }])
+      // Ajouter question utilisateur si fournie
+      if (question) {
+        setConversation(prev => [...prev, { role: 'user', text: question }])
       }
 
-      // Add Alex's response
+      // Ajouter reponse Alex
       setConversation(prev => [...prev, { role: 'assistant', text: result.text }])
-      setEmotion(result.emotion || 'neutral')
 
-      // Alex speaks
+      // ALEX PARLE VRAIMENT
       console.log('Alex va parler:', result.text)
-      voiceService.speak(
+
+      await voiceService.speak(
         result.text,
         () => {
           console.log('START SPEAK')
@@ -148,20 +147,51 @@ export default function VideoChatAlex() {
         () => {
           console.log('END SPEAK')
           setIsSpeaking(false)
-          setEmotion('neutral')
         }
       )
 
-      setUserInput('')
+      setCurrentTranscript('')
 
     } catch (err) {
       console.error('Erreur:', err)
       setError(err instanceof Error ? err.message : 'Erreur lors de l\'analyse')
-      setEmotion('neutral')
     } finally {
       setAnalyzing(false)
     }
-  }, [user?.id, userInput, conversation, navigate])
+  }, [user?.id, conversation, navigate])
+
+  // Conversation vocale
+  const handleVoiceInput = () => {
+    if (!speechRecognitionService.isAvailable()) {
+      setError('Reconnaissance vocale non supportee sur ce navigateur')
+      return
+    }
+
+    if (isListening) {
+      speechRecognitionService.stopListening()
+      setIsListening(false)
+      return
+    }
+
+    setIsListening(true)
+    setError(null)
+
+    speechRecognitionService.startListening(
+      (transcript) => {
+        console.log('Tu as dit:', transcript)
+        setCurrentTranscript(transcript)
+        setIsListening(false)
+
+        // Analyser avec cette question
+        handleAnalyze(transcript)
+      },
+      (errorMsg) => {
+        console.error('Erreur reconnaissance:', errorMsg)
+        setError(`Erreur micro: ${errorMsg}`)
+        setIsListening(false)
+      }
+    )
+  }
 
   // Premium gate
   if (!isPremium) {
@@ -194,40 +224,38 @@ export default function VideoChatAlex() {
 
   return (
     <div className="fixed inset-0 bg-black">
-      {/* Layout type appel video FaceTime */}
       <div className="h-full flex flex-col">
 
-        {/* Header minimal */}
-        <div className="flex-shrink-0 px-4 py-3 bg-black/50 backdrop-blur-sm safe-area-top">
+        {/* Header AAA */}
+        <div className="flex-shrink-0 px-4 py-4 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm safe-area-top">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/app')}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 active:scale-95 transition-all"
             >
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
 
             <div className="text-center">
-              <h1 className="text-white font-semibold text-lg">Alex</h1>
-              <p className="text-white/60 text-xs">Mecanicien Expert</p>
+              <h1 className="text-white font-bold text-xl">Alex</h1>
+              <p className="text-white/60 text-sm font-medium">Mecanicien Expert</p>
             </div>
 
             <div className="w-10"></div>
           </div>
         </div>
 
-        {/* Video principale : ALEX (grand ecran) */}
+        {/* Main : ALEX grand ecran */}
         <div className="flex-1 relative overflow-hidden">
           <AlexAvatar3D
             isSpeaking={isSpeaking}
-            isListening={isListening}
-            emotion={emotion}
+            isListening={isListening || analyzing}
           />
 
-          {/* Video user (Picture-in-Picture style FaceTime) */}
-          <div className="absolute top-4 right-4 w-28 h-40 md:w-36 md:h-52 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-slate-900">
+          {/* Video user (PiP style FaceTime) */}
+          <div className="absolute top-6 right-6 w-32 h-44 md:w-36 md:h-52 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl backdrop-blur-sm bg-slate-900">
             <video
               ref={videoRef}
               autoPlay
@@ -237,21 +265,21 @@ export default function VideoChatAlex() {
             />
 
             {!streaming && (
-              <div className="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex flex-col items-center justify-center gap-3">
                 <button
                   onClick={startCamera}
-                  className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                  className="w-14 h-14 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center active:scale-95 transition-all"
                 >
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </button>
-                <span className="text-white/60 text-xs">Camera</span>
+                <p className="text-xs text-white/60 font-medium">Camera</p>
               </div>
             )}
 
             {streaming && (
-              <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 bg-black/40 rounded-full">
+              <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 bg-black/50 rounded-full">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 <span className="text-white text-xs">Live</span>
               </div>
@@ -260,29 +288,35 @@ export default function VideoChatAlex() {
 
           {/* Erreur */}
           {error && (
-            <div className="absolute top-4 left-4 right-36 p-3 bg-red-500/90 backdrop-blur-sm rounded-xl">
+            <div className="absolute top-6 left-6 right-44 p-3 bg-red-500/90 backdrop-blur-sm rounded-xl">
               <p className="text-white text-sm">{error}</p>
             </div>
           )}
 
-          {/* Transcription live (style sous-titres) */}
-          {conversation.length > 0 && (
-            <div className="absolute bottom-24 left-4 right-4">
-              <div className="bg-black/70 backdrop-blur-md rounded-2xl p-4 max-h-32 overflow-y-auto">
-                <p className="text-white/40 text-xs mb-1">
-                  {conversation[conversation.length - 1].role === 'user' ? 'Toi' : 'Alex'}
-                </p>
-                <p className="text-white text-sm leading-relaxed">
-                  {conversation[conversation.length - 1].text}
-                </p>
+          {/* Transcription live (sous-titres AAA) */}
+          {(conversation.length > 0 || currentTranscript) && (
+            <div className="absolute bottom-28 left-6 right-6">
+              <div className="bg-black/70 backdrop-blur-2xl rounded-2xl p-5 border border-white/10 shadow-2xl max-h-40 overflow-y-auto">
+                {currentTranscript && (
+                  <p className="text-blue-400 text-sm font-medium mb-2">
+                    Toi: {currentTranscript}
+                  </p>
+                )}
+
+                {conversation.length > 0 && (
+                  <p className="text-white text-base leading-relaxed">
+                    <span className="text-white/60 font-medium">Alex: </span>
+                    {conversation[conversation.length - 1].text}
+                  </p>
+                )}
               </div>
             </div>
           )}
 
           {/* Indicateur analyse */}
           {analyzing && (
-            <div className="absolute bottom-24 left-1/2 -translate-x-1/2">
-              <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/90 backdrop-blur-sm rounded-full">
+            <div className="absolute bottom-28 left-1/2 -translate-x-1/2">
+              <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/90 backdrop-blur-sm rounded-full">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span className="text-white text-sm font-medium">Analyse en cours...</span>
               </div>
@@ -290,31 +324,32 @@ export default function VideoChatAlex() {
           )}
         </div>
 
-        {/* Controles bas (style appel video) */}
-        <div className="flex-shrink-0 px-4 py-4 pb-8 bg-gradient-to-t from-black via-black/95 to-transparent safe-area-bottom">
+        {/* Controles AAA */}
+        <div className="flex-shrink-0 px-6 py-6 pb-10 bg-gradient-to-t from-black via-black/95 to-transparent safe-area-bottom">
+          <div className="flex items-center justify-center gap-4">
 
-          {/* Input question */}
-          <div className="mb-4">
-            <input
-              type="text"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && !analyzing && !isSpeaking && streaming && handleAnalyze()}
-              placeholder="Pose une question a Alex..."
-              disabled={!streaming || analyzing || isSpeaking}
-              className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-            />
-          </div>
-
-          {/* Boutons */}
-          <div className="flex items-center justify-center gap-6">
-
-            {/* Bouton analyser */}
+            {/* Bouton PARLER (microphone) */}
             <button
-              onClick={handleAnalyze}
+              onClick={handleVoiceInput}
+              disabled={analyzing || isSpeaking || !streaming}
+              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg active:scale-95 ${
+                isListening
+                  ? 'bg-red-500 hover:bg-red-600 animate-pulse'
+                  : 'bg-blue-500 hover:bg-blue-600'
+              } disabled:bg-gray-600 disabled:cursor-not-allowed`}
+              title={isListening ? 'Ecoute en cours...' : 'Parler a Alex'}
+            >
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </button>
+
+            {/* Bouton ANALYSER (sans parler) */}
+            <button
+              onClick={() => handleAnalyze()}
               disabled={!streaming || analyzing || isSpeaking}
-              className="w-16 h-16 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95 shadow-lg"
-              title="Analyser"
+              className="w-16 h-16 rounded-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-lg active:scale-95"
+              title="Analyser l'image"
             >
               {analyzing ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -325,32 +360,46 @@ export default function VideoChatAlex() {
               )}
             </button>
 
-            {/* Bouton raccrocher */}
+            {/* Bouton RACCROCHER */}
             <button
               onClick={stopCamera}
-              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all active:scale-95 shadow-lg"
-              title="Raccrocher"
+              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all shadow-lg active:scale-95"
+              title="Quitter"
             >
               <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          {/* Hint */}
+          {/* Labels boutons */}
+          <div className="flex items-center justify-center gap-4 mt-3">
+            <span className="w-16 text-center text-white/60 text-xs font-medium">
+              {isListening ? 'Ecoute...' : 'Parler'}
+            </span>
+            <span className="w-16 text-center text-white/60 text-xs font-medium">Analyser</span>
+            <span className="w-16 text-center text-white/60 text-xs font-medium">Quitter</span>
+          </div>
+
+          {/* Hints */}
           {!streaming && (
             <p className="text-center text-white/40 text-xs mt-4">
-              Active la camera pour commencer l'analyse
+              Active la camera pour commencer
             </p>
           )}
-          {streaming && !analyzing && !isSpeaking && (
+          {streaming && !analyzing && !isSpeaking && !isListening && (
             <p className="text-center text-white/40 text-xs mt-4">
-              Appuie sur le bouton eclair pour analyser ta voiture
+              Parle ou analyse ta voiture
             </p>
           )}
           {isSpeaking && (
-            <p className="text-center text-green-400 text-xs mt-4">
+            <p className="text-center text-green-400 text-xs mt-4 animate-pulse">
               Alex parle...
+            </p>
+          )}
+          {isListening && (
+            <p className="text-center text-blue-400 text-xs mt-4 animate-pulse">
+              Je t'ecoute...
             </p>
           )}
         </div>
