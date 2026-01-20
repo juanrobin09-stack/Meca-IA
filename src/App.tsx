@@ -27,6 +27,7 @@ const DiagnosticVideo = lazy(() => import('@/pages/DiagnosticVideo'))
 const PrevisionPannes = lazy(() => import('@/pages/PrevisionPannes'))
 const MechanicChat = lazy(() => import('@/pages/MechanicChat'))
 const Settings = lazy(() => import('@/pages/Settings'))
+const VideoChatAlex = lazy(() => import('@/pages/VideoChatAlex'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -222,6 +223,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/video-chat-alex"
+              element={
+                <ProtectedRoute>
+                  <VideoChatAlex />
                 </ProtectedRoute>
               }
             />
