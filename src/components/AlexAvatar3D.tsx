@@ -7,7 +7,7 @@ interface AlexAvatar3DProps {
 
 export function AlexAvatar3D({ isSpeaking = false, isListening = false }: AlexAvatar3DProps) {
   const [mouthOpen, setMouthOpen] = useState(0)
-  const animationRef = useRef<number>()
+  const animationRef = useRef<number | null>(null)
 
   // Animate mouth when speaking
   useEffect(() => {
