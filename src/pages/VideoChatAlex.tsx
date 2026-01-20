@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AlexAvatar3D } from '@/components/AlexAvatar3D'
 import { voiceService } from '@/services/voiceService'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
-import Sidebar from '@/components/Sidebar'
 
 interface ConversationMessage {
   role: 'user' | 'assistant'
@@ -22,16 +21,11 @@ export default function VideoChatAlex() {
   const [streaming, setStreaming] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isListening, setIsListening] = useState(false)
   const [emotion, setEmotion] = useState<'neutral' | 'happy' | 'thinking' | 'concerned'>('neutral')
   const [conversation, setConversation] = useState<ConversationMessage[]>([])
   const [userInput, setUserInput] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const conversationEndRef = useRef<HTMLDivElement>(null)
-
-  // Auto-scroll conversation
-  useEffect(() => {
-    conversationEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [conversation])
 
   // Cleanup - MUST be before any conditional return
   useEffect(() => {
@@ -46,32 +40,6 @@ export default function VideoChatAlex() {
       }
     }
   }, [])
-
-  // Premium gate
-  if (!isPremium) {
-    return (
-      <>
-        <Sidebar />
-        <div className="md:ml-64 min-h-screen flex items-center justify-center p-4 bg-neutral-50 dark:bg-neutral-950">
-          <div className="text-center max-w-md">
-            <div className="text-7xl mb-6">🎥</div>
-            <h2 className="text-2xl font-bold mb-3 text-neutral-900 dark:text-white">Feature Premium</h2>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-              Le chat vidéo avec Alex est réservé aux membres Premium.
-              Montre ta voiture en direct et reçois des conseils personnalisés !
-            </p>
-            <Link
-              to="/pricing"
-              className="inline-block px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-2xl font-bold text-lg hover:shadow-xl transition-all"
-            >
-              Passer à Premium
-            </Link>
-            <p className="mt-4 text-sm text-neutral-500">9,99€/mois - Sans engagement</p>
-          </div>
-        </div>
-      </>
-    )
-  }
 
   // Start camera
   const startCamera = async () => {
@@ -90,12 +58,12 @@ export default function VideoChatAlex() {
         setStreaming(true)
       }
     } catch (err) {
-      console.error('Erreur caméra:', err)
-      setError('Impossible d\'accéder à la caméra. Vérifie les permissions.')
+      console.error('Erreur camera:', err)
+      setError('Impossible d\'acceder a la camera. Verifie les permissions.')
     }
   }
 
-  // Stop camera
+  // Stop camera and go back
   const stopCamera = () => {
     const stream = videoRef.current?.srcObject as MediaStream
     stream?.getTracks().forEach(track => track.stop())
@@ -105,6 +73,7 @@ export default function VideoChatAlex() {
     setStreaming(false)
     voiceService.stop()
     setIsSpeaking(false)
+    navigate('/app')
   }
 
   // Capture frame
@@ -120,23 +89,24 @@ export default function VideoChatAlex() {
     const ctx = canvas.getContext('2d')
     ctx?.drawImage(video, 0, 0)
 
-    // Get base64 without the data URL prefix
     return canvas.toDataURL('image/jpeg', 0.7).split(',')[1]
   }
 
   // Analyze frame
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(async () => {
     const frameBase64 = captureFrame()
     if (!frameBase64) {
-      setError('Aucune image capturée. Active la caméra d\'abord.')
+      setError('Aucune image capturee. Active la camera d\'abord.')
       return
     }
 
     setAnalyzing(true)
+    setIsListening(false)
     setEmotion('thinking')
     setError(null)
 
     try {
+      console.log('Envoi analyse...')
       const response = await fetch('/.netlify/functions/video-analysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,14 +135,18 @@ export default function VideoChatAlex() {
 
       // Add Alex's response
       setConversation(prev => [...prev, { role: 'assistant', text: result.text }])
-
-      setEmotion(result.emotion)
+      setEmotion(result.emotion || 'neutral')
 
       // Alex speaks
+      console.log('Alex va parler:', result.text)
       voiceService.speak(
         result.text,
-        () => setIsSpeaking(true),
         () => {
+          console.log('START SPEAK')
+          setIsSpeaking(true)
+        },
+        () => {
+          console.log('END SPEAK')
           setIsSpeaking(false)
           setEmotion('neutral')
         }
@@ -187,214 +161,202 @@ export default function VideoChatAlex() {
     } finally {
       setAnalyzing(false)
     }
-  }
+  }, [user?.id, userInput, conversation, navigate])
 
-  // Reset conversation
-  const resetConversation = () => {
-    setConversation([])
-    setUserInput('')
-    voiceService.stop()
-    setIsSpeaking(false)
-    setEmotion('neutral')
+  // Premium gate
+  if (!isPremium) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <div className="text-7xl mb-6">🎥</div>
+          <h2 className="text-2xl font-bold mb-3 text-white">Feature Premium</h2>
+          <p className="text-white/60 mb-6">
+            Le chat video avec Alex est reserve aux membres Premium.
+            Montre ta voiture en direct et recois des conseils personnalises !
+          </p>
+          <Link
+            to="/pricing"
+            className="inline-block px-8 py-4 bg-gradient-to-r from-orange-500 to-rose-500 text-white rounded-2xl font-bold text-lg hover:shadow-xl transition-all"
+          >
+            Passer a Premium
+          </Link>
+          <p className="mt-4 text-sm text-white/40">9,99€/mois - Sans engagement</p>
+          <button
+            onClick={() => navigate('/app')}
+            className="mt-6 text-white/60 hover:text-white text-sm"
+          >
+            ← Retour
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <>
-      <Sidebar />
+    <div className="fixed inset-0 bg-black">
+      {/* Layout type appel video FaceTime */}
+      <div className="h-full flex flex-col">
 
-      <div className="md:ml-64 min-h-screen bg-neutral-50 dark:bg-neutral-950 p-4 pb-24 md:pb-4">
-        <div className="max-w-7xl mx-auto">
-
-          {/* Header */}
-          <div className="mb-6">
+        {/* Header minimal */}
+        <div className="flex-shrink-0 px-4 py-3 bg-black/50 backdrop-blur-sm safe-area-top">
+          <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/app')}
-              className="mb-4 flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+              className="p-2 rounded-full hover:bg-white/10 transition-colors"
             >
-              ← Retour
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white">
-                Chat Vidéo Live
-              </h1>
-              <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
-                PREMIUM
-              </span>
+
+            <div className="text-center">
+              <h1 className="text-white font-semibold text-lg">Alex</h1>
+              <p className="text-white/60 text-xs">Mecanicien Expert</p>
             </div>
-            <p className="text-neutral-600 dark:text-neutral-400">
-              Montre ta voiture en direct, Alex l'analyse en temps réel 🔧
-            </p>
+
+            <div className="w-10"></div>
+          </div>
+        </div>
+
+        {/* Video principale : ALEX (grand ecran) */}
+        <div className="flex-1 relative overflow-hidden">
+          <AlexAvatar3D
+            isSpeaking={isSpeaking}
+            isListening={isListening}
+            emotion={emotion}
+          />
+
+          {/* Video user (Picture-in-Picture style FaceTime) */}
+          <div className="absolute top-4 right-4 w-28 h-40 md:w-36 md:h-52 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-slate-900">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+            />
+
+            {!streaming && (
+              <div className="absolute inset-0 bg-slate-800 flex flex-col items-center justify-center gap-2">
+                <button
+                  onClick={startCamera}
+                  className="p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                </button>
+                <span className="text-white/60 text-xs">Camera</span>
+              </div>
+            )}
+
+            {streaming && (
+              <div className="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-1 bg-black/40 rounded-full">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span className="text-white text-xs">Live</span>
+              </div>
+            )}
           </div>
 
+          {/* Erreur */}
           {error && (
-            <div className="mb-4 p-4 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400">
-              {error}
+            <div className="absolute top-4 left-4 right-36 p-3 bg-red-500/90 backdrop-blur-sm rounded-xl">
+              <p className="text-white text-sm">{error}</p>
             </div>
           )}
 
-          <div className="grid lg:grid-cols-2 gap-6">
-
-            {/* AVATAR ALEX */}
-            <div className="space-y-4 order-2 lg:order-1">
-              <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-rose-500 flex items-center justify-center text-white text-xl shadow-lg">
-                      🔧
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-lg text-neutral-900 dark:text-white">Alex</h2>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        {isSpeaking ? '🗣️ Parle...' : analyzing ? '🤔 Analyse...' : '👋 Prêt à t\'aider'}
-                      </p>
-                    </div>
-                  </div>
-                  {conversation.length > 0 && (
-                    <button
-                      onClick={resetConversation}
-                      className="text-xs text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                    >
-                      Nouvelle conv.
-                    </button>
-                  )}
-                </div>
-
-                {/* Avatar 3D */}
-                <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900">
-                  <AlexAvatar3D isSpeaking={isSpeaking} emotion={emotion} />
-                </div>
-              </div>
-
-              {/* Conversation History */}
-              <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-lg p-4 h-48 lg:h-60 overflow-y-auto">
-                <h3 className="font-bold mb-3 text-neutral-900 dark:text-white text-sm">Conversation</h3>
-                {conversation.length === 0 ? (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-sm text-neutral-400 italic text-center">
-                      Active la caméra et clique sur "Analyser"<br />pour commencer...
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {conversation.map((msg, i) => (
-                      <div
-                        key={i}
-                        className={`p-3 rounded-xl ${
-                          msg.role === 'user'
-                            ? 'bg-blue-50 dark:bg-blue-950/50 ml-4'
-                            : 'bg-neutral-100 dark:bg-neutral-800 mr-4'
-                        }`}
-                      >
-                        <p className="text-xs text-neutral-500 mb-1">
-                          {msg.role === 'user' ? 'Toi' : '🔧 Alex'}
-                        </p>
-                        <p className="text-sm text-neutral-900 dark:text-white">{msg.text}</p>
-                      </div>
-                    ))}
-                    <div ref={conversationEndRef} />
-                  </div>
-                )}
+          {/* Transcription live (style sous-titres) */}
+          {conversation.length > 0 && (
+            <div className="absolute bottom-24 left-4 right-4">
+              <div className="bg-black/70 backdrop-blur-md rounded-2xl p-4 max-h-32 overflow-y-auto">
+                <p className="text-white/40 text-xs mb-1">
+                  {conversation[conversation.length - 1].role === 'user' ? 'Toi' : 'Alex'}
+                </p>
+                <p className="text-white text-sm leading-relaxed">
+                  {conversation[conversation.length - 1].text}
+                </p>
               </div>
             </div>
+          )}
 
-            {/* VIDEO USER */}
-            <div className="space-y-4 order-1 lg:order-2">
-              <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-lg p-4">
-                <h2 className="font-bold text-lg mb-4 text-neutral-900 dark:text-white flex items-center gap-2">
-                  <span>Ta Voiture</span>
-                  {streaming && (
-                    <span className="flex items-center gap-1 text-xs font-normal text-green-600 dark:text-green-400">
-                      <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                      Live
-                    </span>
-                  )}
-                </h2>
-
-                {/* Video */}
-                <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
-
-                  {!streaming && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-neutral-900">
-                      <button
-                        onClick={startCamera}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:shadow-lg active:scale-95 transition-all"
-                      >
-                        📹 Activer Caméra
-                      </button>
-                    </div>
-                  )}
-
-                  {analyzing && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                      <div className="text-white text-center">
-                        <div className="text-4xl mb-2 animate-pulse">🔬</div>
-                        <p>Analyse en cours...</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <canvas ref={canvasRef} className="hidden" />
-
-                {/* Controls */}
-                {streaming && (
-                  <div className="mt-4 space-y-3">
-                    <input
-                      type="text"
-                      value={userInput}
-                      onChange={(e) => setUserInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !analyzing && !isSpeaking) {
-                          handleAnalyze()
-                        }
-                      }}
-                      placeholder="Pose une question à Alex (optionnel)..."
-                      disabled={analyzing || isSpeaking}
-                      className="w-full px-4 py-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-base"
-                    />
-
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleAnalyze}
-                        disabled={analyzing || isSpeaking}
-                        className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:shadow-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {analyzing ? '🔄 Analyse...' : isSpeaking ? '🗣️ Alex parle...' : '🔬 Analyser'}
-                      </button>
-
-                      <button
-                        onClick={stopCamera}
-                        className="px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 active:scale-95 transition-all"
-                        title="Arrêter la caméra"
-                      >
-                        ⏹️
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Tips */}
-              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-                <h3 className="font-bold text-blue-900 dark:text-blue-300 mb-2 text-sm">💡 Conseils pour une bonne analyse</h3>
-                <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1">
-                  <li>• Bonne lumière (plein jour idéal)</li>
-                  <li>• Approche-toi des zones problématiques</li>
-                  <li>• Tiens le téléphone stable</li>
-                  <li>• Attends qu'Alex ait fini de parler avant la prochaine analyse</li>
-                </ul>
+          {/* Indicateur analyse */}
+          {analyzing && (
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2">
+              <div className="flex items-center gap-2 px-4 py-2 bg-blue-500/90 backdrop-blur-sm rounded-full">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-white text-sm font-medium">Analyse en cours...</span>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Controles bas (style appel video) */}
+        <div className="flex-shrink-0 px-4 py-4 pb-8 bg-gradient-to-t from-black via-black/95 to-transparent safe-area-bottom">
+
+          {/* Input question */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && !analyzing && !isSpeaking && streaming && handleAnalyze()}
+              placeholder="Pose une question a Alex..."
+              disabled={!streaming || analyzing || isSpeaking}
+              className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            />
           </div>
+
+          {/* Boutons */}
+          <div className="flex items-center justify-center gap-6">
+
+            {/* Bouton analyser */}
+            <button
+              onClick={handleAnalyze}
+              disabled={!streaming || analyzing || isSpeaking}
+              className="w-16 h-16 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center transition-all active:scale-95 shadow-lg"
+              title="Analyser"
+            >
+              {analyzing ? (
+                <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              )}
+            </button>
+
+            {/* Bouton raccrocher */}
+            <button
+              onClick={stopCamera}
+              className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-all active:scale-95 shadow-lg"
+              title="Raccrocher"
+            >
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Hint */}
+          {!streaming && (
+            <p className="text-center text-white/40 text-xs mt-4">
+              Active la camera pour commencer l'analyse
+            </p>
+          )}
+          {streaming && !analyzing && !isSpeaking && (
+            <p className="text-center text-white/40 text-xs mt-4">
+              Appuie sur le bouton eclair pour analyser ta voiture
+            </p>
+          )}
+          {isSpeaking && (
+            <p className="text-center text-green-400 text-xs mt-4">
+              Alex parle...
+            </p>
+          )}
         </div>
       </div>
-    </>
+
+      <canvas ref={canvasRef} className="hidden" />
+    </div>
   )
 }
