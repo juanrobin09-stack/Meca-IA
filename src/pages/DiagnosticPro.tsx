@@ -505,8 +505,8 @@ export default function DiagnosticPro() {
         {/* INPUT BAR */}
         <div style={{
           flexShrink: 0,
-          padding: '8px 12px',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 12px)'
+          padding: '12px 16px',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
         }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:p-4 md:pb-4">
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             {/* Images preview */}
