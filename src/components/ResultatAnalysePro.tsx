@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { jsPDF } from 'jspdf'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,7 +17,9 @@ import {
   Euro,
   Info,
   Check,
-  FileText
+  FileText,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 
 interface DevisLine {
@@ -68,6 +70,22 @@ export default function ResultatAnalysePro({ data }: Props) {
   const { verdict, lignes, alertes, totaux, economiesPotentielles, garageInfo } = data
   const [downloadSuccess, setDownloadSuccess] = useState(false)
   const [shareSuccess, setShareSuccess] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [expandedLines, setExpandedLines] = useState<number[]>([])
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  const toggleLine = (index: number) => {
+    setExpandedLines(prev =>
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    )
+  }
 
   // Télécharger le rapport en PDF
   const handleDownload = () => {
@@ -361,15 +379,15 @@ export default function ResultatAnalysePro({ data }: Props) {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 rounded-r-xl p-5"
+          className="bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 rounded-r-xl p-3 sm:p-5"
         >
-          <h3 className="text-lg font-bold text-red-900 dark:text-red-200 mb-3 flex items-center gap-2">
-            <XCircle className="h-5 w-5" />
+          <h3 className="text-sm sm:text-lg font-bold text-red-900 dark:text-red-200 mb-2 sm:mb-3 flex items-center gap-2">
+            <XCircle className="h-4 w-4 sm:h-5 sm:w-5" />
             Alertes Graves ({alertes.graves.length})
           </h3>
-          <ul className="space-y-2">
+          <ul className="space-y-1.5 sm:space-y-2">
             {alertes.graves.map((alerte, i) => (
-              <li key={i} className="flex items-start gap-2 text-red-800 dark:text-red-300">
+              <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-red-800 dark:text-red-300">
                 <span className="font-bold mt-0.5">•</span>
                 <span>{alerte}</span>
               </li>
@@ -384,15 +402,15 @@ export default function ResultatAnalysePro({ data }: Props) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 rounded-r-xl p-5"
+          className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 rounded-r-xl p-3 sm:p-5"
         >
-          <h3 className="text-lg font-bold text-amber-900 dark:text-amber-200 mb-3 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
+          <h3 className="text-sm sm:text-lg font-bold text-amber-900 dark:text-amber-200 mb-2 sm:mb-3 flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
             Points d'Attention ({alertes.moyennes.length})
           </h3>
-          <ul className="space-y-2">
+          <ul className="space-y-1.5 sm:space-y-2">
             {alertes.moyennes.map((alerte, i) => (
-              <li key={i} className="flex items-start gap-2 text-amber-800 dark:text-amber-300">
+              <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-amber-800 dark:text-amber-300">
                 <span className="font-bold mt-0.5">•</span>
                 <span>{alerte}</span>
               </li>
@@ -429,129 +447,220 @@ export default function ResultatAnalysePro({ data }: Props) {
 
       {/* ANALYSE LIGNE PAR LIGNE */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="h-5 w-5" />
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Shield className="h-4 w-4 sm:h-5 sm:w-5" />
             Analyse Détaillée
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto -mx-6 px-6">
-            <table className="w-full min-w-[600px]">
-              <thead>
-                <tr className="border-b-2">
-                  <th className="text-left py-3 px-2 font-semibold">Désignation</th>
-                  <th className="text-right py-3 px-2 font-semibold">Facturé</th>
-                  <th className="text-right py-3 px-2 font-semibold">Prix marché</th>
-                  <th className="text-right py-3 px-2 font-semibold">Écart</th>
-                  <th className="text-center py-3 px-2 font-semibold">Verdict</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lignes.map((ligne, i) => (
-                  <tr
+        <CardContent className="px-3 sm:px-6">
+          {/* Mobile: Card view */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {lignes.map((ligne, i) => {
+                const isExpanded = expandedLines.includes(i)
+                return (
+                  <motion.div
                     key={i}
-                    className={`border-b transition-colors ${ligne.verdict === 'arnaque'
-                        ? 'bg-red-50 dark:bg-red-950/20'
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className={`rounded-xl border-2 overflow-hidden ${
+                      ligne.verdict === 'arnaque'
+                        ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
                         : ligne.verdict === 'eleve'
-                          ? 'bg-amber-50 dark:bg-amber-950/20'
-                          : 'bg-emerald-50/50 dark:bg-emerald-950/10'
-                      }`}
+                          ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
+                          : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
+                    }`}
                   >
-                    <td className="py-4 px-2">
-                      <div className="font-medium">{ligne.designation}</div>
-                      {ligne.sourceEstimation && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {ligne.sourceEstimation}
-                        </div>
-                      )}
-                    </td>
-                    <td className="text-right py-4 px-2 font-semibold">
-                      {ligne.totalTTC.toFixed(2)}€
-                    </td>
-                    <td className="text-right py-4 px-2 text-blue-600 dark:text-blue-400">
-                      ~{ligne.prixMarche.moyenne.toFixed(2)}€
-                    </td>
-                    <td className="text-right py-4 px-2">
-                      <span className={`font-bold ${ligne.ecart > 40 ? 'text-red-600' :
-                          ligne.ecart > 15 ? 'text-amber-600' :
+                    {/* Header - Always visible */}
+                    <button
+                      onClick={() => toggleLine(i)}
+                      className="w-full p-3 flex items-center justify-between text-left"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {ligne.verdict === 'ok' && (
+                            <Badge className="bg-emerald-500 text-[10px] px-1.5 py-0">OK</Badge>
+                          )}
+                          {ligne.verdict === 'eleve' && (
+                            <Badge className="bg-amber-500 text-[10px] px-1.5 py-0">Élevé</Badge>
+                          )}
+                          {ligne.verdict === 'arnaque' && (
+                            <Badge className="bg-red-500 text-[10px] px-1.5 py-0">Arnaque</Badge>
+                          )}
+                          <span className={`text-xs font-bold ${
+                            ligne.ecart > 40 ? 'text-red-600' :
+                            ligne.ecart > 15 ? 'text-amber-600' :
                             'text-emerald-600'
-                        }`}>
-                        {ligne.ecart > 0 ? '+' : ''}{ligne.ecart}%
-                      </span>
-                    </td>
-                    <td className="text-center py-4 px-2">
-                      {ligne.verdict === 'ok' && (
-                        <Badge className="bg-emerald-500 hover:bg-emerald-600">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          OK
-                        </Badge>
+                          }`}>
+                            {ligne.ecart > 0 ? '+' : ''}{ligne.ecart}%
+                          </span>
+                        </div>
+                        <p className="font-medium text-sm truncate pr-2">{ligne.designation}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm">{ligne.totalTTC.toFixed(0)}€</span>
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Details - Expanded */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-3 pb-3 pt-0 border-t border-current/10">
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2">
+                                <p className="text-muted-foreground">Prix facturé</p>
+                                <p className="font-bold text-sm">{ligne.totalTTC.toFixed(2)}€</p>
+                              </div>
+                              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2">
+                                <p className="text-muted-foreground">Prix marché</p>
+                                <p className="font-bold text-sm text-blue-600">~{ligne.prixMarche.moyenne.toFixed(2)}€</p>
+                              </div>
+                            </div>
+                            {ligne.sourceEstimation && (
+                              <p className="text-[10px] text-muted-foreground mt-2 italic">
+                                {ligne.sourceEstimation}
+                              </p>
+                            )}
+                          </div>
+                        </motion.div>
                       )}
-                      {ligne.verdict === 'eleve' && (
-                        <Badge className="bg-amber-500 hover:bg-amber-600">
-                          <TrendingUp className="h-3 w-3 mr-1" />
-                          Élevé
-                        </Badge>
-                      )}
-                      {ligne.verdict === 'arnaque' && (
-                        <Badge className="bg-red-500 hover:bg-red-600">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Arnaque
-                        </Badge>
-                      )}
-                    </td>
+                    </AnimatePresence>
+                  </motion.div>
+                )
+              })}
+            </div>
+          ) : (
+            /* Desktop: Table view */
+            <div className="overflow-x-auto -mx-6 px-6">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2">
+                    <th className="text-left py-3 px-2 font-semibold">Désignation</th>
+                    <th className="text-right py-3 px-2 font-semibold">Facturé</th>
+                    <th className="text-right py-3 px-2 font-semibold">Prix marché</th>
+                    <th className="text-right py-3 px-2 font-semibold">Écart</th>
+                    <th className="text-center py-3 px-2 font-semibold">Verdict</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {lignes.map((ligne, i) => (
+                    <tr
+                      key={i}
+                      className={`border-b transition-colors ${ligne.verdict === 'arnaque'
+                          ? 'bg-red-50 dark:bg-red-950/20'
+                          : ligne.verdict === 'eleve'
+                            ? 'bg-amber-50 dark:bg-amber-950/20'
+                            : 'bg-emerald-50/50 dark:bg-emerald-950/10'
+                        }`}
+                    >
+                      <td className="py-4 px-2">
+                        <div className="font-medium">{ligne.designation}</div>
+                        {ligne.sourceEstimation && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {ligne.sourceEstimation}
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-right py-4 px-2 font-semibold">
+                        {ligne.totalTTC.toFixed(2)}€
+                      </td>
+                      <td className="text-right py-4 px-2 text-blue-600 dark:text-blue-400">
+                        ~{ligne.prixMarche.moyenne.toFixed(2)}€
+                      </td>
+                      <td className="text-right py-4 px-2">
+                        <span className={`font-bold ${ligne.ecart > 40 ? 'text-red-600' :
+                            ligne.ecart > 15 ? 'text-amber-600' :
+                              'text-emerald-600'
+                          }`}>
+                          {ligne.ecart > 0 ? '+' : ''}{ligne.ecart}%
+                        </span>
+                      </td>
+                      <td className="text-center py-4 px-2">
+                        {ligne.verdict === 'ok' && (
+                          <Badge className="bg-emerald-500 hover:bg-emerald-600">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            OK
+                          </Badge>
+                        )}
+                        {ligne.verdict === 'eleve' && (
+                          <Badge className="bg-amber-500 hover:bg-amber-600">
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                            Élevé
+                          </Badge>
+                        )}
+                        {ligne.verdict === 'arnaque' && (
+                          <Badge className="bg-red-500 hover:bg-red-600">
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Arnaque
+                          </Badge>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* COMPARATIF FINANCIER */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Euro className="h-5 w-5" />
+        <CardHeader className="pb-2 sm:pb-4">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Euro className="h-4 w-4 sm:h-5 sm:w-5" />
             Comparatif Financier
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between items-center text-lg">
-            <span className="text-muted-foreground">Prix facturé (TTC)</span>
-            <span className="font-bold text-2xl">{totaux.totalFacture.toFixed(2)}€</span>
+        <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6">
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground text-sm sm:text-base">Prix facturé</span>
+            <span className="font-bold text-lg sm:text-2xl">{totaux.totalFacture.toFixed(2)}€</span>
           </div>
 
-          <div className="flex justify-between items-center text-lg">
-            <span className="text-muted-foreground">Prix marché estimé</span>
-            <span className="font-bold text-2xl text-blue-600">~{totaux.totalMarche.toFixed(2)}€</span>
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground text-sm sm:text-base">Prix marché</span>
+            <span className="font-bold text-lg sm:text-2xl text-blue-600">~{totaux.totalMarche.toFixed(2)}€</span>
           </div>
 
-          <div className="h-px bg-border my-2" />
+          <div className="h-px bg-border" />
 
-          <div className={`flex justify-between items-center p-4 rounded-xl ${economiesPotentielles.montant > 0
+          <div className={`flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 sm:p-4 rounded-xl gap-2 ${economiesPotentielles.montant > 0
               ? 'bg-red-50 dark:bg-red-950/30'
               : 'bg-emerald-50 dark:bg-emerald-950/30'
             }`}>
-            <span className="font-semibold text-lg flex items-center gap-2">
+            <span className="font-semibold text-sm sm:text-lg flex items-center gap-2">
               {economiesPotentielles.montant > 0 ? (
                 <>
-                  <TrendingUp className="h-5 w-5 text-red-500" />
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-red-500" />
                   Tu paies en trop
                 </>
               ) : (
                 <>
-                  <TrendingDown className="h-5 w-5 text-emerald-500" />
+                  <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-500" />
                   Prix correct
                 </>
               )}
             </span>
-            <div className="text-right">
-              <div className={`text-3xl font-bold ${economiesPotentielles.montant > 0 ? 'text-red-600' : 'text-emerald-600'
+            <div className="text-left sm:text-right flex items-baseline gap-2 sm:block">
+              <div className={`text-2xl sm:text-3xl font-bold ${economiesPotentielles.montant > 0 ? 'text-red-600' : 'text-emerald-600'
                 }`}>
                 {Math.abs(economiesPotentielles.montant).toFixed(2)}€
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground">
                 ({economiesPotentielles.pourcentage > 0 ? '+' : ''}{economiesPotentielles.pourcentage}%)
               </div>
             </div>
@@ -562,17 +671,17 @@ export default function ResultatAnalysePro({ data }: Props) {
       {/* CONSEILS */}
       {economiesPotentielles.conseils && economiesPotentielles.conseils.length > 0 && (
         <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
-              <Lightbulb className="h-5 w-5" />
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-blue-900 dark:text-blue-100">
+              <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5" />
               Conseils pour Économiser
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
+          <CardContent className="px-3 sm:px-6 pt-0">
+            <ul className="space-y-1.5 sm:space-y-2">
               {economiesPotentielles.conseils.map((conseil, i) => (
-                <li key={i} className="flex items-start gap-2 text-blue-800 dark:text-blue-200">
-                  <span className="text-blue-500 mt-0.5">💡</span>
+                <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-blue-800 dark:text-blue-200">
+                  <span className="text-blue-500 mt-0.5 flex-shrink-0">💡</span>
                   <span>{conseil}</span>
                 </li>
               ))}
@@ -581,10 +690,10 @@ export default function ResultatAnalysePro({ data }: Props) {
         </Card>
       )}
 
-      {/* ACTIONS */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* ACTIONS - Fixed at bottom on mobile */}
+      <div className="flex gap-2 sm:gap-3 sticky bottom-4 sm:static bg-background/80 backdrop-blur-sm p-2 -mx-2 sm:mx-0 sm:p-0 sm:bg-transparent sm:backdrop-blur-none rounded-xl">
         <Button
-          className="flex-1 h-12"
+          className="flex-1 h-10 sm:h-12 text-sm sm:text-base"
           variant={downloadSuccess ? "outline" : "default"}
           onClick={handleDownload}
         >
@@ -597,8 +706,9 @@ export default function ResultatAnalysePro({ data }: Props) {
                 exit={{ scale: 0 }}
                 className="flex items-center"
               >
-                <Check className="h-5 w-5 mr-2 text-emerald-500" />
-                Téléchargé !
+                <Check className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-emerald-500" />
+                <span className="hidden sm:inline">Téléchargé !</span>
+                <span className="sm:hidden">OK</span>
               </motion.div>
             ) : (
               <motion.div
@@ -608,14 +718,15 @@ export default function ResultatAnalysePro({ data }: Props) {
                 exit={{ scale: 0 }}
                 className="flex items-center"
               >
-                <FileText className="h-5 w-5 mr-2" />
-                Télécharger le PDF
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
+                <span className="hidden sm:inline">Télécharger le PDF</span>
+                <span className="sm:hidden">PDF</span>
               </motion.div>
             )}
           </AnimatePresence>
         </Button>
         <Button
-          className="flex-1 h-12"
+          className="flex-1 h-10 sm:h-12 text-sm sm:text-base"
           variant="outline"
           onClick={handleShare}
         >
@@ -628,8 +739,9 @@ export default function ResultatAnalysePro({ data }: Props) {
                 exit={{ scale: 0 }}
                 className="flex items-center"
               >
-                <Check className="h-5 w-5 mr-2 text-emerald-500" />
-                Copié !
+                <Check className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 text-emerald-500" />
+                <span className="hidden sm:inline">Copié !</span>
+                <span className="sm:hidden">OK</span>
               </motion.div>
             ) : (
               <motion.div
@@ -639,8 +751,9 @@ export default function ResultatAnalysePro({ data }: Props) {
                 exit={{ scale: 0 }}
                 className="flex items-center"
               >
-                <Share2 className="h-5 w-5 mr-2" />
-                Partager l'analyse
+                <Share2 className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
+                <span className="hidden sm:inline">Partager l'analyse</span>
+                <span className="sm:hidden">Partager</span>
               </motion.div>
             )}
           </AnimatePresence>
