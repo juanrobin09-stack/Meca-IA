@@ -35,7 +35,7 @@ const defaultContent: Record<PaywallMode, {
 }> = {
   diagnostic: {
     title: 'Tes 2 diagnostics gratuits sont épuisés',
-    subtitle: 'Passe Premium pour des diagnostics illimités et un suivi complet de ta voiture.',
+    subtitle: 'Passe Premium pour créer des diagnostics illimités et un suivi complet de ta voiture.',
     unitLabel: '1 diagnostic immédiat',
     unitButton: 'Acheter 1 diagnostic',
     unitPrice: '2.99€',

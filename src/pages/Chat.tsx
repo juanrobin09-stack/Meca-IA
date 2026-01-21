@@ -21,7 +21,8 @@ interface VehicleInfo {
 }
 
 const MAX_PHOTOS_PER_CONVERSATION = 2
-const MAX_MESSAGES_PER_DIAGNOSTIC = 15
+// Note: No message limit per diagnostic - users get unlimited messages within a diagnostic session
+// The only limit is: 2 diagnostics/month for free users
 
 const EXAMPLE_QUESTIONS = [
   { text: 'Ma voiture fait un bruit au freinage', icon: '🔊' },
@@ -53,9 +54,7 @@ export default function Chat() {
   const [scannedVehicle, setScannedVehicle] = useState<VehicleInfo | null>(null)
 
   const photosUsed = messages.filter(m => m.image).length
-  const userMessagesCount = messages.filter(m => m.role === 'user').length
-  const messagesRemaining = MAX_MESSAGES_PER_DIAGNOSTIC - userMessagesCount
-  const isAtMessageLimit = !isPremium && userMessagesCount >= MAX_MESSAGES_PER_DIAGNOSTIC && !isNewConversation
+  // No message limit per diagnostic - unlimited conversation within a session
 
   // Sync counter with profile changes
   useEffect(() => {
@@ -164,10 +163,6 @@ export default function Chat() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if ((!input.trim() && !selectedImage) || isLoading) return
-    if (isAtMessageLimit) {
-      setShowPaywall(true)
-      return
-    }
 
     const messageContent = input.trim() || (selectedImage ? 'Voici une photo de mon problème.' : '')
     const imageBase64 = selectedImage?.base64
@@ -304,7 +299,7 @@ export default function Chat() {
               fontWeight: 500,
               whiteSpace: 'nowrap'
             }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-              {isPremium ? '∞' : isNewConversation ? `${currentRemaining}/2` : `${messagesRemaining} msg`}
+              {isPremium ? '∞' : `${currentRemaining}/2 diag`}
               {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
             </div>
           </div>
@@ -482,18 +477,6 @@ export default function Chat() {
               <div style={{ fontSize: 12, marginBottom: 8 }} className="text-red-500">{imageError}</div>
             )}
 
-            {isAtMessageLimit && (
-              <div style={{
-                padding: 8,
-                borderRadius: 8,
-                fontSize: 12,
-                textAlign: 'center',
-                marginBottom: 8
-              }} className="bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400">
-                Limite atteinte · <button onClick={() => setShowPaywall(true)} className="text-amber-700 dark:text-amber-400 font-semibold underline" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>Passer Premium</button>
-              </div>
-            )}
-
             <form onSubmit={handleSubmit}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                 {/* Photo button */}
@@ -501,7 +484,7 @@ export default function Chat() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit}
+                  disabled={isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION}
                   style={{
                     width: 48,
                     height: 48,
@@ -510,7 +493,7 @@ export default function Chat() {
                     cursor: 'pointer',
                     fontSize: 20,
                     flexShrink: 0,
-                    opacity: (isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION || isAtMessageLimit) ? 0.4 : 1
+                    opacity: (isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION) ? 0.4 : 1
                   }}
                   className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                 >+</button>
@@ -526,8 +509,8 @@ export default function Chat() {
                       handleSubmit(e)
                     }
                   }}
-                  placeholder={isAtMessageLimit ? "Limite atteinte" : "Décris ton problème..."}
-                  disabled={isLoading || isAtMessageLimit}
+                  placeholder="Décris ton problème..."
+                  disabled={isLoading}
                   rows={1}
                   style={{
                     flex: 1,
@@ -539,7 +522,7 @@ export default function Chat() {
                     maxHeight: 120,
                     outline: 'none',
                     fontFamily: 'inherit',
-                    opacity: (isLoading || isAtMessageLimit) ? 0.5 : 1
+                    opacity: isLoading ? 0.5 : 1
                   }}
                   className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
                 />
@@ -547,7 +530,7 @@ export default function Chat() {
                 {/* Send button */}
                 <button
                   type="submit"
-                  disabled={(!input.trim() && !selectedImage) || isLoading || isAtMessageLimit}
+                  disabled={(!input.trim() && !selectedImage) || isLoading}
                   style={{
                     width: 48,
                     height: 48,
@@ -560,7 +543,7 @@ export default function Chat() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: 'pointer',
-                    opacity: ((!input.trim() && !selectedImage) || isLoading || isAtMessageLimit) ? 0.5 : 1,
+                    opacity: ((!input.trim() && !selectedImage) || isLoading) ? 0.5 : 1,
                     flexShrink: 0,
                     boxShadow: '0 4px 12px rgba(59,130,246,0.3)'
                   }}
