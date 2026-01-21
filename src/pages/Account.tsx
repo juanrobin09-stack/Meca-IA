@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -16,18 +18,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Loader2, ExternalLink, Trash2, CheckCircle2, RefreshCw } from 'lucide-react'
+import { Loader2, ExternalLink, Trash2, CheckCircle2, RefreshCw, Key, Eye, EyeOff } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default function Account() {
   const navigate = useNavigate()
-  const { user, profile, deleteAccount, refreshProfile: _refreshProfile } = useAuth()
+  const { user, profile, deleteAccount, refreshProfile: _refreshProfile, updatePassword } = useAuth()
   const { isPremium, diagnosticsUsed, diagnosticsRemaining } = useSubscription(profile)
 
   const [loading, setLoading] = useState<string | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  // Password change state
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPasswords, setShowPasswords] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   async function handleUpgrade(priceId: string, isSubscription: boolean) {
     if (!user) return
@@ -107,6 +115,36 @@ export default function Account() {
     } catch (error) {
       console.error('Sync error:', error)
       setSyncMessage({ type: 'error', text: 'Erreur de connexion. Réessaie.' })
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  async function handleChangePassword() {
+    setPasswordMessage(null)
+
+    // Validation
+    if (newPassword.length < 6) {
+      setPasswordMessage({ type: 'error', text: 'Le mot de passe doit contenir au moins 6 caractères' })
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: 'error', text: 'Les mots de passe ne correspondent pas' })
+      return
+    }
+
+    setLoading('password')
+
+    try {
+      await updatePassword(newPassword)
+      setPasswordMessage({ type: 'success', text: 'Mot de passe mis à jour avec succès !' })
+      // Reset fields
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error) {
+      console.error('Password change error:', error)
+      setPasswordMessage({ type: 'error', text: error instanceof Error ? error.message : 'Erreur lors du changement' })
     } finally {
       setLoading(null)
     }
@@ -285,6 +323,71 @@ export default function Account() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Change Password */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Modifier mon mot de passe
+              </CardTitle>
+              <CardDescription>
+                Change ton mot de passe pour sécuriser ton compte
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {passwordMessage && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  passwordMessage.type === 'success'
+                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                    : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                }`}>
+                  {passwordMessage.type === 'success' && <CheckCircle2 className="h-4 w-4 inline mr-2" />}
+                  {passwordMessage.text}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    type={showPasswords ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswords(!showPasswords)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPasswords ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Minimum 6 caractères</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
+                <Input
+                  id="confirmPassword"
+                  type={showPasswords ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+              </div>
+
+              <Button
+                onClick={handleChangePassword}
+                disabled={loading !== null || !newPassword || !confirmPassword}
+              >
+                {loading === 'password' && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Changer le mot de passe
+              </Button>
             </CardContent>
           </Card>
 

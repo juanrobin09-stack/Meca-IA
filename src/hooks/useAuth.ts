@@ -185,6 +185,22 @@ export function useAuth() {
     return profile
   }
 
+  async function resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+
+    if (error) throw error
+  }
+
+  async function updatePassword(newPassword: string) {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    })
+
+    if (error) throw error
+  }
+
   return {
     user: state.user,
     profile: state.profile,
@@ -197,5 +213,7 @@ export function useAuth() {
     updateProfile,
     deleteAccount,
     refreshProfile,
+    resetPassword,
+    updatePassword,
   }
 }

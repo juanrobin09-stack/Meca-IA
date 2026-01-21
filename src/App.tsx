@@ -29,6 +29,7 @@ const MechanicChat = lazy(() => import('@/pages/MechanicChat'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
 const VehicleHistory = lazy(() => import('@/pages/VehicleHistory'))
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -114,6 +115,7 @@ export default function App() {
               }
             />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected routes */}
             <Route

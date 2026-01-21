@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Logo from '@/components/Logo'
 import PageTransition from '@/components/PageTransition'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle2 } from 'lucide-react'
 import { GoogleAuthButton } from '@/components/GoogleAuthButton'
 
 export default function Login() {
@@ -15,7 +15,9 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn } = useAuth()
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const { signIn, resetPassword } = useAuth()
   const navigate = useNavigate()
 
   async function handleSubmit(e: React.FormEvent) {
@@ -30,6 +32,25 @@ export default function Login() {
       setError(err instanceof Error ? err.message : 'Erreur de connexion')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleResetPassword() {
+    if (!email) {
+      setError('Entre ton email pour recevoir le lien de réinitialisation')
+      return
+    }
+
+    setError('')
+    setResetLoading(true)
+
+    try {
+      await resetPassword(email)
+      setResetSent(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -79,7 +100,17 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Mot de passe</Label>
+                <button
+                  type="button"
+                  onClick={handleResetPassword}
+                  disabled={resetLoading}
+                  className="text-xs text-primary hover:underline disabled:opacity-50"
+                >
+                  {resetLoading ? 'Envoi...' : 'Mot de passe oublié ?'}
+                </button>
+              </div>
               <Input
                 id="password"
                 type="password"
@@ -89,6 +120,13 @@ export default function Login() {
                 required
               />
             </div>
+
+            {resetSent && (
+              <div className="p-3 text-sm text-emerald-600 bg-emerald-50 rounded-md flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" />
+                Email envoyé ! Vérifie ta boîte de réception.
+              </div>
+            )}
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full" disabled={loading}>
