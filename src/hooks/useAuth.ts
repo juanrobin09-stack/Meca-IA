@@ -64,7 +64,7 @@ export function useAuth() {
     }
   }, [])
 
-  async function fetchProfile(userId: string) {
+  async function fetchProfile(userId: string, retryCount = 0) {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -73,8 +73,15 @@ export function useAuth() {
 
     if (error) {
       console.error('Error fetching profile:', error)
-      // Create profile if it doesn't exist
+      // Profile doesn't exist yet - wait and retry a few times
+      // This handles the race condition during signup where signUp creates the profile
       if (error.code === 'PGRST116') {
+        if (retryCount < 3) {
+          // Wait a bit for signUp to create the profile with display_name
+          await new Promise(resolve => setTimeout(resolve, 500))
+          return fetchProfile(userId, retryCount + 1)
+        }
+        // After retries, create minimal profile (fallback for edge cases)
         const { data: newProfile } = await supabase
           .from('profiles')
           .insert({ id: userId })
@@ -96,19 +103,22 @@ export function useAuth() {
 
     if (error) throw error
 
-    // Create profile with display name and fetch it to update state
+    // Create or update profile with display name using upsert to handle race condition
+    // (onAuthStateChange may create an empty profile before this runs)
     if (data.user) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .insert({
+        .upsert({
           id: data.user.id,
           display_name: displayName,
+        }, {
+          onConflict: 'id',
         })
         .select()
         .single()
 
       if (profileError) {
-        console.error('Error creating profile:', profileError)
+        console.error('Error creating/updating profile:', profileError)
       } else if (profileData) {
         // Update state immediately with the new profile
         setState((prev) => ({ ...prev, profile: profileData as Profile }))

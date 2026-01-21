@@ -18,18 +18,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Loader2, ExternalLink, Trash2, CheckCircle2, RefreshCw, Key, Eye, EyeOff } from 'lucide-react'
+import { Loader2, ExternalLink, Trash2, CheckCircle2, RefreshCw, Key, Eye, EyeOff, Pencil, Check, X } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default function Account() {
   const navigate = useNavigate()
-  const { user, profile, deleteAccount, refreshProfile: _refreshProfile, updatePassword } = useAuth()
+  const { user, profile, deleteAccount, refreshProfile: _refreshProfile, updatePassword, updateProfile } = useAuth()
   const { isPremium, diagnosticsUsed, diagnosticsRemaining } = useSubscription(profile)
 
   const [loading, setLoading] = useState<string | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState('')
   const [syncMessage, setSyncMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  // Display name edit state
+  const [editingName, setEditingName] = useState(false)
+  const [displayNameInput, setDisplayNameInput] = useState(profile?.display_name || '')
+  const [nameMessage, setNameMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   // Password change state
   const [newPassword, setNewPassword] = useState('')
@@ -150,6 +155,40 @@ export default function Account() {
     }
   }
 
+  async function handleSaveDisplayName() {
+    const trimmedName = displayNameInput.trim()
+    if (!trimmedName || trimmedName.length < 2) {
+      setNameMessage({ type: 'error', text: 'Le prénom doit contenir au moins 2 caractères' })
+      return
+    }
+
+    setLoading('name')
+    setNameMessage(null)
+
+    try {
+      await updateProfile({ display_name: trimmedName })
+      setNameMessage({ type: 'success', text: 'Prénom mis à jour !' })
+      setEditingName(false)
+    } catch (error) {
+      console.error('Name update error:', error)
+      setNameMessage({ type: 'error', text: 'Erreur lors de la mise à jour' })
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  function handleCancelEditName() {
+    setEditingName(false)
+    setDisplayNameInput(profile?.display_name || '')
+    setNameMessage(null)
+  }
+
+  function handleStartEditName() {
+    setEditingName(true)
+    setDisplayNameInput(profile?.display_name || '')
+    setNameMessage(null)
+  }
+
   return (
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
@@ -168,12 +207,63 @@ export default function Account() {
                 <p className="text-sm text-muted-foreground">Email</p>
                 <p className="font-medium">{user?.email}</p>
               </div>
-              {profile?.display_name && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Prénom</p>
-                  <p className="font-medium">{profile.display_name}</p>
-                </div>
-              )}
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Prénom</p>
+                {editingName ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={displayNameInput}
+                        onChange={(e) => setDisplayNameInput(e.target.value)}
+                        placeholder="Ton prénom"
+                        className="max-w-[200px]"
+                        autoFocus
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleSaveDisplayName}
+                        disabled={loading === 'name'}
+                        className="h-9 w-9 text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        {loading === 'name' ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleCancelEditName}
+                        disabled={loading === 'name'}
+                        className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {nameMessage && (
+                      <p className={`text-xs ${nameMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                        {nameMessage.text}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">
+                      {profile?.display_name || <span className="text-muted-foreground italic">Non renseigné</span>}
+                    </p>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleStartEditName}
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
               <div>
                 <p className="text-sm text-muted-foreground">Membre depuis</p>
                 <p className="font-medium">
