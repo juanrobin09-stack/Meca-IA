@@ -9,6 +9,7 @@ import Sidebar from '@/components/Sidebar'
 import ChatMessage from '@/components/ChatMessage'
 import PaywallModal from '@/components/PaywallModal'
 import PlateScanner from '@/components/PlateScanner'
+import DiagnosticResult from '@/components/DiagnosticResult'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
 
@@ -36,7 +37,21 @@ export default function Chat() {
   const { user, profile, refreshProfile } = useAuth()
   const { isPremium, diagnosticsRemaining, purchasedDiagnosticCredits, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
   const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
-  const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages, setMemoryContext } = useChat()
+  const {
+    messages,
+    isLoading,
+    error,
+    streamingContent,
+    sendMessage,
+    loadMessages,
+    clearMessages,
+    setMemoryContext,
+    setDiagnosticId,
+    finalDiagnosis,
+    phase,
+    requestDiagnosis,
+    canRequestDiagnosis
+  } = useChat()
   const memoryLoadedRef = useRef(false)
   const limitCheckedRef = useRef(false)
 
@@ -109,6 +124,7 @@ export default function Chat() {
 
   useEffect(() => {
     if (id) {
+      setDiagnosticId(id)
       loadDiagnostic(id).then((diag) => {
         if (diag) {
           // Ensure conversation is a valid array
@@ -123,9 +139,10 @@ export default function Chat() {
     } else {
       clearMessages()
       setCurrentDiagnostic(null)
+      setDiagnosticId(undefined)
       setIsNewConversation(true)
     }
-  }, [id, loadDiagnostic, loadMessages, navigate, clearMessages, setCurrentDiagnostic])
+  }, [id, loadDiagnostic, loadMessages, navigate, clearMessages, setCurrentDiagnostic, setDiagnosticId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -179,10 +196,11 @@ export default function Chat() {
     }
 
     try {
-      let diagnosticId = currentDiagnostic?.id
-      if (!diagnosticId) {
+      let diagId = currentDiagnostic?.id
+      if (!diagId) {
         const diag = await createDiagnostic(messageContent)
-        diagnosticId = diag.id
+        diagId = diag.id
+        setDiagnosticId(diagId)
         setIsNewConversation(false)
         if (!isPremium) {
           // Determine which credit type will be used BEFORE incrementing
@@ -198,19 +216,19 @@ export default function Chat() {
             setCurrentRemaining(prev => Math.max(0, prev - 1))
           }
         }
-        window.history.replaceState(null, '', `/app/chat/${diagnosticId}`)
+        window.history.replaceState(null, '', `/app/chat/${diagId}`)
       }
 
       const assistantMessage = await sendMessage(messageContent, imageBase64)
-      if (assistantMessage && diagnosticId) {
+      if (assistantMessage && diagId) {
         const userMessage: Message = {
           role: 'user',
           content: messageContent,
           timestamp: new Date().toISOString(),
           image: imageBase64 ? `data:image/jpeg;base64,${imageBase64}` : undefined,
         }
-        await addMessage(diagnosticId, userMessage)
-        await addMessage(diagnosticId, assistantMessage)
+        await addMessage(diagId, userMessage)
+        await addMessage(diagId, assistantMessage)
       }
     } catch {}
   }
@@ -426,6 +444,52 @@ export default function Chat() {
                       <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
                       <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
                     </div>
+                  </div>
+                )}
+
+                {/* Final Diagnosis Card */}
+                {finalDiagnosis && phase === 'completed' && (
+                  <div style={{ marginBottom: 16 }}>
+                    <DiagnosticResult diagnosis={finalDiagnosis} />
+                  </div>
+                )}
+
+                {/* Request Diagnosis Button */}
+                {canRequestDiagnosis && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, marginTop: 8 }}>
+                    <button
+                      onClick={async () => {
+                        const result = await requestDiagnosis()
+                        if (result && currentDiagnostic?.id) {
+                          const userMsg: Message = {
+                            role: 'user',
+                            content: '🔍 Obtenir mon diagnostic',
+                            timestamp: new Date().toISOString()
+                          }
+                          await addMessage(currentDiagnostic.id, userMsg)
+                          await addMessage(currentDiagnostic.id, result)
+                        }
+                      }}
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: 999,
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                        color: '#fff',
+                        boxShadow: '0 4px 12px rgba(59,130,246,0.3)',
+                        transition: 'transform 0.2s, box-shadow 0.2s'
+                      }}
+                      className="hover:scale-105 active:scale-95"
+                    >
+                      <span>🔍</span>
+                      Obtenir mon diagnostic
+                    </button>
                   </div>
                 )}
 

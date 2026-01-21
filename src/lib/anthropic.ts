@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import type { FinalDiagnosis, ChatResponse } from '@/types'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -8,6 +9,8 @@ export interface ChatMessage {
 
 export interface ChatOptions {
   memoryContext?: string
+  diagnosticId?: string
+  forceFinalize?: boolean
 }
 
 const API_BASE = import.meta.env.DEV
@@ -49,7 +52,50 @@ export async function sendMessage(messages: ChatMessage[], options?: ChatOptions
   return data.content
 }
 
-export async function* streamMessage(messages: ChatMessage[], options?: ChatOptions): AsyncGenerator<string> {
+// Extended response type for streaming with diagnosis
+export interface StreamResult {
+  content: string
+  diagnosis: FinalDiagnosis | null
+  phase: 'collecting' | 'completed'
+}
+
+export async function fetchChatResponse(messages: ChatMessage[], options?: ChatOptions): Promise<ChatResponse> {
+  const token = await getAuthToken()
+
+  if (!token) {
+    throw new Error('User not authenticated')
+  }
+
+  const response = await fetch(`${API_BASE}/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      messages,
+      stream: false,
+      memoryContext: options?.memoryContext,
+      diagnosticId: options?.diagnosticId,
+      forceFinalize: options?.forceFinalize
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    console.error('Chat API error:', error)
+    throw new Error('Failed to get response from AI')
+  }
+
+  const data = await response.json()
+  return {
+    content: data.content,
+    diagnosis: data.diagnosis || null,
+    phase: data.phase || 'collecting'
+  }
+}
+
+export async function* streamMessage(messages: ChatMessage[], options?: ChatOptions): AsyncGenerator<string, StreamResult> {
   const token = await getAuthToken()
 
   if (!token) {
@@ -67,7 +113,9 @@ export async function* streamMessage(messages: ChatMessage[], options?: ChatOpti
     body: JSON.stringify({
       messages,
       stream: true,
-      memoryContext: options?.memoryContext
+      memoryContext: options?.memoryContext,
+      diagnosticId: options?.diagnosticId,
+      forceFinalize: options?.forceFinalize
     }),
   })
 
@@ -86,6 +134,13 @@ export async function* streamMessage(messages: ChatMessage[], options?: ChatOpti
     yield text.slice(i, i + chunkSize)
     // Small delay to simulate streaming effect
     await new Promise(resolve => setTimeout(resolve, 10))
+  }
+
+  // Return the full result with diagnosis info
+  return {
+    content: text,
+    diagnosis: data.diagnosis || null,
+    phase: data.phase || 'collecting'
   }
 }
 

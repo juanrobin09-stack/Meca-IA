@@ -44,6 +44,27 @@ export interface Diagnostic {
   updated_at: string
 }
 
+// Final diagnosis structure returned by the AI tool
+export interface FinalDiagnosis {
+  diagnosis_summary: string
+  urgency_level: 'low' | 'medium' | 'high'
+  estimated_cost_min: number
+  estimated_cost_max: number
+  confidence_percent: number
+  problem_identified: string
+  causes: string[]
+  recommendations: string[]
+  diy_difficulty?: number
+  parts_needed?: Array<{ name: string; price_estimate: string }>
+}
+
+// Chat response from API
+export interface ChatResponse {
+  content: string
+  diagnosis?: FinalDiagnosis | null
+  phase: 'collecting' | 'completed'
+}
+
 export interface Payment {
   id: string
   user_id: string
