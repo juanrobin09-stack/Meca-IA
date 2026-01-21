@@ -30,6 +30,7 @@ import {
   Euro
 } from 'lucide-react'
 import type { DevisAnalysis, VideoDiagnostic } from '@/types'
+import { jsPDF } from 'jspdf'
 
 // Helper function to convert analysis_result to string (handles both old string format and new JSON format)
 function getAnalysisText(analysisResult: string | object | null | undefined): string {
@@ -206,7 +207,7 @@ export default function History() {
     <div className="min-h-screen bg-muted/40">
       <Sidebar />
 
-      <main className="md:pl-64 pb-20 md:pb-0">
+      <main className="md:pl-64 pb-32 md:pb-8">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <h1 className="text-2xl md:text-3xl font-bold">Mon historique</h1>
@@ -586,46 +587,129 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
   }
 
   const exportToPDF = () => {
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Analyse de Devis - MECAI</title>
-        <style>
-          * { box-sizing: border-box; }
-          body { font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #fff; }
-          .header { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 24px; border-radius: 16px; margin-bottom: 24px; }
-          .header h1 { margin: 0 0 8px 0; font-size: 24px; }
-          .header p { margin: 0; opacity: 0.9; font-size: 14px; }
-          .verdict-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-weight: 600; margin-top: 12px; }
-          .section { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-          .analysis { white-space: pre-wrap; line-height: 1.8; color: #475569; }
-          .footer { margin-top: 32px; padding-top: 16px; border-top: 2px solid #e2e8f0; color: #64748b; font-size: 12px; text-align: center; }
-          @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>🔧 Analyse de Devis</h1>
-          <p>Analysé le ${new Date(devis.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-          <div class="verdict-badge">${verdictStyle.emoji} ${verdictStyle.label}</div>
-        </div>
-        ${devis.potential_savings ? `<div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 16px 20px; border-radius: 12px; margin-bottom: 16px; text-align: center;"><div style="font-size: 14px; opacity: 0.9;">💰 Économie potentielle</div><div style="font-size: 28px; font-weight: 700;">${devis.potential_savings}€</div></div>` : ''}
-        <div class="section">
-          <div class="analysis">${getAnalysisText(devis.analysis_result).replace(/\n/g, '<br>')}</div>
-        </div>
-        <div class="footer">
-          <p><strong>MECAI</strong> - Votre assistant automobile intelligent</p>
-        </div>
-      </body>
-      </html>
-    `
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      printWindow.document.write(printContent)
-      printWindow.document.close()
-      printWindow.focus()
-      setTimeout(() => printWindow.print(), 250)
+    try {
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const margin = 20
+      let y = 20
+
+      // Helper function to add text with word wrap
+      const addText = (text: string, size: number = 10, style: 'normal' | 'bold' = 'normal') => {
+        doc.setFontSize(size)
+        doc.setFont('helvetica', style)
+        const lines = doc.splitTextToSize(text, pageWidth - margin * 2)
+
+        // Check if we need a new page
+        if (y + lines.length * (size * 0.5) > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage()
+          y = 20
+        }
+
+        doc.text(lines, margin, y)
+        y += lines.length * (size * 0.5) + 3
+      }
+
+      const addLine = () => {
+        y += 2
+        doc.setDrawColor(200)
+        doc.line(margin, y, pageWidth - margin, y)
+        y += 5
+      }
+
+      // Header
+      doc.setFillColor(37, 99, 235)
+      doc.rect(0, 0, pageWidth, 35, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('ANALYSE DE DEVIS', pageWidth / 2, 15, { align: 'center' })
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'normal')
+      doc.text('MECA-IA - Assistant Automobile', pageWidth / 2, 25, { align: 'center' })
+
+      y = 45
+      doc.setTextColor(0, 0, 0)
+
+      // Date
+      addText(`Date d'analyse: ${new Date(devis.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, 10)
+
+      addLine()
+
+      // Verdict
+      const verdictText = devis.verdict_type === 'good' ? 'BON PRIX' : devis.verdict_type === 'warning' ? 'NEGOCIABLE' : devis.verdict_type === 'bad' ? 'TROP CHER' : 'ANALYSE'
+
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+
+      if (devis.verdict_type === 'good') doc.setTextColor(16, 185, 129)
+      else if (devis.verdict_type === 'warning') doc.setTextColor(245, 158, 11)
+      else if (devis.verdict_type === 'bad') doc.setTextColor(239, 68, 68)
+      else doc.setTextColor(59, 130, 246)
+
+      doc.text(`VERDICT: ${verdictText}`, pageWidth / 2, y, { align: 'center' })
+      y += 10
+
+      doc.setTextColor(0, 0, 0)
+
+      // Potential savings
+      if (devis.potential_savings && devis.potential_savings > 0) {
+        doc.setFillColor(239, 68, 68)
+        doc.roundedRect(margin, y, pageWidth - margin * 2, 20, 3, 3, 'F')
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.text(`Economie potentielle: ${devis.potential_savings} EUR`, pageWidth / 2, y + 12, { align: 'center' })
+        y += 28
+        doc.setTextColor(0, 0, 0)
+      }
+
+      addLine()
+
+      // Analysis content
+      addText('DETAILS DE L\'ANALYSE', 12, 'bold')
+      y += 3
+
+      const analysisText = getAnalysisText(devis.analysis_result)
+      const lines = analysisText.split('\n')
+
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+        if (!trimmedLine) {
+          y += 3
+          continue
+        }
+
+        if (trimmedLine.startsWith('#')) {
+          doc.setFont('helvetica', 'bold')
+          doc.setFontSize(11)
+          addText(trimmedLine.replace(/^#+\s*/, ''), 11, 'bold')
+        } else if (trimmedLine.includes('[OK]') || trimmedLine.includes('correct')) {
+          doc.setTextColor(16, 185, 129)
+          addText(trimmedLine.replace(/[✅]/g, '[OK]'), 9)
+          doc.setTextColor(0, 0, 0)
+        } else if (trimmedLine.includes('[!]') || trimmedLine.includes('eleve')) {
+          doc.setTextColor(245, 158, 11)
+          addText(trimmedLine.replace(/[⚠️🔶]/g, '[!]'), 9)
+          doc.setTextColor(0, 0, 0)
+        } else if (trimmedLine.includes('[X]') || trimmedLine.includes('excessif')) {
+          doc.setTextColor(239, 68, 68)
+          addText(trimmedLine.replace(/[❌🚫]/g, '[X]'), 9)
+          doc.setTextColor(0, 0, 0)
+        } else {
+          addText(trimmedLine, 9)
+        }
+      }
+
+      // Footer
+      doc.setTextColor(128, 128, 128)
+      doc.setFontSize(8)
+      doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+
+      // Save
+      doc.save(`analyse-devis-${new Date().toISOString().split('T')[0]}.pdf`)
+    } catch (err) {
+      console.error('Erreur PDF:', err)
+      alert('Erreur lors de la generation du PDF. Veuillez reessayer.')
     }
   }
 
@@ -830,61 +914,119 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
   }
 
   const exportToPDF = () => {
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Diagnostic Vidéo - MECAI</title>
-        <style>
-          body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-          h1 { color: #3b82f6; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
-          h2 { color: #1f2937; margin-top: 20px; }
-          .urgency { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: bold; }
-          .urgency-critique { background: #fecaca; color: #dc2626; }
-          .urgency-elevee { background: #fed7aa; color: #ea580c; }
-          .urgency-moyenne { background: #fef08a; color: #ca8a04; }
-          .urgency-faible { background: #bbf7d0; color: #16a34a; }
-          ul { line-height: 1.8; }
-          .cost { font-size: 24px; color: #3b82f6; font-weight: bold; }
-          .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
-        </style>
-      </head>
-      <body>
-        <h1>🎥 Diagnostic Vidéo - MECAI</h1>
-        <p style="color: #6b7280;">Analysé le ${new Date(video.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+    try {
+      const doc = new jsPDF()
+      const pageWidth = doc.internal.pageSize.getWidth()
+      const margin = 20
+      let y = 20
 
-        <h2>${urgencyStyle.icon} ${video.probleme_identifie}</h2>
-        <p><span class="urgency urgency-${video.urgence}">Urgence: ${video.urgence}</span></p>
-        <p>${video.description_visuelle}</p>
+      // Helper function to add text with word wrap
+      const addText = (text: string, size: number = 10, style: 'normal' | 'bold' = 'normal') => {
+        doc.setFontSize(size)
+        doc.setFont('helvetica', style)
+        const lines = doc.splitTextToSize(text, pageWidth - margin * 2)
 
-        <h2>⚠️ Causes possibles</h2>
-        <ul>
-          ${video.causes_possibles.map(c => `<li>${c}</li>`).join('')}
-        </ul>
+        if (y + lines.length * (size * 0.5) > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage()
+          y = 20
+        }
 
-        <h2>🔧 Pièces concernées</h2>
-        <ul>
-          ${video.pieces_concernees.map(p => `<li>${p}</li>`).join('')}
-        </ul>
+        doc.text(lines, margin, y)
+        y += lines.length * (size * 0.5) + 3
+      }
 
-        <h2>💰 Estimation coût</h2>
-        <p class="cost">${video.estimation_cout_min}€ - ${video.estimation_cout_max}€</p>
+      const addLine = () => {
+        y += 2
+        doc.setDrawColor(200)
+        doc.line(margin, y, pageWidth - margin, y)
+        y += 5
+      }
 
-        <h2>📋 Recommandations</h2>
-        <p>${video.recommandations}</p>
+      // Header
+      doc.setFillColor(37, 99, 235)
+      doc.rect(0, 0, pageWidth, 35, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont('helvetica', 'bold')
+      doc.text('DIAGNOSTIC VIDEO', pageWidth / 2, 15, { align: 'center' })
+      doc.setFontSize(11)
+      doc.setFont('helvetica', 'normal')
+      doc.text('MECA-IA - Assistant Automobile', pageWidth / 2, 25, { align: 'center' })
 
-        <div class="footer">
-          <p>Ce rapport a été généré par MECAI - Votre assistant automobile intelligent.</p>
-        </div>
-      </body>
-      </html>
-    `
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      printWindow.document.write(printContent)
-      printWindow.document.close()
-      printWindow.focus()
-      setTimeout(() => printWindow.print(), 250)
+      y = 45
+      doc.setTextColor(0, 0, 0)
+
+      // Date
+      addText(`Date d'analyse: ${new Date(video.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, 10)
+
+      addLine()
+
+      // Urgency
+      const urgencyLabel = video.urgence === 'critique' ? 'CRITIQUE' : video.urgence === 'élevée' ? 'ELEVEE' : video.urgence === 'moyenne' ? 'MOYENNE' : 'FAIBLE'
+
+      if (video.urgence === 'critique') doc.setTextColor(239, 68, 68)
+      else if (video.urgence === 'élevée') doc.setTextColor(234, 88, 12)
+      else if (video.urgence === 'moyenne') doc.setTextColor(202, 138, 4)
+      else doc.setTextColor(22, 163, 74)
+
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`URGENCE: ${urgencyLabel}`, pageWidth / 2, y, { align: 'center' })
+      y += 10
+
+      doc.setTextColor(0, 0, 0)
+
+      // Problem identified
+      addText('PROBLEME IDENTIFIE', 12, 'bold')
+      addText(video.probleme_identifie, 11)
+      y += 3
+
+      // Description
+      addText('Description visuelle:', 10, 'bold')
+      addText(video.description_visuelle, 9)
+
+      addLine()
+
+      // Causes
+      addText('CAUSES POSSIBLES', 12, 'bold')
+      video.causes_possibles.forEach(cause => {
+        addText(`• ${cause}`, 9)
+      })
+
+      y += 3
+
+      // Parts
+      addText('PIECES CONCERNEES', 12, 'bold')
+      video.pieces_concernees.forEach(piece => {
+        addText(`• ${piece}`, 9)
+      })
+
+      addLine()
+
+      // Cost estimation
+      doc.setFillColor(59, 130, 246)
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 20, 3, 3, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`Estimation: ${video.estimation_cout_min} EUR - ${video.estimation_cout_max} EUR`, pageWidth / 2, y + 12, { align: 'center' })
+      y += 28
+      doc.setTextColor(0, 0, 0)
+
+      // Recommendations
+      addText('RECOMMANDATIONS', 12, 'bold')
+      addText(video.recommandations, 9)
+
+      // Footer
+      doc.setTextColor(128, 128, 128)
+      doc.setFontSize(8)
+      doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+
+      // Save
+      doc.save(`diagnostic-video-${new Date().toISOString().split('T')[0]}.pdf`)
+    } catch (err) {
+      console.error('Erreur PDF:', err)
+      alert('Erreur lors de la generation du PDF. Veuillez reessayer.')
     }
   }
 

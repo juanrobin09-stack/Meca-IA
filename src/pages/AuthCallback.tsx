@@ -1,17 +1,46 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import Logo from '@/components/Logo'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [errorDetails, setErrorDetails] = useState<string | null>(null)
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        // Check for OAuth error in URL params (Google returns errors this way)
+        const errorParam = searchParams.get('error')
+        const errorDescription = searchParams.get('error_description')
+
+        if (errorParam) {
+          console.error('OAuth Error:', errorParam, errorDescription)
+          setStatus('error')
+
+          // Handle specific OAuth errors
+          if (errorParam === 'access_denied') {
+            setErrorMessage('Connexion annulée')
+            setErrorDetails('Tu as annulé la connexion Google.')
+          } else if (errorDescription?.includes('redirect_uri_mismatch')) {
+            setErrorMessage('Erreur de configuration OAuth')
+            setErrorDetails(
+              'L\'URL de redirection n\'est pas autorisée dans Google Cloud Console. ' +
+              'Contacte le support pour résoudre ce problème.'
+            )
+          } else {
+            setErrorMessage(errorDescription || 'Erreur lors de la connexion')
+            setErrorDetails(`Code erreur: ${errorParam}`)
+          }
+
+          setTimeout(() => navigate('/login'), 5000)
+          return
+        }
+
         // Supabase gère automatiquement le callback OAuth via detectSessionInUrl
         const { data: { session }, error } = await supabase.auth.getSession()
 
@@ -24,7 +53,7 @@ export default function AuthCallback() {
         }
 
         if (session) {
-          console.log('✅ Connecté avec Google:', session.user.email)
+          console.log('Connecté avec Google:', session.user.email)
 
           // Vérifier/créer le profil
           const { error: profileError } = await supabase
@@ -43,7 +72,7 @@ export default function AuthCallback() {
               id: session.user.id,
               display_name: displayName,
             })
-            console.log('✅ Profil créé pour:', displayName)
+            console.log('Profil créé pour:', displayName)
           }
 
           setStatus('success')
@@ -55,6 +84,7 @@ export default function AuthCallback() {
         } else {
           setStatus('error')
           setErrorMessage('Aucune session trouvée')
+          setErrorDetails('La connexion n\'a pas pu être établie. Réessaie.')
           setTimeout(() => navigate('/login'), 3000)
         }
       } catch (err) {
@@ -66,7 +96,7 @@ export default function AuthCallback() {
     }
 
     handleCallback()
-  }, [navigate])
+  }, [navigate, searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
@@ -99,7 +129,12 @@ export default function AuthCallback() {
           <>
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2 text-red-600">Erreur de connexion</h2>
-            <p className="text-muted-foreground mb-4">{errorMessage}</p>
+            <p className="text-muted-foreground mb-2">{errorMessage}</p>
+            {errorDetails && (
+              <p className="text-sm text-muted-foreground/80 mb-4 bg-muted/50 p-3 rounded-lg">
+                {errorDetails}
+              </p>
+            )}
             <p className="text-sm text-muted-foreground">
               Redirection vers la page de connexion...
             </p>
