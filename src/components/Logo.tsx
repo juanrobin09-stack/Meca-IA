@@ -5,9 +5,18 @@ interface LogoProps {
   showText?: boolean
   linkTo?: string
   className?: string
+  variant?: 'default' | 'dark' | 'icon'
 }
 
-export default function Logo({ size = 'md', showText = true, linkTo, className = '' }: LogoProps) {
+export default function Logo({
+  size = 'md',
+  showText = true,
+  linkTo,
+  className = '',
+  variant: _variant = 'default'
+}: LogoProps) {
+  // _variant is available for future external SVG file loading
+  void _variant
   const sizes = {
     sm: { icon: 32, text: 'text-lg', gap: 'gap-2' },
     md: { icon: 40, text: 'text-xl', gap: 'gap-2.5' },
@@ -16,97 +25,108 @@ export default function Logo({ size = 'md', showText = true, linkTo, className =
 
   const s = sizes[size]
 
+  // Gradient IDs uniques pour éviter les conflits
+  const gradientId = `mecai-grad-${Math.random().toString(36).substr(2, 9)}`
+  const textGradientId = `mecai-text-${Math.random().toString(36).substr(2, 9)}`
+
   const logoContent = (
     <div className={`flex items-center ${s.gap} ${className}`}>
-      {/* Logo SVG - Tête AI + engrenage mécanique */}
+      {/* Logo SVG - Voiture stylisée + réseau IA */}
       <svg
         width={s.icon}
         height={s.icon}
-        viewBox="0 0 64 64"
+        viewBox="0 0 48 48"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="shrink-0"
       >
         <defs>
-          <linearGradient id="headGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#93C5FD" />
-            <stop offset="50%" stopColor="#60A5FA" />
-            <stop offset="100%" stopColor="#3B82F6" />
+          {/* Gradient radial pour fond */}
+          <radialGradient id={`${gradientId}-bg`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#1e293b"/>
+            <stop offset="100%" stopColor="#0f172a"/>
+          </radialGradient>
+
+          {/* Gradient principal orange → rose → bleu */}
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f97316"/>
+            <stop offset="50%" stopColor="#f43f5e"/>
+            <stop offset="100%" stopColor="#3b82f6"/>
           </linearGradient>
-          <linearGradient id="faceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#DBEAFE" />
-            <stop offset="100%" stopColor="#93C5FD" />
-          </linearGradient>
-          <linearGradient id="circuitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#60A5FA" />
-            <stop offset="100%" stopColor="#3B82F6" />
-          </linearGradient>
+
+          {/* Glow effect */}
+          <radialGradient id={`${gradientId}-glow`} cx="50%" cy="70%" r="50%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.3"/>
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0"/>
+          </radialGradient>
         </defs>
 
-        {/* Orbite/anneau */}
-        <ellipse
-          cx="32"
-          cy="34"
-          rx="28"
-          ry="10"
-          stroke="url(#circuitGradient)"
-          strokeWidth="1.5"
-          fill="none"
-          opacity="0.6"
-        />
+        {/* Background avec coins arrondis */}
+        <rect width="48" height="48" fill={`url(#${gradientId}-bg)`} rx="10"/>
 
-        {/* Tête polygonale style low-poly */}
-        <path
-          d="M32 8 L44 16 L48 28 L44 42 L38 48 L26 48 L20 42 L16 28 L20 16 Z"
-          fill="url(#headGradient)"
-          stroke="#2563EB"
-          strokeWidth="1"
-        />
+        {/* Glow subtil */}
+        <ellipse cx="24" cy="30" rx="16" ry="4" fill={`url(#${gradientId}-glow)`} opacity="0.5"/>
 
-        {/* Face interne */}
-        <path
-          d="M32 12 L40 18 L43 28 L40 38 L36 42 L28 42 L24 38 L21 28 L24 18 Z"
-          fill="url(#faceGradient)"
-          opacity="0.4"
-        />
+        {/* Icon : Voiture + IA */}
+        <g transform="translate(6, 10)">
+          {/* Carrosserie fluide */}
+          <path
+            d="M 6 14 Q 10 6, 18 6 L 26 6 Q 30 6, 32 10 L 34 14 Q 36 18, 32 22 L 6 22 Q 2 18, 6 14 Z"
+            fill={`url(#${gradientId})`}
+          />
 
-        {/* Lignes de structure */}
-        <path
-          d="M32 12 L32 42 M24 18 L40 38 M40 18 L24 38"
-          stroke="#2563EB"
-          strokeWidth="0.75"
-          opacity="0.5"
-        />
+          {/* Circuit IA */}
+          <g stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.9">
+            <line x1="10" y1="12" x2="13" y2="12"/>
+            <line x1="17" y1="12" x2="20" y2="12"/>
+            <line x1="24" y1="12" x2="27" y2="12"/>
+            <circle cx="11.5" cy="12" r="1.5" fill="white"/>
+            <circle cx="18.5" cy="12" r="1.5" fill="white"/>
+            <circle cx="25.5" cy="12" r="1.5" fill="white"/>
+          </g>
 
-        {/* Yeux */}
-        <circle cx="26" cy="26" r="3" fill="#1D4ED8" />
-        <circle cx="38" cy="26" r="3" fill="#1D4ED8" />
-        <circle cx="26" cy="26" r="1.5" fill="#93C5FD" />
-        <circle cx="38" cy="26" r="1.5" fill="#93C5FD" />
+          {/* Roues */}
+          <circle cx="10" cy="22" r="3" fill="#0f172a"/>
+          <circle cx="10" cy="22" r="2.2" fill={`url(#${gradientId})`}/>
+          <circle cx="28" cy="22" r="3" fill="#0f172a"/>
+          <circle cx="28" cy="22" r="2.2" fill={`url(#${gradientId})`}/>
 
-        {/* Points de circuit sur l'orbite */}
-        <circle cx="8" cy="34" r="2.5" fill="#60A5FA" />
-        <circle cx="56" cy="34" r="2.5" fill="#60A5FA" />
-        <circle cx="32" cy="44" r="2" fill="#3B82F6" />
-
-        {/* Lignes de connexion */}
-        <line x1="8" y1="34" x2="16" y2="34" stroke="#60A5FA" strokeWidth="1.5" />
-        <line x1="48" y1="34" x2="56" y2="34" stroke="#60A5FA" strokeWidth="1.5" />
-        <line x1="32" y1="44" x2="32" y2="48" stroke="#3B82F6" strokeWidth="1.5" />
-
-        {/* Petits détails tech */}
-        <rect x="29" y="32" width="6" height="4" rx="1" fill="#2563EB" opacity="0.6" />
+          {/* Highlight */}
+          <path d="M 22 8 Q 25 6.5, 28 8" stroke="white" strokeWidth="1" opacity="0.4" strokeLinecap="round" fill="none"/>
+        </g>
       </svg>
 
-      {/* Texte */}
+      {/* Texte avec gradient */}
       {showText && (
         <div className="flex flex-col leading-none">
-          <span className={`${s.text} font-bold tracking-tight`}>
-            <span className="text-gray-800 dark:text-white">MEC</span><span className="text-blue-500">AI</span>
-          </span>
+          <svg
+            width={size === 'lg' ? 90 : size === 'md' ? 70 : 55}
+            height={size === 'lg' ? 28 : size === 'md' ? 22 : 18}
+            viewBox="0 0 90 28"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id={textGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f97316"/>
+                <stop offset="40%" stopColor="#f43f5e"/>
+                <stop offset="100%" stopColor="#3b82f6"/>
+              </linearGradient>
+            </defs>
+            <text
+              x="0"
+              y="22"
+              fontFamily="'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+              fontSize="26"
+              fontWeight="800"
+              fill={`url(#${textGradientId})`}
+              letterSpacing="-0.03em"
+            >
+              MECAI
+            </text>
+          </svg>
           {size === 'lg' && (
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 tracking-widest mt-0.5">
-              COPILOTE MÉCANIQUE
+            <span className="text-[10px] bg-gradient-to-r from-orange-500 via-rose-500 to-blue-500 bg-clip-text text-transparent font-semibold tracking-widest mt-1">
+              TON EXPERT AUTO PAR IA
             </span>
           )}
         </div>
