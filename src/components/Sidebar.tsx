@@ -11,7 +11,6 @@ import { Tooltip } from '@/components/ui/tooltip'
 import Logo from '@/components/Logo'
 import {
   Home,
-  MessageSquarePlus,
   History,
   User,
   LogOut,
@@ -43,8 +42,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/app', icon: Home, label: 'Accueil', shortLabel: 'Accueil', mobileShow: true },
   { href: '/app/mechanic-chat', icon: MessageCircle, label: 'Chat Mécanicien 24/7', shortLabel: 'Chat', mobileShow: true },
-  { href: '/app/chat', icon: MessageSquarePlus, label: 'Diagnostic IA', shortLabel: 'Diagnostic' },
-  { href: '/app/diagnostic-pro', icon: Microscope, label: 'Diagnostic PRO', shortLabel: 'PRO', tier: 'premium' },
+  { href: '/app/diagnostic-pro', icon: Microscope, label: 'Diagnostic PRO', shortLabel: 'Diagnostic', tier: 'premium' },
   { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis' },
   { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic vidéo', shortLabel: 'Vidéo', tier: 'premium' },
   { href: '/app/prevision-pannes', icon: TrendingUp, label: 'Prévision pannes', shortLabel: 'Prévision', tier: 'premium' },
