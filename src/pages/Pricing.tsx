@@ -260,7 +260,7 @@ export default function Pricing() {
                     <tr>
                       <td className="p-3">Historique</td>
                       <td className="p-3 text-center"><X className="h-4 w-4 mx-auto text-gray-400" /></td>
-                      <td className="p-3 text-center font-medium text-primary">Complet + PDF</td>
+                      <td className="p-3 text-center font-medium text-primary">Complet</td>
                     </tr>
                     <tr>
                       <td className="p-3">Support</td>
