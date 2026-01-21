@@ -65,6 +65,62 @@ export interface ChatResponse {
   phase: 'collecting' | 'completed'
 }
 
+// Diagnostic PRO types
+export interface DiagnosticProCause {
+  cause: string
+  probabilite: 'élevée' | 'moyenne' | 'faible'
+  explication: string
+}
+
+export interface DiagnosticProPart {
+  name: string
+  reference?: string
+  price_estimate: string
+}
+
+export interface DiagnosticProTSB {
+  reference: string
+  description: string
+  url?: string
+}
+
+export interface FinalDiagnosisPro {
+  diagnosis_summary: string
+  causes_possibles: DiagnosticProCause[]
+  urgency_level: 'faible' | 'moyen' | 'urgent'
+  estimated_cost_min: number
+  estimated_cost_max: number
+  confidence_percent?: number
+  problem_identified?: string
+  recommandations: string[]
+  difficulty_diy?: 'facile' | 'moyen' | 'difficile' | 'impossible'
+  parts_needed?: DiagnosticProPart[]
+  time_estimate?: string
+  sources: string[]
+  tsb_found?: DiagnosticProTSB[]
+  risks_if_ignored?: string[]
+}
+
+export interface DiagnosticProSession {
+  id: string
+  user_id: string
+  title: string
+  status: 'active' | 'completed'
+  messages: Array<{
+    role: 'user' | 'assistant'
+    content: string
+    images?: string[]
+  }>
+  diagnosis_summary?: string
+  urgency_level?: 'faible' | 'moyen' | 'urgent'
+  estimated_cost_min?: number
+  estimated_cost_max?: number
+  final_diagnosis?: FinalDiagnosisPro
+  sources_collected?: string[]
+  created_at: string
+  updated_at: string
+}
+
 export interface Payment {
   id: string
   user_id: string
