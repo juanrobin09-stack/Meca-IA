@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-icons": "node scripts/generate-icons.mjs"
+    "generate-icons": "node scripts/generate-icons.mjs",
+    "generate-google-logo": "node scripts/generate-google-logo.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
