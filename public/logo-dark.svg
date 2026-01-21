@@ -1,14 +1,14 @@
 <svg width="140" height="32" viewBox="0 0 140 32" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="badge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f97316"/>
-      <stop offset="50%" stop-color="#f43f5e"/>
-      <stop offset="100%" stop-color="#3b82f6"/>
+    <linearGradient id="badge-grad-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="50%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
     </linearGradient>
   </defs>
 
   <!-- Badge M minimal -->
-  <rect x="0" y="4" width="24" height="24" rx="6" fill="url(#badge-grad)"/>
+  <rect x="0" y="4" width="24" height="24" rx="6" fill="url(#badge-grad-dark)"/>
 
   <!-- Lettre M dans le badge -->
   <text
@@ -21,14 +21,14 @@
     fill="white"
   >M</text>
 
-  <!-- Texte MECAI -->
+  <!-- Texte MECAI en blanc -->
   <text
     x="34"
     y="23"
     font-family="'SF Pro Display', 'Inter', -apple-system, system-ui, sans-serif"
     font-size="22"
     font-weight="800"
-    fill="#0f172a"
+    fill="white"
     letter-spacing="-0.02em"
   >MECAI</text>
 </svg>
