@@ -29,6 +29,7 @@ const PrevisionPannes = lazy(() => import('@/pages/PrevisionPannes'))
 const MechanicChat = lazy(() => import('@/pages/MechanicChat'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
+const VehicleHistory = lazy(() => import('@/pages/VehicleHistory'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -233,6 +234,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/vehicle-history"
+              element={
+                <ProtectedRoute>
+                  <VehicleHistory />
                 </ProtectedRoute>
               }
             />
