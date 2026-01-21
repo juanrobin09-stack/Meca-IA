@@ -46,7 +46,7 @@ export const PLANS = {
       'Diagnostic vidéo IA',
       'Prévision de pannes intelligente',
       'Chat mécanicien 24/7 illimité',
-      'Historique complet',
+      'Historique complet + export PDF',
       'Analyse multi-photos',
       'Notifications intelligentes',
       'Support prioritaire',
