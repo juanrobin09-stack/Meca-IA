@@ -74,22 +74,21 @@ export function useAuth() {
     if (error) {
       console.error('Error fetching profile:', error)
       // Profile doesn't exist yet - wait and retry a few times
-      // This handles the race condition during signup where signUp creates the profile
+      // The database trigger should create the profile automatically
       if (error.code === 'PGRST116') {
-        if (retryCount < 3) {
-          // Wait a bit for signUp to create the profile with display_name
-          await new Promise(resolve => setTimeout(resolve, 500))
+        if (retryCount < 5) {
+          // Wait a bit for the database trigger to create the profile
+          await new Promise(resolve => setTimeout(resolve, 800))
           return fetchProfile(userId, retryCount + 1)
         }
-        // After retries, create minimal profile (fallback for edge cases)
-        const { data: newProfile } = await supabase
-          .from('profiles')
-          .insert({ id: userId })
-          .select()
-          .single()
-        setState((prev) => ({ ...prev, profile: newProfile as Profile, loading: false }))
+        // After retries, profile still doesn't exist - log error but continue
+        console.error('Profile not found after retries - trigger may have failed')
+        setState((prev) => ({ ...prev, profile: null, loading: false }))
         return
       }
+      // Other errors - just set loading to false
+      setState((prev) => ({ ...prev, loading: false }))
+      return
     }
 
     setState((prev) => ({ ...prev, profile: data as Profile, loading: false }))
@@ -110,6 +109,7 @@ export function useAuth() {
         .from('profiles')
         .upsert({
           id: data.user.id,
+          email: email, // Required field - NOT NULL in database
           display_name: displayName,
         }, {
           onConflict: 'id',
