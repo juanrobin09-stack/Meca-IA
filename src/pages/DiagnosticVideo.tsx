@@ -11,6 +11,7 @@ import { useSubscription } from '@/hooks/useSubscription'
 import PaywallModal from '@/components/PaywallModal'
 import ResultatAnalyseVideo from '@/components/ResultatAnalyseVideo'
 import { VideoHashService } from '@/services/videoHashService'
+import { supabase } from '@/lib/supabase'
 import type { VideoAnalysisResult } from '@/types/video'
 import {
   Video,
@@ -270,9 +271,47 @@ export default function DiagnosticVideo() {
       const analysisResult = await response.json() as VideoAnalysisResult
       setResult(analysisResult)
 
-      // 5. Save for future consistency
+      // 5. Save for future consistency (cache)
       setAnalysisStep('Sauvegarde...')
       await VideoHashService.saveAnalysis(user.id, videoHash, analysisResult)
+
+      // 6. Save to history (video_diagnostics table)
+      try {
+        // Map urgency values to match database constraint
+        const mapUrgency = (urgence: string): string => {
+          const mapping: Record<string, string> = {
+            'critique': 'critique',
+            'important': 'élevée',
+            'moyen': 'moyenne',
+            'faible': 'faible'
+          }
+          return mapping[urgence] || 'moyenne'
+        }
+
+        const historyData = {
+          user_id: user.id,
+          probleme_identifie: analysisResult.verdict?.diagnostic || analysisResult.synthesis?.probleme_principal || 'Diagnostic vidéo',
+          description_visuelle: analysisResult.frames_analyses?.map(f => f.observations.join(', ')).join(' | ') || '',
+          causes_possibles: analysisResult.synthesis?.causes_probables?.map(c => c.cause) || [],
+          urgence: mapUrgency(analysisResult.verdict?.urgence || analysisResult.synthesis?.urgence || 'moyen'),
+          pieces_concernees: analysisResult.verdict?.pieces_a_remplacer || analysisResult.synthesis?.pieces_concernees || [],
+          estimation_cout_min: analysisResult.verdict?.cout_estime?.pieces || 0,
+          estimation_cout_max: analysisResult.verdict?.cout_estime?.total || 0,
+          recommandations: analysisResult.verdict?.recommandations?.join('\n') || analysisResult.synthesis?.recommandations?.join('\n') || ''
+        }
+
+        const { error: historyError } = await supabase
+          .from('video_diagnostics')
+          .insert(historyData)
+
+        if (historyError) {
+          console.warn('Error saving video diagnostic to history:', historyError.message)
+        } else {
+          console.log('✅ Video diagnostic saved to history')
+        }
+      } catch (historyErr) {
+        console.warn('Error saving to history:', historyErr)
+      }
 
     } catch (err) {
       console.error('Analysis error:', err)

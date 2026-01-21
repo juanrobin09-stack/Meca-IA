@@ -580,6 +580,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
         await onDelete(devis.id)
       } catch (error) {
         console.error('Error deleting devis:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+        alert(`Impossible de supprimer le devis: ${errorMessage}\n\nAssurez-vous que la migration RLS a été appliquée dans Supabase.`)
       } finally {
         setIsDeleting(false)
       }
@@ -749,19 +751,44 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
       const pdfBlob = doc.output('blob')
       const blobUrl = URL.createObjectURL(pdfBlob)
 
-      // Create download link
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = filename
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
+      // Detect if mobile
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link)
-        URL.revokeObjectURL(blobUrl)
-      }, 100)
+      if (isMobile) {
+        // On mobile, open in new window/tab for download
+        const newWindow = window.open(blobUrl, '_blank')
+        if (!newWindow) {
+          // Fallback: try the download link method
+          const link = document.createElement('a')
+          link.href = blobUrl
+          link.download = filename
+          link.target = '_blank'
+          link.rel = 'noopener noreferrer'
+          document.body.appendChild(link)
+          link.click()
+          setTimeout(() => {
+            document.body.removeChild(link)
+            URL.revokeObjectURL(blobUrl)
+          }, 1000)
+        } else {
+          // Cleanup after delay
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+        }
+      } else {
+        // Desktop: use download link
+        const link = document.createElement('a')
+        link.href = blobUrl
+        link.download = filename
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link)
+          URL.revokeObjectURL(blobUrl)
+        }, 100)
+      }
 
       console.log('[PDF] PDF saved successfully')
     } catch (err) {
@@ -964,6 +991,8 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
         await onDelete(video.id)
       } catch (error) {
         console.error('Error deleting video diagnostic:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
+        alert(`Impossible de supprimer le diagnostic vidéo: ${errorMessage}\n\nAssurez-vous que la migration RLS a été appliquée dans Supabase.`)
       } finally {
         setIsDeleting(false)
       }
@@ -1116,19 +1145,44 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
       const pdfBlob = doc.output('blob')
       const blobUrl = URL.createObjectURL(pdfBlob)
 
-      // Create download link
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.download = filename
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      link.click()
+      // Detect if mobile
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
-      // Cleanup
-      setTimeout(() => {
-        document.body.removeChild(link)
-        URL.revokeObjectURL(blobUrl)
-      }, 100)
+      if (isMobile) {
+        // On mobile, open in new window/tab for download
+        const newWindow = window.open(blobUrl, '_blank')
+        if (!newWindow) {
+          // Fallback: try the download link method
+          const link = document.createElement('a')
+          link.href = blobUrl
+          link.download = filename
+          link.target = '_blank'
+          link.rel = 'noopener noreferrer'
+          document.body.appendChild(link)
+          link.click()
+          setTimeout(() => {
+            document.body.removeChild(link)
+            URL.revokeObjectURL(blobUrl)
+          }, 1000)
+        } else {
+          // Cleanup after delay
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
+        }
+      } else {
+        // Desktop: use download link
+        const link = document.createElement('a')
+        link.href = blobUrl
+        link.download = filename
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link)
+          URL.revokeObjectURL(blobUrl)
+        }, 100)
+      }
 
       console.log('[PDF] Video PDF saved successfully')
     } catch (err) {

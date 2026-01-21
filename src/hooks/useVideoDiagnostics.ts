@@ -39,7 +39,11 @@ export function useVideoDiagnostics(userId: string | undefined) {
   }, [loadVideoDiagnostics])
 
   const deleteVideoDiagnostic = useCallback(async (id: string) => {
-    if (!userId) return
+    if (!userId) {
+      throw new Error('Utilisateur non connecté')
+    }
+
+    console.log('[useVideoDiagnostics] Deleting video diagnostic:', id, 'for user:', userId)
 
     const { error } = await supabase
       .from('video_diagnostics')
@@ -48,10 +52,11 @@ export function useVideoDiagnostics(userId: string | undefined) {
       .eq('user_id', userId)
 
     if (error) {
-      console.error('Error deleting video diagnostic:', error)
-      throw error
+      console.error('[useVideoDiagnostics] Delete error:', error)
+      throw new Error(`Erreur de suppression: ${error.message}`)
     }
 
+    console.log('[useVideoDiagnostics] Video diagnostic deleted successfully')
     setVideoDiagnostics(prev => prev.filter(d => d.id !== id))
   }, [userId])
 

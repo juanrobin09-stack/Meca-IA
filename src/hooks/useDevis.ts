@@ -108,16 +108,30 @@ export function useDevis(userId: string | undefined) {
 
   const deleteDevis = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from('devis_analyses').delete().eq('id', id)
+      if (!userId) {
+        throw new Error('Utilisateur non connecté')
+      }
 
-      if (error) throw error
+      console.log('[useDevis] Deleting devis:', id, 'for user:', userId)
 
+      const { error } = await supabase
+        .from('devis_analyses')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
+
+      if (error) {
+        console.error('[useDevis] Delete error:', error)
+        throw new Error(`Erreur de suppression: ${error.message}`)
+      }
+
+      console.log('[useDevis] Devis deleted successfully')
       setDevisList((prev) => prev.filter((d) => d.id !== id))
       if (currentDevis?.id === id) {
         setCurrentDevis(null)
       }
     },
-    [currentDevis]
+    [currentDevis, userId]
   )
 
   return {
