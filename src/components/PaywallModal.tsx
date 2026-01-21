@@ -36,13 +36,15 @@ const defaultContent: Record<PaywallMode, {
   diagnostic: {
     title: 'Tes 2 diagnostics gratuits sont épuisés',
     subtitle: 'Passe Premium pour créer des diagnostics illimités et un suivi complet de ta voiture.',
-    unitLabel: '1 diagnostic immédiat',
-    unitButton: 'Acheter 1 diagnostic',
-    unitPrice: '2.99€',
-    priceId: STRIPE_PRICES.PAY_PER_USE,
+    unitLabel: '',
+    unitButton: '',
+    unitPrice: '',
+    priceId: '',
     productType: 'diagnostic',
+    hideUnitPurchase: true, // No single purchase - only Premium
     features: [
       'Diagnostics IA illimités',
+      'Diagnostic PRO avec recherche web',
       'Diagnostic vidéo IA',
       'Analyseur de devis (anti-arnaque)',
       'Prévision de pannes',
