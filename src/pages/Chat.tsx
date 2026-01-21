@@ -4,7 +4,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
 import { useChat } from '@/hooks/useChat'
-import { useConfetti } from '@/hooks/useConfetti'
 import { AIMemoryService } from '@/services/aiMemoryService'
 import Sidebar from '@/components/Sidebar'
 import ChatMessage from '@/components/ChatMessage'
@@ -24,13 +23,6 @@ interface VehicleInfo {
 const MAX_PHOTOS_PER_CONVERSATION = 2
 const MAX_MESSAGES_PER_DIAGNOSTIC = 15
 
-function isDiagnosticComplete(content: string): boolean {
-  const hasEstimation = content.includes('Estimation') || content.includes('estimation')
-  const hasDiagnostic = content.includes('Diagnostic') || content.includes('diagnostic')
-  const hasPieces = content.includes('pièce') || content.includes('Pièce')
-  return (hasEstimation && hasDiagnostic) || hasPieces
-}
-
 const EXAMPLE_QUESTIONS = [
   { text: 'Ma voiture fait un bruit au freinage', icon: '🔊' },
   { text: 'Voyant moteur allumé', icon: '🚨' },
@@ -44,8 +36,6 @@ export default function Chat() {
   const { isPremium, diagnosticsRemaining, purchasedDiagnosticCredits, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
   const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
   const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages, setMemoryContext } = useChat()
-  const { celebrate } = useConfetti()
-  const hasConfettiedRef = useRef(false)
   const memoryLoadedRef = useRef(false)
 
   const [input, setInput] = useState('')
@@ -65,6 +55,14 @@ export default function Chat() {
   const userMessagesCount = messages.filter(m => m.role === 'user').length
   const messagesRemaining = MAX_MESSAGES_PER_DIAGNOSTIC - userMessagesCount
   const isAtMessageLimit = !isPremium && userMessagesCount >= MAX_MESSAGES_PER_DIAGNOSTIC && !isNewConversation
+
+  // Sync counter with profile changes
+  useEffect(() => {
+    if (!isPremium) {
+      setCurrentRemaining(diagnosticsRemaining)
+      setCurrentPurchasedCredits(purchasedDiagnosticCredits)
+    }
+  }, [isPremium, diagnosticsRemaining, purchasedDiagnosticCredits])
 
   useEffect(() => {
     async function checkLimitOnLoad() {
@@ -122,15 +120,6 @@ export default function Chat() {
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px'
     }
   }, [input])
-
-  useEffect(() => {
-    if (hasConfettiedRef.current) return
-    const lastMessage = messages[messages.length - 1]
-    if (lastMessage?.role === 'assistant' && isDiagnosticComplete(lastMessage.content)) {
-      hasConfettiedRef.current = true
-      celebrate()
-    }
-  }, [messages, celebrate])
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
