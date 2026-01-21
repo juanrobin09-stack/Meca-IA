@@ -24,7 +24,6 @@ const NotFound = lazy(() => import('@/pages/NotFound'))
 const Pricing = lazy(() => import('@/pages/Pricing'))
 const Vehicles = lazy(() => import('@/pages/Vehicles'))
 const DiagnosticVideo = lazy(() => import('@/pages/DiagnosticVideo'))
-const VideoChatAlex = lazy(() => import('@/pages/VideoChatAlex'))
 const PrevisionPannes = lazy(() => import('@/pages/PrevisionPannes'))
 const MechanicChat = lazy(() => import('@/pages/MechanicChat'))
 const Settings = lazy(() => import('@/pages/Settings'))
@@ -202,14 +201,6 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <DiagnosticVideo />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/video-chat"
-              element={
-                <ProtectedRoute>
-                  <VideoChatAlex />
                 </ProtectedRoute>
               }
             />

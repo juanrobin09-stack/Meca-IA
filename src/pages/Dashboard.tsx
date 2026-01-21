@@ -240,35 +240,6 @@ export default function Dashboard() {
               </Card>
             </motion.div>
 
-            {/* Chat Vidéo Live - Feature Premium */}
-            <Link to="/app/video-chat">
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="mb-6"
-              >
-                <Card className="bg-gradient-to-r from-purple-600 to-pink-600 text-white border-0 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden">
-                  <div className="absolute top-2 right-2">
-                    <Badge className="bg-white/20 text-white border-0 text-[10px]">
-                      ✨ Premium
-                    </Badge>
-                  </div>
-                  <CardContent className="flex items-center gap-4 p-5">
-                    <div className="h-14 w-14 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 text-2xl">
-                      🎥
-                    </div>
-                    <div className="flex-1">
-                      <h2 className="font-bold text-lg">Chat Vidéo Live</h2>
-                      <p className="text-sm text-purple-100">
-                        Montre ta voiture, Alex analyse en direct
-                      </p>
-                    </div>
-                    <div className="hidden sm:block text-3xl">→</div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Link>
-
             {/* Actions rapides */}
             <div className="grid grid-cols-2 gap-3 mb-6">
               <Link to="/app/history">
