@@ -95,32 +95,34 @@ export function useAuth() {
   }
 
   async function signUp(email: string, password: string, displayName?: string) {
+    // Include display_name in user metadata so the database trigger can use it
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          display_name: displayName,
+        }
+      }
     })
 
     if (error) throw error
 
-    // Create or update profile with display name using upsert to handle race condition
-    // (onAuthStateChange may create an empty profile before this runs)
+    // The database trigger (handle_new_user) will create the profile automatically
+    // using the display_name from raw_user_meta_data
+    // We just need to wait for it and fetch the profile
     if (data.user) {
-      const { data: profileData, error: profileError } = await supabase
+      // Wait a bit for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Try to fetch the profile (trigger should have created it)
+      const { data: profileData } = await supabase
         .from('profiles')
-        .upsert({
-          id: data.user.id,
-          email: email, // Required field - NOT NULL in database
-          display_name: displayName,
-        }, {
-          onConflict: 'id',
-        })
-        .select()
+        .select('*')
+        .eq('id', data.user.id)
         .single()
 
-      if (profileError) {
-        console.error('Error creating/updating profile:', profileError)
-      } else if (profileData) {
-        // Update state immediately with the new profile
+      if (profileData) {
         setState((prev) => ({ ...prev, profile: profileData as Profile }))
       }
     }
