@@ -203,7 +203,7 @@ export default function Vehicles() {
                   Mes véhicules
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                  {maxVehicles === Infinity
+                  {isPremium
                     ? `${vehicles.length} véhicule${vehicles.length !== 1 ? 's' : ''} • Illimité`
                     : `${vehicles.length}/${maxVehicles} véhicule${maxVehicles !== 1 ? 's' : ''}`
                   }

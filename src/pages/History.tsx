@@ -586,31 +586,39 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
     }
   }
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    console.log('[PDF] Starting PDF export for devis:', devis.id)
     try {
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
       const margin = 20
       let y = 20
 
-      // Helper function to add text with word wrap
+      // Helper function to add text with word wrap and page breaks
       const addText = (text: string, size: number = 10, style: 'normal' | 'bold' = 'normal') => {
+        if (!text) return
         doc.setFontSize(size)
         doc.setFont('helvetica', style)
-        const lines = doc.splitTextToSize(text, pageWidth - margin * 2)
+        const lines = doc.splitTextToSize(String(text), pageWidth - margin * 2)
 
         // Check if we need a new page
-        if (y + lines.length * (size * 0.5) > doc.internal.pageSize.getHeight() - 20) {
+        const lineHeight = size * 0.5
+        if (y + lines.length * lineHeight > pageHeight - 20) {
           doc.addPage()
           y = 20
         }
 
         doc.text(lines, margin, y)
-        y += lines.length * (size * 0.5) + 3
+        y += lines.length * lineHeight + 3
       }
 
       const addLine = () => {
         y += 2
+        if (y > pageHeight - 30) {
+          doc.addPage()
+          y = 20
+        }
         doc.setDrawColor(200)
         doc.line(margin, y, pageWidth - margin, y)
         y += 5
@@ -631,12 +639,19 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
       doc.setTextColor(0, 0, 0)
 
       // Date
-      addText(`Date d'analyse: ${new Date(devis.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, 10)
+      const dateStr = new Date(devis.created_at).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+      addText(`Date d'analyse: ${dateStr}`, 10)
 
       addLine()
 
       // Verdict
-      const verdictText = devis.verdict_type === 'good' ? 'BON PRIX' : devis.verdict_type === 'warning' ? 'NEGOCIABLE' : devis.verdict_type === 'bad' ? 'TROP CHER' : 'ANALYSE'
+      const verdictText = devis.verdict_type === 'good' ? 'BON PRIX' :
+                         devis.verdict_type === 'warning' ? 'NEGOCIABLE' :
+                         devis.verdict_type === 'bad' ? 'TROP CHER' : 'ANALYSE'
 
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
@@ -653,7 +668,11 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
 
       // Potential savings
       if (devis.potential_savings && devis.potential_savings > 0) {
-        doc.setFillColor(239, 68, 68)
+        if (y + 30 > pageHeight - 20) {
+          doc.addPage()
+          y = 20
+        }
+        doc.setFillColor(16, 185, 129) // Green for savings
         doc.roundedRect(margin, y, pageWidth - margin * 2, 20, 3, 3, 'F')
         doc.setTextColor(255, 255, 255)
         doc.setFontSize(12)
@@ -670,46 +689,66 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
       y += 3
 
       const analysisText = getAnalysisText(devis.analysis_result)
-      const lines = analysisText.split('\n')
+      if (analysisText) {
+        const lines = analysisText.split('\n')
 
-      for (const line of lines) {
-        const trimmedLine = line.trim()
-        if (!trimmedLine) {
-          y += 3
-          continue
-        }
+        for (const line of lines) {
+          const trimmedLine = line.trim()
+          if (!trimmedLine) {
+            y += 3
+            continue
+          }
 
-        if (trimmedLine.startsWith('#')) {
-          doc.setFont('helvetica', 'bold')
-          doc.setFontSize(11)
-          addText(trimmedLine.replace(/^#+\s*/, ''), 11, 'bold')
-        } else if (trimmedLine.includes('[OK]') || trimmedLine.includes('correct')) {
-          doc.setTextColor(16, 185, 129)
-          addText(trimmedLine.replace(/[✅]/g, '[OK]'), 9)
-          doc.setTextColor(0, 0, 0)
-        } else if (trimmedLine.includes('[!]') || trimmedLine.includes('eleve')) {
-          doc.setTextColor(245, 158, 11)
-          addText(trimmedLine.replace(/[⚠️🔶]/g, '[!]'), 9)
-          doc.setTextColor(0, 0, 0)
-        } else if (trimmedLine.includes('[X]') || trimmedLine.includes('excessif')) {
-          doc.setTextColor(239, 68, 68)
-          addText(trimmedLine.replace(/[❌🚫]/g, '[X]'), 9)
-          doc.setTextColor(0, 0, 0)
-        } else {
-          addText(trimmedLine, 9)
+          // Clean emojis for PDF (replace with text markers)
+          let cleanLine = trimmedLine
+            .replace(/✅/g, '[OK] ')
+            .replace(/⚠️/g, '[!] ')
+            .replace(/🔶/g, '[!] ')
+            .replace(/❌/g, '[X] ')
+            .replace(/🚫/g, '[X] ')
+            .replace(/💬/g, '> ')
+            .replace(/[^\x00-\x7F\u00C0-\u00FF\u0100-\u017F]/g, '') // Remove other emojis
+
+          if (cleanLine.startsWith('#')) {
+            doc.setFont('helvetica', 'bold')
+            doc.setFontSize(11)
+            doc.setTextColor(0, 0, 0)
+            addText(cleanLine.replace(/^#+\s*/, ''), 11, 'bold')
+          } else if (cleanLine.includes('[OK]') || cleanLine.toLowerCase().includes('correct')) {
+            doc.setTextColor(16, 185, 129)
+            addText(cleanLine, 9)
+            doc.setTextColor(0, 0, 0)
+          } else if (cleanLine.includes('[!]') || cleanLine.toLowerCase().includes('eleve')) {
+            doc.setTextColor(245, 158, 11)
+            addText(cleanLine, 9)
+            doc.setTextColor(0, 0, 0)
+          } else if (cleanLine.includes('[X]') || cleanLine.toLowerCase().includes('excessif')) {
+            doc.setTextColor(239, 68, 68)
+            addText(cleanLine, 9)
+            doc.setTextColor(0, 0, 0)
+          } else {
+            doc.setTextColor(60, 60, 60)
+            addText(cleanLine, 9)
+            doc.setTextColor(0, 0, 0)
+          }
         }
       }
 
-      // Footer
+      // Footer on last page
       doc.setTextColor(128, 128, 128)
       doc.setFontSize(8)
-      doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+      doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, pageHeight - 10, { align: 'center' })
 
-      // Save
-      doc.save(`analyse-devis-${new Date().toISOString().split('T')[0]}.pdf`)
+      // Generate filename with safe characters
+      const dateForFile = new Date().toISOString().split('T')[0]
+      const filename = `analyse-devis-${dateForFile}.pdf`
+
+      console.log('[PDF] Saving PDF:', filename)
+      doc.save(filename)
+      console.log('[PDF] PDF saved successfully')
     } catch (err) {
-      console.error('Erreur PDF:', err)
-      alert('Erreur lors de la generation du PDF. Veuillez reessayer.')
+      console.error('[PDF] Error generating PDF:', err)
+      alert(`Erreur lors de la génération du PDF: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
     }
   }
 
@@ -766,7 +805,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
         <div className="space-y-4">
           {/* Preview or full analysis */}
           {showFull ? (
-            <div className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-xl p-4 max-h-96 overflow-y-auto">
+            <div id={`devis-analysis-${devis.id}`} className="text-sm text-muted-foreground leading-relaxed bg-muted/30 rounded-xl p-4 max-h-[50vh] overflow-y-auto">
               {getAnalysisText(devis.analysis_result).split('\n').map((line, i) => {
                 const trimmedLine = line.trim()
                 if (!trimmedLine) return <div key={i} className="h-2" />
@@ -913,30 +952,38 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
     }
   }
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
+    console.log('[PDF] Starting PDF export for video diagnostic:', video.id)
     try {
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
+      const pageHeight = doc.internal.pageSize.getHeight()
       const margin = 20
       let y = 20
 
-      // Helper function to add text with word wrap
+      // Helper function to add text with word wrap and page breaks
       const addText = (text: string, size: number = 10, style: 'normal' | 'bold' = 'normal') => {
+        if (!text) return
         doc.setFontSize(size)
         doc.setFont('helvetica', style)
-        const lines = doc.splitTextToSize(text, pageWidth - margin * 2)
+        const lines = doc.splitTextToSize(String(text), pageWidth - margin * 2)
 
-        if (y + lines.length * (size * 0.5) > doc.internal.pageSize.getHeight() - 20) {
+        const lineHeight = size * 0.5
+        if (y + lines.length * lineHeight > pageHeight - 20) {
           doc.addPage()
           y = 20
         }
 
         doc.text(lines, margin, y)
-        y += lines.length * (size * 0.5) + 3
+        y += lines.length * lineHeight + 3
       }
 
       const addLine = () => {
         y += 2
+        if (y > pageHeight - 30) {
+          doc.addPage()
+          y = 20
+        }
         doc.setDrawColor(200)
         doc.line(margin, y, pageWidth - margin, y)
         y += 5
@@ -957,12 +1004,19 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
       doc.setTextColor(0, 0, 0)
 
       // Date
-      addText(`Date d'analyse: ${new Date(video.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, 10)
+      const dateStr = new Date(video.created_at).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+      addText(`Date d'analyse: ${dateStr}`, 10)
 
       addLine()
 
       // Urgency
-      const urgencyLabel = video.urgence === 'critique' ? 'CRITIQUE' : video.urgence === 'élevée' ? 'ELEVEE' : video.urgence === 'moyenne' ? 'MOYENNE' : 'FAIBLE'
+      const urgencyLabel = video.urgence === 'critique' ? 'CRITIQUE' :
+                          video.urgence === 'élevée' ? 'ELEVEE' :
+                          video.urgence === 'moyenne' ? 'MOYENNE' : 'FAIBLE'
 
       if (video.urgence === 'critique') doc.setTextColor(239, 68, 68)
       else if (video.urgence === 'élevée') doc.setTextColor(234, 88, 12)
@@ -978,55 +1032,72 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
 
       // Problem identified
       addText('PROBLEME IDENTIFIE', 12, 'bold')
-      addText(video.probleme_identifie, 11)
+      addText(video.probleme_identifie || 'Non spécifié', 11)
       y += 3
 
       // Description
       addText('Description visuelle:', 10, 'bold')
-      addText(video.description_visuelle, 9)
+      addText(video.description_visuelle || 'Non spécifiée', 9)
 
       addLine()
 
       // Causes
       addText('CAUSES POSSIBLES', 12, 'bold')
-      video.causes_possibles.forEach(cause => {
-        addText(`• ${cause}`, 9)
-      })
+      if (video.causes_possibles && video.causes_possibles.length > 0) {
+        video.causes_possibles.forEach(cause => {
+          addText(`• ${cause}`, 9)
+        })
+      } else {
+        addText('Non spécifiées', 9)
+      }
 
       y += 3
 
       // Parts
       addText('PIECES CONCERNEES', 12, 'bold')
-      video.pieces_concernees.forEach(piece => {
-        addText(`• ${piece}`, 9)
-      })
+      if (video.pieces_concernees && video.pieces_concernees.length > 0) {
+        video.pieces_concernees.forEach(piece => {
+          addText(`• ${piece}`, 9)
+        })
+      } else {
+        addText('Non spécifiées', 9)
+      }
 
       addLine()
 
       // Cost estimation
+      if (y + 30 > pageHeight - 20) {
+        doc.addPage()
+        y = 20
+      }
       doc.setFillColor(59, 130, 246)
       doc.roundedRect(margin, y, pageWidth - margin * 2, 20, 3, 3, 'F')
       doc.setTextColor(255, 255, 255)
       doc.setFontSize(12)
       doc.setFont('helvetica', 'bold')
-      doc.text(`Estimation: ${video.estimation_cout_min} EUR - ${video.estimation_cout_max} EUR`, pageWidth / 2, y + 12, { align: 'center' })
+      doc.text(`Estimation: ${video.estimation_cout_min || 0} EUR - ${video.estimation_cout_max || 0} EUR`, pageWidth / 2, y + 12, { align: 'center' })
       y += 28
       doc.setTextColor(0, 0, 0)
 
       // Recommendations
       addText('RECOMMANDATIONS', 12, 'bold')
-      addText(video.recommandations, 9)
+      addText(video.recommandations || 'Non spécifiées', 9)
 
-      // Footer
+      // Footer on last page
       doc.setTextColor(128, 128, 128)
       doc.setFontSize(8)
-      doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
+      doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, pageHeight - 10, { align: 'center' })
 
-      // Save
-      doc.save(`diagnostic-video-${new Date().toISOString().split('T')[0]}.pdf`)
+      // Generate filename with safe characters
+      const dateForFile = new Date().toISOString().split('T')[0]
+      const filename = `diagnostic-video-${dateForFile}.pdf`
+
+      console.log('[PDF] Saving video PDF:', filename)
+      doc.save(filename)
+      console.log('[PDF] Video PDF saved successfully')
     } catch (err) {
-      console.error('Erreur PDF:', err)
-      alert('Erreur lors de la generation du PDF. Veuillez reessayer.')
+      console.error('[PDF] Error generating video PDF:', err)
+      alert(`Erreur lors de la génération du PDF: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
     }
   }
 

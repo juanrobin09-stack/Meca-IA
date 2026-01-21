@@ -26,11 +26,12 @@ export default function AuthCallback() {
           if (errorParam === 'access_denied') {
             setErrorMessage('Connexion annulée')
             setErrorDetails('Tu as annulé la connexion Google.')
-          } else if (errorDescription?.includes('redirect_uri_mismatch')) {
+          } else if (errorDescription?.includes('redirect_uri_mismatch') || errorParam === 'redirect_uri_mismatch') {
             setErrorMessage('Erreur de configuration OAuth')
             setErrorDetails(
-              'L\'URL de redirection n\'est pas autorisée dans Google Cloud Console. ' +
-              'Contacte le support pour résoudre ce problème.'
+              'L\'URL de redirection Supabase doit être ajoutée dans Google Cloud Console → ' +
+              'APIs & Services → Credentials → OAuth 2.0 Client ID → Authorized redirect URIs. ' +
+              'URL à ajouter : https://dgcryodwrwqdxgghrjpp.supabase.co/auth/v1/callback'
             )
           } else {
             setErrorMessage(errorDescription || 'Erreur lors de la connexion')
