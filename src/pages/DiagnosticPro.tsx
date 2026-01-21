@@ -309,11 +309,12 @@ export default function DiagnosticPro() {
 
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center text-base md:text-xl"
+              <div className="w-9 h-9 md:w-11 md:h-11 rounded-full overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
                   boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)'
-                }}>🔬</div>
+                }}>
+                <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
+              </div>
               <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-neutral-950"></div>
             </div>
 
@@ -363,11 +364,12 @@ export default function DiagnosticPro() {
             {messages.length === 0 ? (
               /* Empty State */
               <div className="text-center pt-[5vh] md:pt-[10vh]">
-                <div className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-xl md:rounded-2xl mx-auto mb-4 md:mb-5 flex items-center justify-center text-2xl md:text-4xl"
+                <div className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-xl md:rounded-2xl mx-auto mb-4 md:mb-5 overflow-hidden"
                   style={{
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
                     boxShadow: '0 12px 32px rgba(139, 92, 246, 0.4)'
-                  }}>🔬</div>
+                  }}>
+                  <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
+                </div>
                 <h2 className="text-lg md:text-[22px] font-bold mb-1 md:mb-2 text-neutral-900 dark:text-white">
                   Diagnostic PRO
                 </h2>
@@ -419,8 +421,9 @@ export default function DiagnosticPro() {
                     className={`flex mb-3 md:mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {message.role === 'assistant' && (
-                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm mr-2 flex-shrink-0"
-                        style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>🔬</div>
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
+                        <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
+                      </div>
                     )}
                     <div
                       className={`max-w-[85%] md:max-w-[80%] px-3 py-2 md:px-4 md:py-3 rounded-2xl ${
@@ -453,8 +456,9 @@ export default function DiagnosticPro() {
                 {/* Loading indicator */}
                 {loading && (
                   <div className="flex gap-2 mb-3 md:mb-4">
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm"
-                      style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>🔬</div>
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden flex-shrink-0">
+                      <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
+                    </div>
                     <div className="px-3 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800">
                       {searching ? (
                         <>

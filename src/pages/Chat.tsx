@@ -284,13 +284,11 @@ export default function Chat() {
                 width: 40,
                 height: 40,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 18,
+                overflow: 'hidden',
                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}>🔬</div>
+              }}>
+                <img src="/logo-icon.svg" alt="Meca IA" style={{ width: '100%', height: '100%' }} />
+              </div>
               <div style={{
                 position: 'absolute',
                 bottom: -2,
@@ -355,14 +353,12 @@ export default function Chat() {
                   width: 64,
                   height: 64,
                   borderRadius: 16,
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 32,
+                  overflow: 'hidden',
                   margin: '0 auto 16px',
                   boxShadow: '0 8px 24px rgba(59,130,246,0.3)'
-                }}>🔬</div>
+                }}>
+                  <img src="/logo-icon.svg" alt="Meca IA" style={{ width: '100%', height: '100%' }} />
+                </div>
                 <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }} className="text-neutral-900 dark:text-white">Comment puis-je t'aider ?</h2>
                 <p style={{ marginBottom: 24 }} className="text-neutral-500 dark:text-neutral-400">Décris ton problème auto</p>
 
@@ -433,12 +429,10 @@ export default function Chat() {
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 14
-                    }}>🔬</div>
+                      overflow: 'hidden'
+                    }}>
+                      <img src="/logo-icon.svg" alt="Meca IA" style={{ width: '100%', height: '100%' }} />
+                    </div>
                     <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', gap: 4 }} className="bg-neutral-100 dark:bg-neutral-800">
                       <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
                       <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
