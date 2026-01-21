@@ -107,7 +107,7 @@ function formatAnalysisObject(obj: any): string {
 export default function History() {
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
-  const { diagnostics, loading: loadingDiagnostics } = useDiagnostics(user?.id)
+  const { diagnostics, loading: loadingDiagnostics, deleteDiagnostic } = useDiagnostics(user?.id)
   const { devisList, loading: loadingDevis, deleteDevis } = useDevis(user?.id)
   const { videoDiagnostics, loading: loadingVideo, deleteVideoDiagnostic } = useVideoDiagnostics(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -339,7 +339,7 @@ export default function History() {
               ) : (
                 <div className="space-y-4">
                   {filteredDiagnostics.map((diagnostic) => (
-                    <DiagnosticCard key={diagnostic.id} diagnostic={diagnostic} />
+                    <DiagnosticCard key={diagnostic.id} diagnostic={diagnostic} onDelete={deleteDiagnostic} />
                   ))}
                 </div>
               )}

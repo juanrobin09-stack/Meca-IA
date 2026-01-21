@@ -96,12 +96,23 @@ export function useAuth() {
 
     if (error) throw error
 
-    // Create profile with display name
+    // Create profile with display name and fetch it to update state
     if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        display_name: displayName,
-      })
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          display_name: displayName,
+        })
+        .select()
+        .single()
+
+      if (profileError) {
+        console.error('Error creating profile:', profileError)
+      } else if (profileData) {
+        // Update state immediately with the new profile
+        setState((prev) => ({ ...prev, profile: profileData as Profile }))
+      }
     }
 
     return data

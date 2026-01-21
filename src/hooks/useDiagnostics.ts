@@ -141,16 +141,30 @@ export function useDiagnostics(userId: string | undefined) {
 
   const deleteDiagnostic = useCallback(
     async (id: string) => {
-      const { error } = await supabase.from('diagnostics').delete().eq('id', id)
+      if (!userId) {
+        throw new Error('Utilisateur non connecté')
+      }
 
-      if (error) throw error
+      console.log('[useDiagnostics] Deleting diagnostic:', id, 'for user:', userId)
 
+      const { error } = await supabase
+        .from('diagnostics')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', userId)
+
+      if (error) {
+        console.error('[useDiagnostics] Delete error:', error)
+        throw new Error(`Erreur de suppression: ${error.message}`)
+      }
+
+      console.log('[useDiagnostics] Diagnostic deleted successfully')
       setDiagnostics((prev) => prev.filter((d) => d.id !== id))
       if (currentDiagnostic?.id === id) {
         setCurrentDiagnostic(null)
       }
     },
-    [currentDiagnostic]
+    [currentDiagnostic, userId]
   )
 
   return {
