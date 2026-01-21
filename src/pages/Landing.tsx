@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import Logo from '@/components/Logo'
 import PageTransition from '@/components/PageTransition'
-import { Zap, MessageSquare, Euro, CheckCircle2, X, AlertTriangle, Star, Car, MapPin, ShoppingCart, FileText, Sparkles, Gauge, Shield } from 'lucide-react'
+import { Zap, MessageSquare, Euro, CheckCircle2, X, AlertTriangle, Star, Car, MapPin, ShoppingCart, FileText, Sparkles, Gauge, Shield, Wrench } from 'lucide-react'
 import { PLANS } from '@/config/plans'
 
 // Composant pour le fond blanc animé ultra moderne
@@ -372,6 +372,7 @@ export default function Landing() {
               { icon: Car, title: "Mes véhicules", desc: "Enregistre tes voitures", color: "violet" },
               { icon: MapPin, title: "Trouver un garage", desc: "Garages de confiance près de toi", color: "rose" },
               { icon: ShoppingCart, title: "Comparer les pièces", desc: "Meilleurs prix Oscaro, Yakarouler", color: "cyan" },
+              { icon: Wrench, title: "Chat mécanicien", desc: "Discute avec un pro en direct", color: "orange" },
             ].map((feature, i) => (
               <motion.div
                 key={i}
