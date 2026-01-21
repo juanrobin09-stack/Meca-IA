@@ -298,66 +298,33 @@ export default function DiagnosticPro() {
         {/* HEADER */}
         <div style={{
           flexShrink: 0,
-          padding: '12px 16px',
-          paddingTop: 'max(env(safe-area-inset-top), 12px)'
-        }} className="bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '900px', margin: '0 auto' }}>
+          paddingTop: 'max(env(safe-area-inset-top), 8px)'
+        }} className="px-3 py-2 md:px-4 md:py-3 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+          <div className="flex items-center gap-2 md:gap-3 max-w-[900px] mx-auto">
             {/* Back button (mobile) */}
             <button
               onClick={() => navigate('/app')}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: '50%',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 16
-              }}
-              className="md:hidden bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+              className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-sm bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
             >←</button>
 
             {/* Avatar */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 20,
-                boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)'
-              }}>🔬</div>
-              <div style={{
-                position: 'absolute',
-                bottom: -2,
-                right: -2,
-                width: 14,
-                height: 14,
-                backgroundColor: '#22c55e',
-                borderRadius: '50%',
-                border: '2px solid #fff'
-              }}></div>
+            <div className="relative flex-shrink-0">
+              <div className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center text-base md:text-xl"
+                style={{
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)'
+                }}>🔬</div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-neutral-950"></div>
             </div>
 
             {/* Title */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }} className="text-neutral-900 dark:text-white">
-                Diagnostic PRO
-                <span style={{
-                  fontSize: 9,
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: 4,
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                  color: '#fff'
-                }}>AVANCÉ</span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm md:text-base font-bold flex items-center gap-1.5 text-neutral-900 dark:text-white">
+                <span className="truncate">Diagnostic PRO</span>
+                <span className="text-[8px] md:text-[9px] font-semibold px-1.5 py-0.5 rounded"
+                  style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', color: '#fff' }}>PRO</span>
               </div>
-              <div style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }} className="text-neutral-500 dark:text-neutral-400">
+              <div className="text-[10px] md:text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                 <span>Expert auto</span>
                 {sourcesCount > 0 && (
                   <span className="text-emerald-500">• {sourcesCount} sources</span>
@@ -366,36 +333,22 @@ export default function DiagnosticPro() {
             </div>
 
             {/* Counter */}
-            <div style={{
-              padding: '4px 10px',
-              borderRadius: 999,
-              fontSize: 12,
-              fontWeight: 500,
-              whiteSpace: 'nowrap'
-            }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-              {isPremium ? '∞' : `${currentRemaining}/2 diag`}
+            <div className="px-2 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              {isPremium ? '∞' : `${currentRemaining}/2`}
               {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
             </div>
           </div>
 
-          {/* Pro features banner */}
-          <div style={{ maxWidth: '900px', margin: '8px auto 0' }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '8px 12px',
-              borderRadius: 8,
-              fontSize: 11,
-              overflowX: 'auto'
-            }} className="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400">
-              <span>🔍 Recherche TSB</span>
-              <span>•</span>
-              <span>📷 Vision IA</span>
-              <span>•</span>
-              <span>💰 Prix vérifiés</span>
-              <span>•</span>
-              <span>📋 Rapport complet</span>
+          {/* Pro features banner - hidden on small mobile, compact on larger */}
+          <div className="hidden xs:block max-w-[900px] mx-auto mt-2">
+            <div className="flex items-center gap-2 md:gap-3 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[9px] md:text-[11px] overflow-x-auto scrollbar-hide bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400">
+              <span className="whitespace-nowrap">🔍 TSB</span>
+              <span className="text-violet-300 dark:text-violet-600">•</span>
+              <span className="whitespace-nowrap">📷 Vision IA</span>
+              <span className="text-violet-300 dark:text-violet-600">•</span>
+              <span className="whitespace-nowrap">💰 Prix</span>
+              <span className="text-violet-300 dark:text-violet-600">•</span>
+              <span className="whitespace-nowrap">📋 Rapport</span>
             </div>
           </div>
         </div>
@@ -404,57 +357,35 @@ export default function DiagnosticPro() {
         <div style={{
           flex: 1,
           overflowY: 'auto',
-          padding: 16,
           WebkitOverflowScrolling: 'touch'
-        }}>
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        }} className="p-3 md:p-4">
+          <div className="max-w-[900px] mx-auto">
             {messages.length === 0 ? (
               /* Empty State */
-              <div style={{ textAlign: 'center', paddingTop: '10vh' }}>
-                <div style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 18,
-                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 36,
-                  margin: '0 auto 20px',
-                  boxShadow: '0 12px 32px rgba(139, 92, 246, 0.4)'
-                }}>🔬</div>
-                <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }} className="text-neutral-900 dark:text-white">
-                  Diagnostic Professionnel
+              <div className="text-center pt-[5vh] md:pt-[10vh]">
+                <div className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-xl md:rounded-2xl mx-auto mb-4 md:mb-5 flex items-center justify-center text-2xl md:text-4xl"
+                  style={{
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%)',
+                    boxShadow: '0 12px 32px rgba(139, 92, 246, 0.4)'
+                  }}>🔬</div>
+                <h2 className="text-lg md:text-[22px] font-bold mb-1 md:mb-2 text-neutral-900 dark:text-white">
+                  Diagnostic PRO
                 </h2>
-                <p style={{ marginBottom: 8, maxWidth: 400, margin: '0 auto 24px' }} className="text-neutral-500 dark:text-neutral-400">
-                  Analyse approfondie avec recherche temps réel de TSB, prix et forums techniques
+                <p className="text-xs md:text-sm max-w-[300px] md:max-w-[400px] mx-auto mb-4 md:mb-6 text-neutral-500 dark:text-neutral-400">
+                  Analyse approfondie avec TSB, prix vérifiés et rapport complet
                 </p>
 
                 {/* Pro features */}
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: 8,
-                  maxWidth: 360,
-                  margin: '0 auto 24px'
-                }}>
+                <div className="grid grid-cols-2 gap-1.5 md:gap-2 max-w-[280px] md:max-w-[360px] mx-auto mb-4 md:mb-6">
                   {[
-                    { icon: '🔍', text: 'TSB constructeur' },
-                    { icon: '💰', text: 'Prix actualisés' },
-                    { icon: '📷', text: 'Analyse photos' },
-                    { icon: '📊', text: 'Rapport complet' }
+                    { icon: '🔍', text: 'TSB' },
+                    { icon: '💰', text: 'Prix' },
+                    { icon: '📷', text: 'Photos' },
+                    { icon: '📊', text: 'Rapport' }
                   ].map((feature, i) => (
                     <div
                       key={i}
-                      style={{
-                        padding: '10px 12px',
-                        borderRadius: 10,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        fontSize: 13
-                      }}
-                      className="bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400"
+                      className="py-2 px-2.5 md:py-2.5 md:px-3 rounded-lg flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400"
                     >
                       <span>{feature.icon}</span>
                       <span>{feature.text}</span>
@@ -463,31 +394,18 @@ export default function DiagnosticPro() {
                 </div>
 
                 {/* Quick questions */}
-                <div style={{ maxWidth: 400, margin: '0 auto' }}>
-                  <p style={{ fontSize: 12, marginBottom: 12 }} className="text-neutral-400">
+                <div className="max-w-[340px] md:max-w-[400px] mx-auto">
+                  <p className="text-[10px] md:text-xs mb-2 md:mb-3 text-neutral-400">
                     Questions fréquentes
                   </p>
                   {EXAMPLE_QUESTIONS.map((q, i) => (
                     <button
                       key={i}
                       onClick={() => setInput(q.text)}
-                      style={{
-                        width: '100%',
-                        padding: 14,
-                        marginBottom: 8,
-                        border: 'none',
-                        borderRadius: 12,
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        transition: 'transform 0.2s'
-                      }}
-                      className="bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 active:scale-98"
+                      className="w-full py-2.5 px-3 md:py-3.5 md:px-4 mb-1.5 md:mb-2 rounded-xl text-left flex items-center gap-2 md:gap-3 transition-transform bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 active:scale-[0.98]"
                     >
-                      <span style={{ fontSize: 20 }}>{q.icon}</span>
-                      <span style={{ fontSize: 14 }} className="text-neutral-700 dark:text-neutral-300">{q.text}</span>
+                      <span className="text-base md:text-xl">{q.icon}</span>
+                      <span className="text-xs md:text-sm text-neutral-700 dark:text-neutral-300">{q.text}</span>
                     </button>
                   ))}
                 </div>
@@ -498,63 +416,34 @@ export default function DiagnosticPro() {
                 {messages.map((message, index) => (
                   <div
                     key={index}
-                    style={{
-                      display: 'flex',
-                      justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start',
-                      marginBottom: 16
-                    }}
+                    className={`flex mb-3 md:mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {message.role === 'assistant' && (
-                      <div style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 14,
-                        marginRight: 8,
-                        flexShrink: 0
-                      }}>🔬</div>
+                      <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm mr-2 flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>🔬</div>
                     )}
                     <div
-                      style={{
-                        maxWidth: '80%',
-                        padding: '12px 16px',
-                        borderRadius: 16,
-                        borderBottomLeftRadius: message.role === 'assistant' ? 4 : 16,
-                        borderBottomRightRadius: message.role === 'user' ? 4 : 16
-                      }}
-                      className={message.role === 'user'
+                      className={`max-w-[85%] md:max-w-[80%] px-3 py-2 md:px-4 md:py-3 rounded-2xl ${
+                        message.role === 'assistant' ? 'rounded-bl-sm' : 'rounded-br-sm'
+                      } ${message.role === 'user'
                         ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white'
                         : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200'
-                      }
+                      }`}
                     >
                       {/* Images */}
                       {message.images && message.images.length > 0 && (
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: message.images.length > 1 ? 'repeat(2, 1fr)' : '1fr',
-                          gap: 8,
-                          marginBottom: message.content ? 12 : 0
-                        }}>
+                        <div className={`grid gap-1.5 md:gap-2 ${message.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} ${message.content ? 'mb-2 md:mb-3' : ''}`}>
                           {message.images.map((img, j) => (
                             <img
                               key={j}
                               src={img}
                               alt={`Photo ${j + 1}`}
-                              style={{
-                                width: '100%',
-                                borderRadius: 8,
-                                maxHeight: 200,
-                                objectFit: 'cover'
-                              }}
+                              className="w-full rounded-lg max-h-[150px] md:max-h-[200px] object-cover"
                             />
                           ))}
                         </div>
                       )}
-                      <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: 15, lineHeight: 1.5 }}>
+                      <p className="whitespace-pre-wrap m-0 text-sm md:text-[15px] leading-relaxed">
                         {message.content}
                       </p>
                     </div>
@@ -563,35 +452,20 @@ export default function DiagnosticPro() {
 
                 {/* Loading indicator */}
                 {loading && (
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                    <div style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 14
-                    }}>🔬</div>
-                    <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', alignItems: 'center', gap: 8 }} className="bg-neutral-100 dark:bg-neutral-800">
+                  <div className="flex gap-2 mb-3 md:mb-4">
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center text-xs md:text-sm"
+                      style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>🔬</div>
+                    <div className="px-3 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800">
                       {searching ? (
                         <>
-                          <div style={{
-                            width: 16,
-                            height: 16,
-                            border: '2px solid #8b5cf6',
-                            borderTopColor: 'transparent',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite'
-                          }}></div>
-                          <span className="text-violet-600 dark:text-violet-400" style={{ fontSize: 14 }}>Recherche en cours...</span>
+                          <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-violet-600 dark:text-violet-400 text-xs md:text-sm">Recherche...</span>
                         </>
                       ) : (
                         <>
-                          <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
-                          <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
-                          <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
+                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-400 dark:bg-neutral-500"></div>
+                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-400 dark:bg-neutral-500" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-400 dark:bg-neutral-500" style={{ animationDelay: '0.2s' }}></div>
                         </>
                       )}
                     </div>
@@ -600,35 +474,24 @@ export default function DiagnosticPro() {
 
                 {/* Final Diagnosis Card */}
                 {finalDiagnosis && (
-                  <div style={{ marginBottom: 16 }}>
+                  <div className="mb-3 md:mb-4">
                     <DiagnosticProResult diagnosis={finalDiagnosis} />
                   </div>
                 )}
 
                 {/* Request diagnosis button */}
                 {messages.length >= 3 && !finalDiagnosis && !loading && (
-                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                  <div className="flex justify-center mb-3 md:mb-4">
                     <button
                       onClick={requestFinalDiagnosis}
+                      className="px-4 py-2.5 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-semibold flex items-center gap-2 text-white hover:scale-105 active:scale-95 transition-transform"
                       style={{
-                        padding: '12px 24px',
-                        borderRadius: 999,
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
                         background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                        color: '#fff',
-                        boxShadow: '0 4px 16px rgba(139, 92, 246, 0.4)',
-                        transition: 'transform 0.2s, box-shadow 0.2s'
+                        boxShadow: '0 4px 16px rgba(139, 92, 246, 0.4)'
                       }}
-                      className="hover:scale-105 active:scale-95"
                     >
                       <span>📋</span>
-                      Obtenir mon diagnostic PRO
+                      <span className="hidden xs:inline">Obtenir mon</span> diagnostic PRO
                     </button>
                   </div>
                 )}
@@ -642,9 +505,9 @@ export default function DiagnosticPro() {
         {/* INPUT BAR */}
         <div style={{
           flexShrink: 0,
-          padding: '12px 16px',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
-        }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:pb-4">
+          padding: '8px 12px',
+          paddingBottom: 'max(env(safe-area-inset-bottom), 12px)'
+        }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:p-4 md:pb-4">
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             {/* Images preview */}
             {selectedImages.length > 0 && (
@@ -700,16 +563,16 @@ export default function DiagnosticPro() {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loading || selectedImages.length >= MAX_IMAGES}
                   style={{
-                    width: 48,
-                    height: 48,
                     borderRadius: '50%',
                     border: 'none',
                     cursor: 'pointer',
-                    fontSize: 20,
                     flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     opacity: (loading || selectedImages.length >= MAX_IMAGES) ? 0.4 : 1
                   }}
-                  className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                  className="w-10 h-10 md:w-12 md:h-12 text-lg md:text-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                 >📷</button>
 
                 {/* Textarea */}
@@ -723,22 +586,20 @@ export default function DiagnosticPro() {
                       handleSubmit(e)
                     }
                   }}
-                  placeholder="Décris ton problème en détail..."
+                  placeholder="Décris ton problème..."
                   disabled={loading}
                   rows={1}
                   style={{
                     flex: 1,
-                    padding: '12px 16px',
                     borderRadius: 20,
                     fontSize: 16,
                     resize: 'none',
-                    minHeight: 48,
-                    maxHeight: 120,
+                    maxHeight: 100,
                     outline: 'none',
                     fontFamily: 'inherit',
                     opacity: loading ? 0.5 : 1
                   }}
-                  className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
+                  className="p-2.5 md:p-3 min-h-[40px] md:min-h-[48px] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
                 />
 
                 {/* Send button */}
@@ -746,13 +607,10 @@ export default function DiagnosticPro() {
                   type="submit"
                   disabled={(!input.trim() && selectedImages.length === 0) || loading}
                   style={{
-                    width: 48,
-                    height: 48,
                     borderRadius: '50%',
                     background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
                     border: 'none',
                     color: '#fff',
-                    fontSize: 18,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -761,14 +619,15 @@ export default function DiagnosticPro() {
                     flexShrink: 0,
                     boxShadow: '0 4px 12px rgba(139, 92, 246, 0.4)'
                   }}
+                  className="w-10 h-10 md:w-12 md:h-12 text-base md:text-lg"
                 >
                   {loading ? '⏳' : '➤'}
                 </button>
               </div>
             </form>
 
-            <p style={{ fontSize: 10, textAlign: 'center', marginTop: 8 }} className="text-neutral-400 dark:text-neutral-500">
-              Diagnostic PRO avec recherche temps réel • À titre indicatif uniquement
+            <p className="text-[9px] md:text-[10px] text-center mt-1.5 md:mt-2 text-neutral-400 dark:text-neutral-500">
+              Diagnostic PRO • À titre indicatif
             </p>
           </div>
         </div>
