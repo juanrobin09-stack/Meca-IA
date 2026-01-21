@@ -744,7 +744,25 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
       const filename = `analyse-devis-${dateForFile}.pdf`
 
       console.log('[PDF] Saving PDF:', filename)
-      doc.save(filename)
+
+      // Use blob method for better mobile compatibility
+      const pdfBlob = doc.output('blob')
+      const blobUrl = URL.createObjectURL(pdfBlob)
+
+      // Create download link
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = filename
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link)
+        URL.revokeObjectURL(blobUrl)
+      }, 100)
+
       console.log('[PDF] PDF saved successfully')
     } catch (err) {
       console.error('[PDF] Error generating PDF:', err)
@@ -1093,7 +1111,25 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
       const filename = `diagnostic-video-${dateForFile}.pdf`
 
       console.log('[PDF] Saving video PDF:', filename)
-      doc.save(filename)
+
+      // Use blob method for better mobile compatibility
+      const pdfBlob = doc.output('blob')
+      const blobUrl = URL.createObjectURL(pdfBlob)
+
+      // Create download link
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = filename
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(link)
+        URL.revokeObjectURL(blobUrl)
+      }, 100)
+
       console.log('[PDF] Video PDF saved successfully')
     } catch (err) {
       console.error('[PDF] Error generating video PDF:', err)

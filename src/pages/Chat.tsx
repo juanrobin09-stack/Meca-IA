@@ -96,16 +96,21 @@ export default function Chat() {
     if (id) {
       loadDiagnostic(id).then((diag) => {
         if (diag) {
-          loadMessages(diag.conversation as Message[])
+          // Ensure conversation is a valid array
+          const conversation = Array.isArray(diag.conversation) ? diag.conversation : []
+          loadMessages(conversation as Message[])
           setIsNewConversation(false)
         }
-      }).catch(() => navigate('/app/chat'))
+      }).catch((err) => {
+        console.error('Error loading diagnostic:', err)
+        navigate('/app/chat')
+      })
     } else {
       clearMessages()
       setCurrentDiagnostic(null)
       setIsNewConversation(true)
     }
-  }, [id])
+  }, [id, loadDiagnostic, loadMessages, navigate, clearMessages, setCurrentDiagnostic])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })

@@ -506,6 +506,34 @@ CREATE TRIGGER update_mechanic_chats_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
+-- TABLE: video_diagnostics (diagnostics vidéo)
+-- ============================================
+CREATE TABLE IF NOT EXISTS video_diagnostics (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+
+  -- Diagnostic info
+  probleme_identifie TEXT NOT NULL,
+  description_visuelle TEXT,
+  causes_possibles JSONB DEFAULT '[]'::jsonb,
+  urgence TEXT CHECK (urgence IN ('faible', 'moyenne', 'élevée', 'critique')),
+  pieces_concernees JSONB DEFAULT '[]'::jsonb,
+  estimation_cout_min NUMERIC(10,2),
+  estimation_cout_max NUMERIC(10,2),
+  recommandations TEXT,
+
+  -- Media
+  thumbnail_url TEXT,
+  video_url TEXT,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_video_diagnostics_user ON video_diagnostics(user_id);
+CREATE INDEX IF NOT EXISTS idx_video_diagnostics_created ON video_diagnostics(created_at DESC);
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS)
 -- ============================================
 
@@ -516,6 +544,7 @@ ALTER TABLE diagnostics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE devis_analyses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE video_diagnostics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pannes_predictions ENABLE ROW LEVEL SECURITY;
 
@@ -558,6 +587,10 @@ DROP POLICY IF EXISTS "Users can update own diagnostics" ON diagnostics;
 CREATE POLICY "Users can update own diagnostics" ON diagnostics
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own diagnostics" ON diagnostics;
+CREATE POLICY "Users can delete own diagnostics" ON diagnostics
+  FOR DELETE USING (auth.uid() = user_id);
+
 -- Policies pour devis_analyses
 DROP POLICY IF EXISTS "Users can view own devis" ON devis_analyses;
 CREATE POLICY "Users can view own devis" ON devis_analyses
@@ -566,6 +599,31 @@ CREATE POLICY "Users can view own devis" ON devis_analyses
 DROP POLICY IF EXISTS "Users can insert own devis" ON devis_analyses;
 CREATE POLICY "Users can insert own devis" ON devis_analyses
   FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own devis" ON devis_analyses;
+CREATE POLICY "Users can update own devis" ON devis_analyses
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own devis" ON devis_analyses;
+CREATE POLICY "Users can delete own devis" ON devis_analyses
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Policies pour video_diagnostics
+DROP POLICY IF EXISTS "Users can view own video diagnostics" ON video_diagnostics;
+CREATE POLICY "Users can view own video diagnostics" ON video_diagnostics
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own video diagnostics" ON video_diagnostics;
+CREATE POLICY "Users can insert own video diagnostics" ON video_diagnostics
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own video diagnostics" ON video_diagnostics;
+CREATE POLICY "Users can update own video diagnostics" ON video_diagnostics
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own video diagnostics" ON video_diagnostics;
+CREATE POLICY "Users can delete own video diagnostics" ON video_diagnostics
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- Policies pour chat_conversations
 DROP POLICY IF EXISTS "Users can view own conversations" ON chat_conversations;
