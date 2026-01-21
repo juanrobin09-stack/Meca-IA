@@ -27,8 +27,8 @@ import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import { Link } from 'react-router-dom'
 
 export default function AnalyseDevis() {
-  const { user, profile } = useAuth()
-  const { isPremium, devisRemaining, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
+  const { user, profile, refreshProfile } = useAuth()
+  const { isPremium, devisRemaining, purchasedDevisCredits, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
   const { saveDevis, devisList } = useDevis(user?.id)
   const { celebrateSuccess } = useConfetti()
 
@@ -39,6 +39,7 @@ export default function AnalyseDevis() {
   const [error, setError] = useState<string | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
   const [currentRemaining, setCurrentRemaining] = useState<number>(devisRemaining as number)
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(purchasedDevisCredits as number)
   const [fromCache, setFromCache] = useState(false)
   const [analysisStep, setAnalysisStep] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
@@ -55,11 +56,19 @@ export default function AnalyseDevis() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  const limitCheckedRef = useRef(false)
+
   // Check limit on page load - wait for profile to be loaded
   useEffect(() => {
     async function checkLimit() {
-      // Wait for profile to be loaded
-      if (!profile) return
+      // Wait for profile to be loaded and avoid multiple checks
+      if (!profile || limitCheckedRef.current) return
+      limitCheckedRef.current = true
+
+      // Refresh profile to get latest data (important after returning from payment)
+      if (refreshProfile) {
+        await refreshProfile()
+      }
 
       // Always check from database to get fresh status
       const status = await checkDevisLimit()
@@ -71,13 +80,16 @@ export default function AnalyseDevis() {
         return
       }
 
+      setCurrentRemaining(status.remaining as number)
+      setCurrentPurchasedCredits(status.purchasedCredits || 0)
+
+      // Only show paywall if user truly cannot analyze (no free remaining AND no purchased credits)
       if (!status.canAnalyze) {
         setShowPaywall(true)
       }
-      setCurrentRemaining(status.remaining as number)
     }
     checkLimit()
-  }, [profile, checkDevisLimit])
+  }, [profile, checkDevisLimit, refreshProfile])
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -238,8 +250,17 @@ export default function AnalyseDevis() {
 
       // Increment counter after successful analysis (for free users)
       if (!isPremium) {
+        // Determine which credit type will be used BEFORE incrementing
+        const willUsePurchasedCredit = currentRemaining <= 0 && currentPurchasedCredits > 0
+
         await incrementDevisCount()
-        setCurrentRemaining(prev => Math.max(0, prev - 1))
+
+        // Update the correct counter based on which credit was used
+        if (willUsePurchasedCredit) {
+          setCurrentPurchasedCredits(prev => Math.max(0, prev - 1))
+        } else {
+          setCurrentRemaining(prev => Math.max(0, prev - 1))
+        }
       }
     } catch (err: any) {
       console.error('❌ Erreur analyse:', err)
@@ -300,7 +321,11 @@ export default function AnalyseDevis() {
                   {isPremium ? (
                     <>✨ <span className="hidden sm:inline">Illimité</span><span className="sm:hidden">∞</span></>
                   ) : (
-                    <><span className="hidden sm:inline">{displayRemaining}/1 analyse gratuite</span><span className="sm:hidden">{displayRemaining}/1</span></>
+                    <>
+                      <span className="hidden sm:inline">{displayRemaining}/1 analyse gratuite</span>
+                      <span className="sm:hidden">{displayRemaining}/1</span>
+                      {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
+                    </>
                   )}
                 </Badge>
               </div>
@@ -537,7 +562,23 @@ export default function AnalyseDevis() {
         </div>
       </main>
 
-      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} mode="devis" />
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={async (open) => {
+          setShowPaywall(open)
+          // When closing the paywall, refresh profile to get updated credits (in case user purchased)
+          if (!open && refreshProfile) {
+            const freshProfile = await refreshProfile()
+            if (freshProfile) {
+              const freeRemaining = Math.max(0, 1 - (freshProfile.free_devis_used || 0))
+              const purchasedCredits = freshProfile.purchased_devis_credits || 0
+              setCurrentRemaining(freeRemaining)
+              setCurrentPurchasedCredits(purchasedCredits)
+            }
+          }
+        }}
+        mode="devis"
+      />
     </div>
     </PageTransition>
   )

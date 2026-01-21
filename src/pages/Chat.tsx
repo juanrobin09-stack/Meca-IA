@@ -37,6 +37,7 @@ export default function Chat() {
   const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
   const { messages, isLoading, error, streamingContent, sendMessage, loadMessages, clearMessages, setMemoryContext } = useChat()
   const memoryLoadedRef = useRef(false)
+  const limitCheckedRef = useRef(false)
 
   const [input, setInput] = useState('')
   const [showPaywall, setShowPaywall] = useState(false)
@@ -66,16 +67,33 @@ export default function Chat() {
 
   useEffect(() => {
     async function checkLimitOnLoad() {
-      if (id) return
+      // Skip if loading existing diagnostic or already checked
+      if (id || limitCheckedRef.current) return
+      limitCheckedRef.current = true
+
+      // Refresh profile to get latest data (important after returning from payment)
+      if (refreshProfile) {
+        await refreshProfile()
+      }
+
       const limitStatus = await checkDiagnosticLimit()
       setCurrentRemaining(limitStatus.remaining)
       setCurrentPurchasedCredits(limitStatus.purchasedCredits || 0)
+
+      // Only show paywall if user truly cannot diagnose (no free remaining AND no purchased credits)
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
         setShowPaywall(true)
       }
     }
     if (user && profile) checkLimitOnLoad()
-  }, [id, user, profile, checkDiagnosticLimit])
+  }, [id, user, profile, checkDiagnosticLimit, refreshProfile])
+
+  // Reset the check flag when navigating to a new chat (no id)
+  useEffect(() => {
+    if (!id) {
+      limitCheckedRef.current = false
+    }
+  }, [id])
 
   useEffect(() => {
     async function loadMemory() {
@@ -172,9 +190,18 @@ export default function Chat() {
         diagnosticId = diag.id
         setIsNewConversation(false)
         if (!isPremium) {
+          // Determine which credit type will be used BEFORE incrementing
+          const willUsePurchasedCredit = currentRemaining <= 0 && currentPurchasedCredits > 0
+
           await incrementDiagnosticCount()
           if (refreshProfile) await refreshProfile()
-          setCurrentRemaining(prev => Math.max(0, prev - 1))
+
+          // Update the correct counter based on which credit was used
+          if (willUsePurchasedCredit) {
+            setCurrentPurchasedCredits(prev => Math.max(0, prev - 1))
+          } else {
+            setCurrentRemaining(prev => Math.max(0, prev - 1))
+          }
         }
         window.history.replaceState(null, '', `/app/chat/${diagnosticId}`)
       }
@@ -550,7 +577,22 @@ export default function Chat() {
         </div>
       </div>
 
-      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} />
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={async (open) => {
+          setShowPaywall(open)
+          // When closing the paywall, refresh profile to get updated credits (in case user purchased)
+          if (!open && refreshProfile) {
+            const freshProfile = await refreshProfile()
+            if (freshProfile) {
+              const freeRemaining = Math.max(0, 2 - (freshProfile.free_diagnostics_used || 0))
+              const purchasedCredits = freshProfile.purchased_diagnostic_credits || 0
+              setCurrentRemaining(freeRemaining)
+              setCurrentPurchasedCredits(purchasedCredits)
+            }
+          }
+        }}
+      />
       <PlateScanner open={showPlateScanner} onOpenChange={setShowPlateScanner} onVehicleConfirmed={handleVehicleConfirmed} />
 
       <style>{`
