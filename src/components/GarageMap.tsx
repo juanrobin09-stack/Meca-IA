@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Garage } from '@/services/garages'
-import { Star, Phone, Navigation, Clock, MapPin } from 'lucide-react'
+import { Star, Phone, Navigation, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
@@ -92,7 +92,6 @@ export default function GarageMap({
   onGarageSelect,
   onCall,
   onDirections,
-  selectedGarage,
 }: GarageMapProps) {
   const mapRef = useRef<L.Map | null>(null)
 

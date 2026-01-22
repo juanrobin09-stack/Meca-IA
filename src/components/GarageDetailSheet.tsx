@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence, PanInfo } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { PanInfo } from 'framer-motion'
 import type { Garage } from '@/services/garages'
 import { getGarageDetails } from '@/services/garages'
 import { Badge } from '@/components/ui/badge'
@@ -15,7 +16,6 @@ import {
   X,
   Loader2,
   ExternalLink,
-  ChevronDown,
 } from 'lucide-react'
 
 interface GarageDetailSheetProps {

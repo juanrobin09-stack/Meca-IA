@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '@/components/Sidebar'
 import PageTransition from '@/components/PageTransition'
@@ -19,7 +19,6 @@ import {
   ChevronRight,
   AlertCircle,
   X,
-  List,
 } from 'lucide-react'
 import {
   searchGarages,
@@ -30,13 +29,6 @@ import {
 } from '@/services/garages'
 import { useUserLocation } from '@/hooks/useUserLocation'
 import { cn } from '@/lib/utils'
-import GarageDetailSheet from '@/components/GarageDetailSheet'
-
-// Lazy load map component for better initial load performance
-const GarageMap = lazy(() => import('@/components/GarageMap'))
-
-// View mode type
-type ViewMode = 'list' | 'map'
 
 // Filtres disponibles
 const DISTANCE_FILTERS = [
