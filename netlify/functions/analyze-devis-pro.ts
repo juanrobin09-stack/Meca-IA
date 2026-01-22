@@ -96,6 +96,13 @@ PRIX 2026: Main d'œuvre 60-90€/h, Plaquettes 25-60€, Vidange 60-120€, Ré
     const lignesElevees = parsed.lignes?.filter((l: any) => l.verdict === 'eleve').length || 0
     const lignesArnaques = parsed.lignes?.filter((l: any) => l.verdict === 'arnaque').length || 0
 
+    // CALCUL CORRECT de la différence (surfacturation)
+    // On calcule côté serveur pour éviter les erreurs de calcul de l'IA
+    const totalFacture = parsed.totalTTC || 0
+    const totalMarche = parsed.lignes?.reduce((s: number, l: any) => s + (l.prixMarcheEstime || 0), 0) || 0
+    const difference = Math.round((totalFacture - totalMarche) * 100) / 100
+    const pourcentage = totalMarche > 0 ? Math.round(((difference / totalMarche) * 100) * 10) / 10 : 0
+
     const result = {
       garage: parsed.garage || { nom: 'Non identifié' },
       lignes: (parsed.lignes || []).map((l: any) => ({
@@ -118,10 +125,15 @@ PRIX 2026: Main d'œuvre 60-90€/h, Plaquettes 25-60€, Vidange 60-120€, Ré
         lignesArnaques
       },
       totaux: {
-        totalFacture: parsed.totalTTC || 0,
-        totalMarche: parsed.lignes?.reduce((s: number, l: any) => s + (l.prixMarcheEstime || 0), 0) || 0
+        totalFacture,
+        totalMarche
       },
-      economiesPotentielles: parsed.economiesPotentielles || { montant: 0, conseils: [] },
+      // FIX: Calcul correct = totalFacture - totalMarche (pas la somme des écarts)
+      economiesPotentielles: {
+        montant: difference,
+        pourcentage,
+        conseils: parsed.economiesPotentielles?.conseils || []
+      },
       timestamp: new Date().toISOString()
     }
 
