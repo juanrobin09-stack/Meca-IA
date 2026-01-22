@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { formatRelativeTime, formatPrice } from '@/lib/utils'
 import { ChevronRight, Download, Trash2 } from 'lucide-react'
 import { jsPDF } from 'jspdf'
+import { downloadPDF } from '@/lib/pdfDownload'
 import type { Diagnostic } from '@/types'
 
 interface DiagnosticCardProps {
@@ -213,43 +214,8 @@ export default function DiagnosticCard({ diagnostic, onDelete }: DiagnosticCardP
 
       console.log('[PDF] Saving diagnostic PDF:', filename)
 
-      // Use blob method for better mobile compatibility
-      const pdfBlob = doc.output('blob')
-      const blobUrl = URL.createObjectURL(pdfBlob)
-
-      // Detect if mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-
-      if (isMobile) {
-        const newWindow = window.open(blobUrl, '_blank')
-        if (!newWindow) {
-          const link = document.createElement('a')
-          link.href = blobUrl
-          link.download = filename
-          link.target = '_blank'
-          link.rel = 'noopener noreferrer'
-          document.body.appendChild(link)
-          link.click()
-          setTimeout(() => {
-            document.body.removeChild(link)
-            URL.revokeObjectURL(blobUrl)
-          }, 1000)
-        } else {
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
-        }
-      } else {
-        const link = document.createElement('a')
-        link.href = blobUrl
-        link.download = filename
-        link.style.display = 'none'
-        document.body.appendChild(link)
-        link.click()
-
-        setTimeout(() => {
-          document.body.removeChild(link)
-          URL.revokeObjectURL(blobUrl)
-        }, 100)
-      }
+      // Use the shared download utility for proper mobile support
+      await downloadPDF(doc, filename)
 
       console.log('[PDF] Diagnostic PDF saved successfully')
     } catch (err) {

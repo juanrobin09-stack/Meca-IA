@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { jsPDF } from 'jspdf'
+import { downloadPDF } from '@/lib/pdfDownload'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -88,7 +89,7 @@ export default function ResultatAnalysePro({ data }: Props) {
   }
 
   // Télécharger le rapport en PDF
-  const handleDownload = () => {
+  const handleDownload = async () => {
     try {
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
@@ -232,13 +233,17 @@ export default function ResultatAnalysePro({ data }: Props) {
       doc.setFontSize(8)
       doc.text('Rapport genere par MECA-IA - mymecai.com', pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' })
 
-      // Save
-      doc.save(`rapport-devis-${new Date().toISOString().split('T')[0]}.pdf`)
+      // Save with mobile-compatible download utility
+      const filename = `rapport-devis-${new Date().toISOString().split('T')[0]}.pdf`
+      const success = await downloadPDF(doc, filename)
 
-      setDownloadSuccess(true)
-      setTimeout(() => setDownloadSuccess(false), 2000)
+      if (success) {
+        setDownloadSuccess(true)
+        setTimeout(() => setDownloadSuccess(false), 2000)
+      }
     } catch (err) {
       console.error('Download failed:', err)
+      alert(`Erreur lors du téléchargement: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
     }
   }
 

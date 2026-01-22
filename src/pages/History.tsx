@@ -31,6 +31,7 @@ import {
 } from 'lucide-react'
 import type { DevisAnalysis, VideoDiagnostic } from '@/types'
 import { jsPDF } from 'jspdf'
+import { downloadPDF } from '@/lib/pdfDownload'
 
 // Helper function to convert analysis_result to string (handles both old string format and new JSON format)
 function getAnalysisText(analysisResult: string | object | null | undefined): string {
@@ -747,48 +748,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
 
       console.log('[PDF] Saving PDF:', filename)
 
-      // Use blob method for better mobile compatibility
-      const pdfBlob = doc.output('blob')
-      const blobUrl = URL.createObjectURL(pdfBlob)
-
-      // Detect if mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-
-      if (isMobile) {
-        // On mobile, open in new window/tab for download
-        const newWindow = window.open(blobUrl, '_blank')
-        if (!newWindow) {
-          // Fallback: try the download link method
-          const link = document.createElement('a')
-          link.href = blobUrl
-          link.download = filename
-          link.target = '_blank'
-          link.rel = 'noopener noreferrer'
-          document.body.appendChild(link)
-          link.click()
-          setTimeout(() => {
-            document.body.removeChild(link)
-            URL.revokeObjectURL(blobUrl)
-          }, 1000)
-        } else {
-          // Cleanup after delay
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
-        }
-      } else {
-        // Desktop: use download link
-        const link = document.createElement('a')
-        link.href = blobUrl
-        link.download = filename
-        link.style.display = 'none'
-        document.body.appendChild(link)
-        link.click()
-
-        // Cleanup
-        setTimeout(() => {
-          document.body.removeChild(link)
-          URL.revokeObjectURL(blobUrl)
-        }, 100)
-      }
+      // Use the shared download utility for proper mobile support
+      await downloadPDF(doc, filename)
 
       console.log('[PDF] PDF saved successfully')
     } catch (err) {
@@ -1141,48 +1102,8 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
 
       console.log('[PDF] Saving video PDF:', filename)
 
-      // Use blob method for better mobile compatibility
-      const pdfBlob = doc.output('blob')
-      const blobUrl = URL.createObjectURL(pdfBlob)
-
-      // Detect if mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-
-      if (isMobile) {
-        // On mobile, open in new window/tab for download
-        const newWindow = window.open(blobUrl, '_blank')
-        if (!newWindow) {
-          // Fallback: try the download link method
-          const link = document.createElement('a')
-          link.href = blobUrl
-          link.download = filename
-          link.target = '_blank'
-          link.rel = 'noopener noreferrer'
-          document.body.appendChild(link)
-          link.click()
-          setTimeout(() => {
-            document.body.removeChild(link)
-            URL.revokeObjectURL(blobUrl)
-          }, 1000)
-        } else {
-          // Cleanup after delay
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000)
-        }
-      } else {
-        // Desktop: use download link
-        const link = document.createElement('a')
-        link.href = blobUrl
-        link.download = filename
-        link.style.display = 'none'
-        document.body.appendChild(link)
-        link.click()
-
-        // Cleanup
-        setTimeout(() => {
-          document.body.removeChild(link)
-          URL.revokeObjectURL(blobUrl)
-        }, 100)
-      }
+      // Use the shared download utility for proper mobile support
+      await downloadPDF(doc, filename)
 
       console.log('[PDF] Video PDF saved successfully')
     } catch (err) {
