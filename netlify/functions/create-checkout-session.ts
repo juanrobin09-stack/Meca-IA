@@ -187,16 +187,17 @@ export async function handler(event: WebhookEvent) {
         url: session.url,
       }),
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Stripe session error:', error)
-    const errorMessage = error?.message || error?.raw?.message || 'Unknown error'
+    const err = error as { message?: string; raw?: { message?: string }; type?: string; code?: string }
+    const errorMessage = err?.message || err?.raw?.message || 'Unknown error'
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         error: errorMessage,
-        type: error?.type || 'unknown',
-        code: error?.code || 'unknown'
+        type: err?.type || 'unknown',
+        code: err?.code || 'unknown'
       }),
     }
   }

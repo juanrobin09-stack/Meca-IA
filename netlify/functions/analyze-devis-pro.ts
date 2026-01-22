@@ -86,26 +86,33 @@ PRIX 2026: Main d'œuvre 60-90€/h, Plaquettes 25-60€, Vidange 60-120€, Ré
     try {
       const clean = responseText.replace(/```json\n?|\n?```/g, '').trim()
       parsed = JSON.parse(clean)
-    } catch (e) {
+    } catch {
       console.error('❌ Parse error:', responseText.substring(0, 200))
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Impossible de lire le devis. Photo plus nette SVP.' }) }
     }
 
     // Construire résultat
-    const lignesOk = parsed.lignes?.filter((l: any) => l.verdict === 'ok').length || 0
-    const lignesElevees = parsed.lignes?.filter((l: any) => l.verdict === 'eleve').length || 0
-    const lignesArnaques = parsed.lignes?.filter((l: any) => l.verdict === 'arnaque').length || 0
+    interface LigneDevis {
+      designation: string
+      totalTTC: number
+      prixMarcheEstime: number
+      ecartPourcent: number
+      verdict: 'ok' | 'eleve' | 'arnaque'
+    }
+    const lignesOk = parsed.lignes?.filter((l: LigneDevis) => l.verdict === 'ok').length || 0
+    const lignesElevees = parsed.lignes?.filter((l: LigneDevis) => l.verdict === 'eleve').length || 0
+    const lignesArnaques = parsed.lignes?.filter((l: LigneDevis) => l.verdict === 'arnaque').length || 0
 
     // CALCUL CORRECT de la différence (surfacturation)
     // On calcule côté serveur pour éviter les erreurs de calcul de l'IA
     const totalFacture = parsed.totalTTC || 0
-    const totalMarche = parsed.lignes?.reduce((s: number, l: any) => s + (l.prixMarcheEstime || 0), 0) || 0
+    const totalMarche = parsed.lignes?.reduce((s: number, l: LigneDevis) => s + (l.prixMarcheEstime || 0), 0) || 0
     const difference = Math.round((totalFacture - totalMarche) * 100) / 100
     const pourcentage = totalMarche > 0 ? Math.round(((difference / totalMarche) * 100) * 10) / 10 : 0
 
     const result = {
       garage: parsed.garage || { nom: 'Non identifié' },
-      lignes: (parsed.lignes || []).map((l: any) => ({
+      lignes: (parsed.lignes || []).map((l: LigneDevis) => ({
         designation: l.designation,
         totalTTC: l.totalTTC,
         prixMarche: { moyenne: l.prixMarcheEstime },
@@ -141,10 +148,11 @@ PRIX 2026: Main d'œuvre 60-90€/h, Plaquettes 25-60€, Vidange 60-120€, Ré
 
     return { statusCode: 200, headers, body: JSON.stringify(result) }
 
-  } catch (error: any) {
-    console.error('❌ Erreur:', error.message)
+  } catch (error: unknown) {
+    const err = error as { message?: string; status?: number }
+    console.error('❌ Erreur:', err.message)
 
-    if (error.status === 429) {
+    if (err.status === 429) {
       return { statusCode: 429, headers, body: JSON.stringify({ error: 'Trop de requêtes. Attends 1 min.' }) }
     }
 

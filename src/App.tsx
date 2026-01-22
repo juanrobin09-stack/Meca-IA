@@ -54,16 +54,19 @@ const AuthRedirect = memo(function AuthRedirect({ children }: { children: React.
 // Memoized OnboardingWrapper
 const OnboardingWrapper = memo(function OnboardingWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
-  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Compute initial state synchronously to avoid setState in effect
+  const shouldShowInitially = user && localStorage.getItem('mecaia_show_onboarding') === 'true'
+  const [showOnboarding, setShowOnboarding] = useState(shouldShowInitially)
 
   useEffect(() => {
-    if (user) {
-      const shouldShow = localStorage.getItem('mecaia_show_onboarding')
-      if (shouldShow === 'true') {
-        setShowOnboarding(true)
-      }
+    // Only update if user changes and we need to show onboarding
+    if (user && localStorage.getItem('mecaia_show_onboarding') === 'true' && !showOnboarding) {
+      setShowOnboarding(true) // eslint-disable-line react-hooks/set-state-in-effect
+    } else if (!user && showOnboarding) {
+      setShowOnboarding(false)  
     }
-  }, [user])
+  }, [user, showOnboarding])
 
   const handleComplete = () => {
     localStorage.removeItem('mecaia_show_onboarding')

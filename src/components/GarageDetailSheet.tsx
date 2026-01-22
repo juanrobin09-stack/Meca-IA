@@ -38,12 +38,12 @@ export default function GarageDetailSheet({
   // Fetch full details when garage changes
   useEffect(() => {
     if (!garage) {
-      setDetails(null)
+      setDetails(null) // eslint-disable-line react-hooks/set-state-in-effect
       return
     }
 
     // Start with basic info
-    setDetails(garage)
+    setDetails(garage)  
 
     // Fetch full details if we don't have phone/website
     if (!garage.phone && !garage.website) {

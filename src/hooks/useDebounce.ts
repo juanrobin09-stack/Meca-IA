@@ -70,15 +70,24 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
  */
 export function useThrottle<T>(value: T, limit = 300): T {
   const [throttledValue, setThrottledValue] = useState<T>(value)
-  const lastRan = useRef(Date.now())
+  const lastRan = useRef(0)
+
+  // Initialize lastRan on first effect run
+  useEffect(() => {
+    if (lastRan.current === 0) {
+      lastRan.current = Date.now()
+    }
+  }, [])
 
   useEffect(() => {
+    const now = Date.now()
+    const timeSinceLastRan = now - lastRan.current
+    const delay = timeSinceLastRan >= limit ? 0 : limit - timeSinceLastRan
+
     const handler = setTimeout(() => {
-      if (Date.now() - lastRan.current >= limit) {
-        setThrottledValue(value)
-        lastRan.current = Date.now()
-      }
-    }, limit - (Date.now() - lastRan.current))
+      setThrottledValue(value)
+      lastRan.current = Date.now()
+    }, delay)
 
     return () => {
       clearTimeout(handler)

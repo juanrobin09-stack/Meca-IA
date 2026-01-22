@@ -231,7 +231,7 @@ export default function Garages() {
         filters
       )
       setGarages(results)
-    } catch (err) {
+    } catch {
       setError('Impossible de trouver des garages. Réessaie.')
       setGarages([])
     } finally {
@@ -250,7 +250,7 @@ export default function Garages() {
     try {
       const results = await searchGarages(query)
       setGarages(results)
-    } catch (err) {
+    } catch {
       setError('Impossible de trouver des garages. Vérifie ta recherche.')
       setGarages([])
     } finally {
@@ -275,6 +275,7 @@ export default function Garages() {
     if (userLocation && searched && !query) {
       searchByLocation()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [distanceFilter, ratingFilter, openNowFilter])
 
   async function handleCall(garage: Garage) {

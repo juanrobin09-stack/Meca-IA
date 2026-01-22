@@ -74,8 +74,8 @@ export default function Chat() {
   // Sync counter with profile changes
   useEffect(() => {
     if (!isPremium) {
-      setCurrentRemaining(diagnosticsRemaining)
-      setCurrentPurchasedCredits(purchasedDiagnosticCredits)
+      setCurrentRemaining(diagnosticsRemaining) // eslint-disable-line react-hooks/set-state-in-effect
+      setCurrentPurchasedCredits(purchasedDiagnosticCredits)  
     }
   }, [isPremium, diagnosticsRemaining, purchasedDiagnosticCredits])
 
@@ -117,7 +117,7 @@ export default function Chat() {
         const memoryContext = AIMemoryService.generateContextForAI(memory)
         setMemoryContext(memoryContext)
         memoryLoadedRef.current = true
-      } catch {}
+      } catch { /* Memory loading is optional */ }
     }
     loadMemory()
   }, [user?.id, setMemoryContext])
@@ -140,6 +140,7 @@ export default function Chat() {
       clearMessages()
       setCurrentDiagnostic(null)
       setDiagnosticId(undefined)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsNewConversation(true)
     }
   }, [id, loadDiagnostic, loadMessages, navigate, clearMessages, setCurrentDiagnostic, setDiagnosticId])
@@ -230,7 +231,7 @@ export default function Chat() {
         await addMessage(diagId, userMessage)
         await addMessage(diagId, assistantMessage)
       }
-    } catch {}
+    } catch { /* Saving messages failed, non-critical */ }
   }
 
   function handleVehicleConfirmed(vehicle: VehicleInfo) {

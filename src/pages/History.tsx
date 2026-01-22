@@ -53,7 +53,16 @@ function getAnalysisText(analysisResult: string | object | null | undefined): st
 }
 
 // Format the professional analysis object to readable text
-function formatAnalysisObject(obj: any): string {
+interface AnalysisObject {
+  verdict?: { statut?: string; note?: number; recommandation?: string; commentaireExpert?: string }
+  alertes?: { graves?: string[]; moyennes?: string[] }
+  lignes?: Array<{ designation: string; totalTTC?: number; prixMarche?: { moyenne?: number }; ecart?: number; verdict?: string }>
+  totaux?: { totalFacture?: number; totalMarche?: number }
+  economiesPotentielles?: number | { montant?: number }
+  recommandations?: string[]
+}
+
+function formatAnalysisObject(obj: AnalysisObject): string {
   if (!obj) return ''
 
   const lines: string[] = []
@@ -69,24 +78,28 @@ function formatAnalysisObject(obj: any): string {
 
   // Alerts
   if (obj.alertes) {
-    if (obj.alertes.graves?.length > 0) {
+    const graves = obj.alertes.graves
+    if (graves && graves.length > 0) {
       lines.push('# ALERTES GRAVES')
-      obj.alertes.graves.forEach((a: string) => lines.push(`❌ ${a}`))
+      graves.forEach((a: string) => lines.push(`❌ ${a}`))
       lines.push('')
     }
-    if (obj.alertes.moyennes?.length > 0) {
+    const moyennes = obj.alertes.moyennes
+    if (moyennes && moyennes.length > 0) {
       lines.push('# POINTS D\'ATTENTION')
-      obj.alertes.moyennes.forEach((a: string) => lines.push(`⚠️ ${a}`))
+      moyennes.forEach((a: string) => lines.push(`⚠️ ${a}`))
       lines.push('')
     }
   }
 
   // Lines analysis
-  if (obj.lignes?.length > 0) {
+  const lignes = obj.lignes
+  if (lignes && lignes.length > 0) {
     lines.push('# ANALYSE DÉTAILLÉE')
-    obj.lignes.forEach((l: any) => {
+    lignes.forEach((l) => {
       const icon = l.verdict === 'ok' ? '✅' : l.verdict === 'eleve' ? '⚠️' : '❌'
-      lines.push(`${icon} ${l.designation}: ${l.totalTTC?.toFixed(2) || 0}€ (marché: ~${l.prixMarche?.moyenne?.toFixed(2) || 0}€, écart: ${l.ecart > 0 ? '+' : ''}${l.ecart || 0}%)`)
+      const ecart = l.ecart ?? 0
+      lines.push(`${icon} ${l.designation}: ${l.totalTTC?.toFixed(2) || 0}€ (marché: ~${l.prixMarche?.moyenne?.toFixed(2) || 0}€, écart: ${ecart > 0 ? '+' : ''}${ecart}%)`)
     })
     lines.push('')
   }
@@ -97,7 +110,9 @@ function formatAnalysisObject(obj: any): string {
     lines.push(`Prix facturé: ${obj.totaux.totalFacture?.toFixed(2) || 0}€`)
     lines.push(`Prix marché: ~${obj.totaux.totalMarche?.toFixed(2) || 0}€`)
     if (obj.economiesPotentielles) {
-      const diff = obj.economiesPotentielles.montant || 0
+      const diff = typeof obj.economiesPotentielles === 'number'
+        ? obj.economiesPotentielles
+        : (obj.economiesPotentielles.montant || 0)
       lines.push(`Différence: ${diff > 0 ? '+' : ''}${diff.toFixed(2)}€`)
     }
   }
@@ -703,14 +718,14 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
           }
 
           // Clean emojis for PDF (replace with text markers)
-          let cleanLine = trimmedLine
+          const cleanLine = trimmedLine
             .replace(/✅/g, '[OK] ')
             .replace(/⚠️/g, '[!] ')
             .replace(/🔶/g, '[!] ')
             .replace(/❌/g, '[X] ')
             .replace(/🚫/g, '[X] ')
             .replace(/💬/g, '> ')
-            .replace(/[^\x00-\x7F\u00C0-\u00FF\u0100-\u017F]/g, '') // Remove other emojis
+            .replace(/[^\x20-\x7F\u00C0-\u00FF\u0100-\u017F]/g, '') // Remove other emojis (excluding control chars)
 
           if (cleanLine.startsWith('#')) {
             doc.setFont('helvetica', 'bold')
@@ -828,7 +843,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
                   return (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-emerald-700 dark:text-emerald-300">{trimmedLine.replace(/[✅]/g, '').trim()}</span>
+                      <span className="text-emerald-700 dark:text-emerald-300">{trimmedLine.replace(/✅/gu, '').trim()}</span>
                     </div>
                   )
                 }
@@ -836,7 +851,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
                   return (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span className="text-amber-700 dark:text-amber-300">{trimmedLine.replace(/[⚠️🔶]/g, '').trim()}</span>
+                      <span className="text-amber-700 dark:text-amber-300">{trimmedLine.replace(/⚠️|🔶/gu, '').trim()}</span>
                     </div>
                   )
                 }
@@ -844,7 +859,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
                   return (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-                      <span className="text-red-700 dark:text-red-300">{trimmedLine.replace(/[❌🚫]/g, '').trim()}</span>
+                      <span className="text-red-700 dark:text-red-300">{trimmedLine.replace(/❌|🚫/gu, '').trim()}</span>
                     </div>
                   )
                 }

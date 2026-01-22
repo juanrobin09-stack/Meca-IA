@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useId } from 'react'
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg'
@@ -23,8 +24,9 @@ export default function Logo({
 
   const s = sizes[size]
 
-  // Gradient IDs uniques pour éviter les conflits
-  const gradientId = `mecai-grad-${Math.random().toString(36).substr(2, 9)}`
+  // Gradient IDs uniques pour éviter les conflits (useId génère un ID stable)
+  const uniqueId = useId()
+  const gradientId = `mecai-grad-${uniqueId}`
 
   // Couleurs selon variant
   const textColor = variant === 'dark' ? 'white' : '#0f172a'

@@ -98,9 +98,10 @@ export default function Pieces() {
 
       setResults(data.results || [])
       setHasSearched(true)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Search error:', err)
-      setError(err.message || 'Erreur lors de la recherche')
+      const error = err as { message?: string }
+      setError(error?.message || 'Erreur lors de la recherche')
     } finally {
       setIsSearching(false)
     }

@@ -399,7 +399,7 @@ export const handler: Handler = async (event) => {
     let finalDiagnosis: FinalDiagnosisInput | null = null
     let iterations = 0
     const maxIterations = 6 // Allow more iterations for web search + diagnosis
-    let currentMessages = [...formattedMessages]
+    const currentMessages = [...formattedMessages]
 
     while (iterations < maxIterations) {
       iterations++

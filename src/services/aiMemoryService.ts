@@ -177,123 +177,151 @@ export class AIMemoryService {
    * Consolide toutes les données en mémoire structurée
    */
   private static consolidateMemory(data: {
-    vehicles: any[]
-    diagnostics: any[]
-    chatHistory: any[]
-    videoAnalyses: any[]
-    devisAnalyses: any[]
-    entretiens: any[]
-    interactions: any[]
+    vehicles: Record<string, unknown>[]
+    diagnostics: Record<string, unknown>[]
+    chatHistory: Record<string, unknown>[]
+    videoAnalyses: Record<string, unknown>[]
+    devisAnalyses: Record<string, unknown>[]
+    entretiens: Record<string, unknown>[]
+    interactions: Record<string, unknown>[]
   }): UserMemory {
     const memory: UserMemory = this.getEmptyMemory()
 
     // Mapper les véhicules
-    memory.vehicles = (data.vehicles || []).map(v => ({
-      id: v.id,
-      brand: v.brand || v.marque,
-      model: v.model || v.modele,
-      year: v.year || v.annee,
-      license_plate: v.license_plate || v.plaque,
-      kilometrage: v.kilometrage || v.mileage,
-      fuel_type: v.fuel_type || v.carburant,
-      derniere_revision: v.derniere_revision,
-      date_achat: v.date_achat
+    memory.vehicles = (data.vehicles || []).map((v: Record<string, unknown>) => ({
+      id: v.id as string,
+      brand: (v.brand || v.marque) as string,
+      model: (v.model || v.modele) as string,
+      year: (v.year || v.annee) as number,
+      license_plate: (v.license_plate || v.plaque) as string | undefined,
+      kilometrage: (v.kilometrage || v.mileage) as number | undefined,
+      fuel_type: (v.fuel_type || v.carburant) as string | undefined,
+      derniere_revision: v.derniere_revision as string | undefined,
+      date_achat: v.date_achat as string | undefined
     }))
 
     // Consolider diagnostics
-    data.diagnostics?.forEach((diag: any) => {
-      const conversation = diag.conversation || []
-      const userMessages = conversation.filter((m: any) => m.role === 'user')
-      const firstUserMessage = userMessages[0]?.content || diag.description || 'Diagnostic'
+    interface ConversationMessage {
+      role: string
+      content?: string
+    }
+    data.diagnostics?.forEach((diag: Record<string, unknown>) => {
+      const conversation = (diag.conversation || []) as ConversationMessage[]
+      const userMessages = conversation.filter((m: ConversationMessage) => m.role === 'user')
+      const firstUserMessage = userMessages[0]?.content || (diag.description as string) || 'Diagnostic'
 
       memory.problemes_historiques.push({
-        date: diag.created_at,
+        date: diag.created_at as string,
         type: 'diagnostic',
         probleme: firstUserMessage,
         solution: this.extractSolution(conversation),
         cout: this.extractCost(conversation),
-        resolu: diag.resolu || false
+        resolu: (diag.resolu as boolean) || false
       })
     })
 
     // Consolider chats mécanicien
-    data.chatHistory?.forEach((chat: any) => {
-      const messages = chat.messages || []
-      const userMessages = messages.filter((m: any) => m.role === 'user')
+    data.chatHistory?.forEach((chat: Record<string, unknown>) => {
+      const messages = (chat.messages || []) as ConversationMessage[]
+      const userMessages = messages.filter((m: ConversationMessage) => m.role === 'user')
       const lastUserMessage = userMessages[userMessages.length - 1]?.content
 
       if (lastUserMessage) {
         memory.problemes_historiques.push({
-          date: chat.updated_at || chat.created_at,
+          date: (chat.updated_at || chat.created_at) as string,
           type: 'chat',
           probleme: lastUserMessage,
-          resolu: chat.resolu || false
+          resolu: (chat.resolu as boolean) || false
         })
       }
     })
 
     // Consolider vidéos
-    data.videoAnalyses?.forEach((video: any) => {
-      const result = video.analyse_resultat || video.analysis_result
+    interface VideoResult {
+      verdict?: { diagnostic?: string; cout_estime?: { total?: number } }
+      synthesis?: { diagnostic_global?: string }
+      prix_pieces?: Array<{ prix?: number }>
+    }
+    data.videoAnalyses?.forEach((video: Record<string, unknown>) => {
+      const result = (video.analyse_resultat || video.analysis_result) as VideoResult | undefined
       memory.problemes_historiques.push({
-        date: video.cree_at || video.created_at,
+        date: (video.cree_at || video.created_at) as string,
         type: 'video',
         probleme: result?.verdict?.diagnostic || result?.synthesis?.diagnostic_global || 'Analyse vidéo',
-        cout: result?.verdict?.cout_estime?.total || result?.prix_pieces?.reduce((sum: number, p: any) => sum + (p.prix || 0), 0),
+        cout: result?.verdict?.cout_estime?.total || result?.prix_pieces?.reduce((sum: number, p: { prix?: number }) => sum + (p.prix || 0), 0),
         resolu: false
       })
     })
 
     // Consolider devis
-    data.devisAnalyses?.forEach((devis: any) => {
-      const result = devis.analysis_result
+    interface DevisResult {
+      verdict?: { statut?: string }
+    }
+    data.devisAnalyses?.forEach((devis: Record<string, unknown>) => {
+      const result = devis.analysis_result as DevisResult | string | undefined
       const verdictText = typeof result === 'string'
         ? result
-        : result?.verdict?.statut || 'Analyse devis'
+        : (result as DevisResult)?.verdict?.statut || 'Analyse devis'
 
       memory.problemes_historiques.push({
-        date: devis.created_at,
+        date: devis.created_at as string,
         type: 'devis',
         probleme: `Devis: ${verdictText}`,
-        cout: devis.total_amount,
+        cout: devis.total_amount as number | undefined,
         resolu: true
       })
     })
 
     // Consolider entretiens
-    memory.entretiens = (data.entretiens || []).map(ent => ({
-      date: ent.date,
-      type: ent.type,
-      garage: ent.garage,
-      cout: ent.cout,
-      kilometrage: ent.kilometrage,
-      pieces_changees: ent.pieces_changees || []
+    memory.entretiens = (data.entretiens || []).map((ent: Record<string, unknown>) => ({
+      date: ent.date as string,
+      type: ent.type as string,
+      garage: ent.garage as string | undefined,
+      cout: ent.cout as number | undefined,
+      kilometrage: ent.kilometrage as number | undefined,
+      pieces_changees: (ent.pieces_changees as string[] | undefined) || []
     }))
 
     // Extraire pièces changées des entretiens
-    data.entretiens?.forEach((ent: any) => {
-      (ent.pieces_changees || []).forEach((piece: string) => {
+    interface EntretienRecord {
+      pieces_changees?: string[]
+      date: string
+      kilometrage?: number
+      garantie_jusqu_a?: string
+    }
+    data.entretiens?.forEach((ent: Record<string, unknown>) => {
+      const entretien = ent as unknown as EntretienRecord
+      ;(entretien.pieces_changees || []).forEach((piece: string) => {
         memory.pieces_changees.push({
           piece,
-          date: ent.date,
-          kilometrage: ent.kilometrage,
-          garantie_jusqu_a: ent.garantie_jusqu_a
+          date: entretien.date,
+          kilometrage: entretien.kilometrage,
+          garantie_jusqu_a: entretien.garantie_jusqu_a
         })
       })
     })
 
     // Consolider interactions récentes
-    data.interactions?.forEach((interaction: any) => {
+    interface InteractionRecord {
+      created_at: string
+      type: 'diagnostic' | 'chat' | 'video' | 'devis'
+      probleme: string
+      solution?: string
+      cout?: number
+      resolu?: boolean
+    }
+    data.interactions?.forEach((interaction: Record<string, unknown>) => {
+      const inter = interaction as unknown as InteractionRecord
       if (!memory.problemes_historiques.find(p =>
-        p.probleme === interaction.probleme && p.date === interaction.created_at
+        p.probleme === inter.probleme && p.date === inter.created_at
       )) {
         memory.problemes_historiques.push({
-          date: interaction.created_at,
-          type: interaction.type,
-          probleme: interaction.probleme,
-          solution: interaction.solution,
-          cout: interaction.cout,
-          resolu: interaction.resolu || false
+          date: inter.created_at,
+          type: inter.type,
+          probleme: inter.probleme,
+          solution: inter.solution,
+          cout: inter.cout,
+          resolu: inter.resolu || false
         })
       }
     })
@@ -327,8 +355,8 @@ export class AIMemoryService {
   /**
    * Extrait la solution d'une conversation de diagnostic
    */
-  private static extractSolution(conversation: any[]): string | undefined {
-    const assistantMessages = conversation.filter((m: any) => m.role === 'assistant')
+  private static extractSolution(conversation: Array<{ role: string; content?: string }>): string | undefined {
+    const assistantMessages = conversation.filter((m) => m.role === 'assistant')
     const lastAssistant = assistantMessages[assistantMessages.length - 1]?.content
 
     if (lastAssistant) {
@@ -345,8 +373,8 @@ export class AIMemoryService {
   /**
    * Extrait le coût estimé d'une conversation
    */
-  private static extractCost(conversation: any[]): number | undefined {
-    const assistantMessages = conversation.filter((m: any) => m.role === 'assistant')
+  private static extractCost(conversation: Array<{ role: string; content?: string }>): number | undefined {
+    const assistantMessages = conversation.filter((m) => m.role === 'assistant')
 
     for (const msg of assistantMessages) {
       const content = msg.content || ''

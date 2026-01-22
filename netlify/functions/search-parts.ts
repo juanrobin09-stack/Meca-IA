@@ -189,14 +189,15 @@ export const handler: Handler = async (event) => {
       })
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Search parts error:', error)
+    const err = error as { message?: string }
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         error: 'Erreur lors de la recherche',
-        message: error.message
+        message: err?.message || 'Unknown error'
       })
     }
   }

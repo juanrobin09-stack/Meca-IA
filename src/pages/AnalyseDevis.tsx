@@ -34,6 +34,7 @@ export default function AnalyseDevis() {
 
   const [selectedFile, setSelectedFile] = useState<{ dataUrl: string; base64: string } | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [analysisResult, setAnalysisResult] = useState<any>(null)
   const [savedDevisId, setSavedDevisId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -129,10 +130,11 @@ export default function AnalyseDevis() {
         base64: compressed.base64,
       })
       setAnalysisStep('')
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Erreur compression:', err)
       // Message d'erreur plus clair pour mobile
-      const errorMsg = err.message || "Erreur lors du traitement de l'image."
+      const error = err as { message?: string }
+      const errorMsg = error?.message || "Erreur lors du traitement de l'image."
       if (errorMsg.includes('Format') || errorMsg.includes('supporté')) {
         setError('📸 Cette image ne peut pas être lue. Utilise le bouton "Prendre photo" pour capturer directement ton devis.')
       } else {
@@ -262,12 +264,13 @@ export default function AnalyseDevis() {
           setCurrentRemaining(prev => Math.max(0, prev - 1))
         }
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('❌ Erreur analyse:', err)
-      if (err.name === 'AbortError') {
+      const error = err as { name?: string; message?: string }
+      if (error?.name === 'AbortError') {
         setError('L\'analyse prend trop de temps. Réessaie avec une photo plus nette.')
       } else {
-        setError(err.message || "Erreur lors de l'analyse. Réessaie.")
+        setError(error?.message || "Erreur lors de l'analyse. Réessaie.")
       }
     } finally {
       setIsAnalyzing(false)

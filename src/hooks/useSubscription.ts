@@ -312,10 +312,10 @@ export function useSubscription(profile: Profile | null) {
   const isPremium = profile?.subscription_status === 'premium'
   const diagnosticsUsed = profile?.free_diagnostics_used ?? 0
   const diagnosticsRemaining = isPremium ? Infinity : Math.max(0, FREE_DIAGNOSTICS_LIMIT - diagnosticsUsed)
-  const purchasedDiagnosticCredits = (profile as any)?.purchased_diagnostic_credits ?? 0
+  const purchasedDiagnosticCredits = (profile as { purchased_diagnostic_credits?: number } | null)?.purchased_diagnostic_credits ?? 0
   const devisUsed = profile?.free_devis_used ?? 0
   const devisRemaining = isPremium ? Infinity : Math.max(0, FREE_DEVIS_LIMIT - devisUsed)
-  const purchasedDevisCredits = (profile as any)?.purchased_devis_credits ?? 0
+  const purchasedDevisCredits = (profile as { purchased_devis_credits?: number } | null)?.purchased_devis_credits ?? 0
 
   return {
     loading,

@@ -80,6 +80,7 @@ export default function VehicleHistory() {
     }
 
     fetchHistory()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plate])
 
   const fetchHistory = async () => {

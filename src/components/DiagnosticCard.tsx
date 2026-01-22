@@ -188,8 +188,8 @@ export default function DiagnosticCard({ diagnostic, onDelete }: DiagnosticCardP
         for (const msg of assistantMessages) {
           if (msg.content) {
             // Clean the message
-            let cleanContent = String(msg.content)
-              .replace(/[^\x00-\x7F\u00C0-\u00FF\u0100-\u017F]/g, '') // Remove emojis
+            const cleanContent = String(msg.content)
+              .replace(/[^\x20-\x7F\u00C0-\u00FF\u0100-\u017F]/g, '') // Remove emojis and control chars
               .substring(0, 500) // Limit length
 
             if (cleanContent.length > 0) {

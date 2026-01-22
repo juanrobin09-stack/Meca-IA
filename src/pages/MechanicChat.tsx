@@ -61,6 +61,7 @@ export default function MechanicChat() {
       loadConversations()
       loadDailyMessageCount()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const loadDailyMessageCount = async () => {
@@ -226,6 +227,7 @@ export default function MechanicChat() {
     } finally {
       setIsTyping(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputMessage, isTyping, currentConversation, user, selectedVehicleId, selectedImage])
 
   const QUICK_ACTIONS = [

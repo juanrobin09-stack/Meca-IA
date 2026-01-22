@@ -83,10 +83,6 @@ export default function Vehicles() {
   const maxVehicles = plan.maxVehicles
   const canAddVehicle = vehicles.length < maxVehicles
 
-  useEffect(() => {
-    fetchVehicles()
-  }, [user])
-
   const fetchVehicles = async () => {
     if (!user) {
       console.log('[Vehicles] No user, skipping fetch')
@@ -114,6 +110,11 @@ export default function Vehicles() {
     }
     setLoading(false)
   }
+
+  useEffect(() => {
+    fetchVehicles()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -364,6 +365,7 @@ function VehicleModal({
 
   useEffect(() => {
     if (vehicle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: vehicle.name || '',
         brand: vehicle.brand || '',
@@ -374,6 +376,7 @@ function VehicleModal({
         plate: vehicle.plate || '',
       })
     } else {
+       
       setFormData({
         name: '',
         brand: '',

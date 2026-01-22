@@ -432,7 +432,7 @@ export const handler: Handler = async (event) => {
     console.log('[diagnostic-pro] Request:', { userId, sessionId, hasImages: images.length > 0, forceFinalize })
 
     // 1. Get or create user profile and check limits
-    let { data: profile } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -587,7 +587,7 @@ export const handler: Handler = async (event) => {
     let allSources: string[] = [...(session.sources_collected || [])]
     let iterations = 0
     const maxIterations = 6 // Réduit de 8 à 6 pour éviter timeout
-    let currentMessages = [...formattedMessages]
+    const currentMessages = [...formattedMessages]
     let searchCount = 0
     const maxSearches = 3 // Limite les recherches web pour éviter timeout
     const startTime = Date.now()

@@ -18,6 +18,32 @@ export function useAuth() {
     loading: true,
   })
 
+  // Define fetchProfile before useEffect to avoid accessing before declaration
+  const fetchProfile = async (userId: string, retryCount = 0) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching profile:', error)
+      if (error.code === 'PGRST116') {
+        if (retryCount < 5) {
+          await new Promise(resolve => setTimeout(resolve, 800))
+          return fetchProfile(userId, retryCount + 1)
+        }
+        console.error('Profile not found after retries - trigger may have failed')
+        setState((prev) => ({ ...prev, profile: null, loading: false }))
+        return
+      }
+      setState((prev) => ({ ...prev, loading: false }))
+      return
+    }
+
+    setState((prev) => ({ ...prev, profile: data as Profile, loading: false }))
+  }
+
   useEffect(() => {
     // Timeout pour éviter le loading infini si Supabase ne répond pas
     const timeout = setTimeout(() => {
@@ -62,37 +88,8 @@ export function useAuth() {
       clearTimeout(timeout)
       subscription.unsubscribe()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  async function fetchProfile(userId: string, retryCount = 0) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
-    if (error) {
-      console.error('Error fetching profile:', error)
-      // Profile doesn't exist yet - wait and retry a few times
-      // The database trigger should create the profile automatically
-      if (error.code === 'PGRST116') {
-        if (retryCount < 5) {
-          // Wait a bit for the database trigger to create the profile
-          await new Promise(resolve => setTimeout(resolve, 800))
-          return fetchProfile(userId, retryCount + 1)
-        }
-        // After retries, profile still doesn't exist - log error but continue
-        console.error('Profile not found after retries - trigger may have failed')
-        setState((prev) => ({ ...prev, profile: null, loading: false }))
-        return
-      }
-      // Other errors - just set loading to false
-      setState((prev) => ({ ...prev, loading: false }))
-      return
-    }
-
-    setState((prev) => ({ ...prev, profile: data as Profile, loading: false }))
-  }
 
   async function signUp(email: string, password: string, displayName?: string) {
     // Include display_name in user metadata so the database trigger can use it
