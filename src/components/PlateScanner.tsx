@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Camera, Loader2, Car, CheckCircle2 } from 'lucide-react'
+import { Camera, Loader2, Car, CheckCircle2, ImagePlus } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 
 interface VehicleInfo {
@@ -62,13 +62,16 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
     fuel: 'Essence',
   })
   const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (fileInputRef.current) fileInputRef.current.value = ''
+    // Clear both inputs
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+    if (galleryInputRef.current) galleryInputRef.current.value = ''
     setError(null)
 
     const validation = validateImageFile(file)
@@ -165,31 +168,53 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
 
         {step === 'upload' ? (
           <div className="space-y-4">
-            <div
-              className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              {isScanning ? (
-                <div className="space-y-2">
-                  <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Analyse en cours...</p>
-                </div>
-              ) : (
-                <>
-                  <Camera className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="font-medium">Prendre une photo</p>
-                  <p className="text-sm text-muted-foreground">de ta plaque d'immatriculation</p>
-                </>
-              )}
-            </div>
+            {/* Hidden file inputs */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {isScanning ? (
+              <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                <Loader2 className="h-12 w-12 mx-auto animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground mt-2">Analyse en cours...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {/* Camera button */}
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                >
+                  <Camera className="h-10 w-10 mx-auto text-primary mb-3" />
+                  <p className="font-medium text-sm">Prendre une photo</p>
+                  <p className="text-xs text-muted-foreground mt-1">Ouvrir la caméra</p>
+                </button>
+
+                {/* Gallery button */}
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                >
+                  <ImagePlus className="h-10 w-10 mx-auto text-primary mb-3" />
+                  <p className="font-medium text-sm">Choisir une photo</p>
+                  <p className="text-xs text-muted-foreground mt-1">Depuis la galerie</p>
+                </button>
+              </div>
+            )}
 
             {error && <p className="text-sm text-red-600 text-center">{error}</p>}
 
