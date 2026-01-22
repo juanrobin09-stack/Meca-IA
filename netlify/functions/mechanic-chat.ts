@@ -96,8 +96,314 @@ interface VehicleContext {
   forecast?: unknown
 }
 
+interface UserMemory {
+  vehicles: Array<{
+    id: string
+    brand: string
+    model: string
+    year: number
+    license_plate?: string
+    mileage?: number
+    fuel_type?: string
+  }>
+  problemes: Array<{
+    date: string
+    type: string
+    probleme: string
+    solution?: string
+    cout?: number
+    resolu: boolean
+  }>
+  entretiens: Array<{
+    date: string
+    type: string
+    garage?: string
+    cout?: number
+    pieces: string[]
+  }>
+  pieces_changees: Array<{
+    piece: string
+    date: string
+    kilometrage?: number
+  }>
+}
+
+/**
+ * Charge la mémoire COMPLÈTE de l'utilisateur - LE COEUR DE L'APP
+ * L'IA retient TOUT pour chaque utilisateur
+ */
+async function loadUserMemory(userId: string): Promise<UserMemory> {
+  if (!supabase) {
+    return { vehicles: [], problemes: [], entretiens: [], pieces_changees: [] }
+  }
+
+  try {
+    // 1. Tous les véhicules
+    const { data: vehicles } = await supabase
+      .from('vehicles')
+      .select('id, brand, model, year, license_plate, mileage, fuel_type')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    // 2. Tous les diagnostics (historique complet)
+    const { data: diagnostics } = await supabase
+      .from('diagnostics')
+      .select('created_at, problem_description, diagnosis_summary, estimated_cost_min, estimated_cost_max, conversation')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(30)
+
+    // 3. Conversations chat mécanicien précédentes
+    const { data: chatConvs } = await supabase
+      .from('chat_conversations')
+      .select('id, title, updated_at')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false })
+      .limit(10)
+
+    // 4. Messages de ces conversations
+    let chatMessages: Array<{ conversation_id: string; content: string; sender: string }> = []
+    if (chatConvs && chatConvs.length > 0) {
+      const convIds = chatConvs.map(c => c.id)
+      const { data: messages } = await supabase
+        .from('chat_messages')
+        .select('conversation_id, content, sender')
+        .in('conversation_id', convIds)
+        .eq('sender', 'user')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      chatMessages = messages || []
+    }
+
+    // 5. Analyses vidéo
+    const { data: videoAnalyses } = await supabase
+      .from('video_diagnostic')
+      .select('cree_at, analyse_resultat')
+      .eq('utilisateur_id', userId)
+      .order('cree_at', { ascending: false })
+      .limit(10)
+
+    // 6. Analyses devis
+    const { data: devisAnalyses } = await supabase
+      .from('devis_analyses')
+      .select('created_at, garage_name, original_amount, analysis_result')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    // 7. Entretiens
+    const { data: entretiens } = await supabase
+      .from('entretiens')
+      .select('date, type, garage, cout, kilometrage, pieces_changees')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+      .limit(20)
+
+    // 8. Historique interactions
+    const { data: interactions } = await supabase
+      .from('interactions_history')
+      .select('created_at, type, probleme, solution, cout, resolu')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(30)
+
+    // Consolider les problèmes
+    const problemes: UserMemory['problemes'] = []
+
+    // Depuis diagnostics
+    diagnostics?.forEach(d => {
+      const conversation = d.conversation || []
+      const userMsg = conversation.find((m: { role: string }) => m.role === 'user')
+      problemes.push({
+        date: d.created_at,
+        type: 'diagnostic',
+        probleme: d.problem_description || userMsg?.content || 'Diagnostic',
+        solution: d.diagnosis_summary,
+        cout: d.estimated_cost_min ? Math.round((d.estimated_cost_min + (d.estimated_cost_max || d.estimated_cost_min)) / 2) : undefined,
+        resolu: !!d.diagnosis_summary
+      })
+    })
+
+    // Depuis chat mécanicien
+    chatMessages?.forEach(m => {
+      if (m.content && m.content.length > 10) {
+        problemes.push({
+          date: new Date().toISOString(),
+          type: 'chat',
+          probleme: m.content.slice(0, 200),
+          resolu: true
+        })
+      }
+    })
+
+    // Depuis vidéo
+    videoAnalyses?.forEach(v => {
+      const result = v.analyse_resultat
+      if (result) {
+        problemes.push({
+          date: v.cree_at,
+          type: 'video',
+          probleme: result?.verdict?.diagnostic || result?.synthesis?.diagnostic_global || 'Analyse vidéo',
+          cout: result?.verdict?.cout_estime?.total,
+          resolu: false
+        })
+      }
+    })
+
+    // Depuis devis
+    devisAnalyses?.forEach(d => {
+      problemes.push({
+        date: d.created_at,
+        type: 'devis',
+        probleme: `Devis ${d.garage_name}: ${d.original_amount}€`,
+        cout: d.original_amount,
+        resolu: true
+      })
+    })
+
+    // Depuis interactions
+    interactions?.forEach(i => {
+      if (!problemes.find(p => p.probleme === i.probleme && p.date === i.created_at)) {
+        problemes.push({
+          date: i.created_at,
+          type: i.type,
+          probleme: i.probleme,
+          solution: i.solution,
+          cout: i.cout,
+          resolu: i.resolu || false
+        })
+      }
+    })
+
+    // Trier par date
+    problemes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+    // Entretiens
+    const entretiensFormatted = (entretiens || []).map(e => ({
+      date: e.date,
+      type: e.type,
+      garage: e.garage,
+      cout: e.cout,
+      pieces: e.pieces_changees || []
+    }))
+
+    // Pièces changées
+    const pieces_changees: UserMemory['pieces_changees'] = []
+    entretiens?.forEach(e => {
+      (e.pieces_changees || []).forEach((piece: string) => {
+        pieces_changees.push({
+          piece,
+          date: e.date,
+          kilometrage: e.kilometrage
+        })
+      })
+    })
+
+    return {
+      vehicles: vehicles || [],
+      problemes: problemes.slice(0, 50), // Top 50
+      entretiens: entretiensFormatted,
+      pieces_changees
+    }
+  } catch (error) {
+    console.error('Error loading user memory:', error)
+    return { vehicles: [], problemes: [], entretiens: [], pieces_changees: [] }
+  }
+}
+
+/**
+ * Génère le contexte formaté pour l'IA
+ */
+function generateMemoryContext(memory: UserMemory): string {
+  if (memory.vehicles.length === 0 && memory.problemes.length === 0) {
+    return 'Nouvel utilisateur - Aucun historique'
+  }
+
+  let context = '\n═══════════════════════════════════════\n'
+  context += '        MÉMOIRE UTILISATEUR MECAI        \n'
+  context += '═══════════════════════════════════════\n\n'
+
+  // Véhicules
+  if (memory.vehicles.length > 0) {
+    context += '🚗 VÉHICULES:\n'
+    memory.vehicles.forEach(v => {
+      context += `• ${v.brand} ${v.model} ${v.year}`
+      if (v.mileage) context += ` - ${v.mileage.toLocaleString('fr-FR')} km`
+      if (v.fuel_type) context += ` (${v.fuel_type})`
+      if (v.license_plate) context += ` [${v.license_plate}]`
+      context += '\n'
+    })
+    context += '\n'
+  }
+
+  // Historique problèmes (top 15)
+  if (memory.problemes.length > 0) {
+    context += `📋 HISTORIQUE (${memory.problemes.length} interactions):\n`
+    memory.problemes.slice(0, 15).forEach(p => {
+      const date = new Date(p.date).toLocaleDateString('fr-FR')
+      const status = p.resolu ? '✓' : '⚠️'
+      context += `${status} [${date}] ${p.type.toUpperCase()}: ${p.probleme.slice(0, 100)}`
+      if (p.cout) context += ` (~${p.cout}€)`
+      context += '\n'
+      if (p.solution) context += `  → ${p.solution.slice(0, 80)}...\n`
+    })
+    context += '\n'
+  }
+
+  // Pièces changées
+  if (memory.pieces_changees.length > 0) {
+    context += '🔧 PIÈCES CHANGÉES:\n'
+    memory.pieces_changees.slice(0, 10).forEach(p => {
+      const date = new Date(p.date).toLocaleDateString('fr-FR')
+      context += `• ${p.piece} (${date})`
+      if (p.kilometrage) context += ` à ${p.kilometrage.toLocaleString('fr-FR')} km`
+      context += '\n'
+    })
+    context += '\n'
+  }
+
+  // Entretiens
+  if (memory.entretiens.length > 0) {
+    context += '🛠️ ENTRETIENS:\n'
+    memory.entretiens.slice(0, 5).forEach(e => {
+      const date = new Date(e.date).toLocaleDateString('fr-FR')
+      context += `• ${date}: ${e.type}`
+      if (e.garage) context += ` chez ${e.garage}`
+      if (e.cout) context += ` (${e.cout}€)`
+      context += '\n'
+    })
+    context += '\n'
+  }
+
+  // Patterns détectés
+  const problemTypes = memory.problemes.map(p => p.probleme.toLowerCase())
+  const recurringKeywords = ['frein', 'bruit', 'fuite', 'voyant', 'démarrage', 'embrayage', 'suspension', 'moteur']
+  const recurring = recurringKeywords.filter(k =>
+    problemTypes.filter(t => t.includes(k)).length >= 2
+  )
+
+  if (recurring.length > 0) {
+    context += `⚠️ PATTERNS RÉCURRENTS: ${recurring.join(', ')}\n`
+  }
+
+  // Problèmes non résolus
+  const nonResolus = memory.problemes.filter(p => !p.resolu).slice(0, 3)
+  if (nonResolus.length > 0) {
+    context += '\n🔴 À SUIVRE (non résolu):\n'
+    nonResolus.forEach(p => {
+      context += `• ${p.probleme.slice(0, 80)}\n`
+    })
+  }
+
+  context += '\n═══════════════════════════════════════\n'
+
+  return context
+}
+
 async function buildContext(userId: string, vehicleId?: string): Promise<VehicleContext> {
   const context: VehicleContext = {}
+
+  if (!supabase) return context
 
   if (vehicleId) {
     // Véhicule
@@ -241,8 +547,10 @@ export const handler: Handler = async (event) => {
       }
     }
 
-    // 3. Build context
+    // 3. Build context + MÉMOIRE COMPLÈTE
     const context = await buildContext(userId, vehicleId)
+    const userMemory = await loadUserMemory(userId)
+    const memoryContext = generateMemoryContext(userMemory)
 
     // 4. Get conversation history
     const { data: history } = await supabase
@@ -302,17 +610,17 @@ QUAND UTILISER LA RECHERCHE WEB:
 ═══════════════════════════════════════════════════════════════
 
 ${context.vehicle ? `
-🚗 VÉHICULE: ${vehicleText}
+🚗 VÉHICULE ACTUEL: ${vehicleText}
    Carburant: ${context.vehicle.fuel_type || 'Non spécifié'}
 ` : '⚠️ Aucun véhicule sélectionné - demande-lui sa voiture !'}
 
-${context.recent_diagnostics && context.recent_diagnostics.length > 0 ? `
-📋 HISTORIQUE RÉCENT (utilise-le !):
-${context.recent_diagnostics.map(d => `- ${d.problem_description} (${new Date(d.created_at).toLocaleDateString('fr-FR')})`).join('\n')}
+${memoryContext}
 
-👆 IMPORTANT: Fais référence à cet historique naturellement !
-"Tiens, tu m'avais parlé de [problème] l'autre fois..."
-` : ''}
+👆 SUPER IMPORTANT - UTILISE CETTE MÉMOIRE !
+- Fais référence aux problèmes passés: "Tiens, la dernière fois tu m'avais parlé de..."
+- Rappelle les pièces déjà changées: "Tes plaquettes ont été changées il y a..."
+- Évite de répéter des solutions déjà essayées
+- Si un problème était non résolu, demande des nouvelles: "Au fait, ton souci de X c'est réglé ?"
 
 ═══════════════════════════════════════════════════════════════
                     RÈGLES DE CONVERSATION
