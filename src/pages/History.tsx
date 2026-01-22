@@ -141,11 +141,11 @@ export default function History() {
   const filteredDiagnostics = useMemo(() => {
     let filtered = diagnostics
 
-    // Filter by time for free users (30 days)
+    // Filter by time for free users (7 days as per plans.ts)
     if (!isPremium) {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      filtered = filtered.filter((d) => new Date(d.created_at) > thirtyDaysAgo)
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      filtered = filtered.filter((d) => new Date(d.created_at) > sevenDaysAgo)
     }
 
     // Filter by search
@@ -171,11 +171,11 @@ export default function History() {
   const filteredDevis = useMemo(() => {
     let filtered = devisList
 
-    // Filter by time for free users (30 days)
+    // Filter by time for free users (7 days as per plans.ts)
     if (!isPremium) {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      filtered = filtered.filter((d) => new Date(d.created_at) > thirtyDaysAgo)
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      filtered = filtered.filter((d) => new Date(d.created_at) > sevenDaysAgo)
     }
 
     // Filter by search
@@ -195,11 +195,11 @@ export default function History() {
   const filteredVideoDiagnostics = useMemo(() => {
     let filtered = videoDiagnostics
 
-    // Filter by time for free users (30 days)
+    // Filter by time for free users (7 days as per plans.ts)
     if (!isPremium) {
-      const thirtyDaysAgo = new Date()
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-      filtered = filtered.filter((d) => new Date(d.created_at) > thirtyDaysAgo)
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      filtered = filtered.filter((d) => new Date(d.created_at) > sevenDaysAgo)
     }
 
     // Filter by search
@@ -299,7 +299,7 @@ export default function History() {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-amber-800">Historique limité à 30 jours</p>
+                        <p className="font-medium text-amber-800">Historique limité à 7 jours</p>
                         <p className="text-sm text-amber-700">
                           Passe Premium pour accéder à tout ton historique.
                         </p>
@@ -383,7 +383,7 @@ export default function History() {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-amber-800">Historique limité à 30 jours</p>
+                        <p className="font-medium text-amber-800">Historique limité à 7 jours</p>
                         <p className="text-sm text-amber-700">
                           Passe Premium pour accéder à tout ton historique.
                         </p>
@@ -465,7 +465,7 @@ export default function History() {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-amber-800">Historique limité à 30 jours</p>
+                        <p className="font-medium text-amber-800">Historique limité à 7 jours</p>
                         <p className="text-sm text-amber-700">
                           Passe Premium pour accéder à tout ton historique.
                         </p>
