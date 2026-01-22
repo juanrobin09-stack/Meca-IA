@@ -16,6 +16,21 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.env.production
+.env.development
+.env.staging
+
+# Security - Never commit secrets
+*.key
+*.pem
+*.p12
+*.pfx
+config.local.js
+config.local.ts
+secrets/
+.secrets/
+credentials.json
+service-account.json
 
 # Editor directories and files
 .vscode/*
