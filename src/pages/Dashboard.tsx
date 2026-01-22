@@ -211,11 +211,6 @@ export default function Dashboard() {
                       diagnostic{thisMonthDiagnostics.length !== 1 ? 's' : ''}
                     </span>
                   </div>
-                  {thisMonthDiagnostics.length > 0 && (
-                    <p className="text-xs text-green-600 mt-1">
-                      ~{thisMonthDiagnostics.length * 80}€ économisés en évitant le garage
-                    </p>
-                  )}
                 </CardContent>
               </Card>
             </div>
