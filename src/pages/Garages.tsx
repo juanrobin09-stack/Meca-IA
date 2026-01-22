@@ -231,8 +231,16 @@ export default function Garages() {
         filters
       )
       setGarages(results)
-    } catch {
-      setError('Impossible de trouver des garages. Réessaie.')
+    } catch (err) {
+      console.error('Garage search error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue'
+      if (errorMessage.includes('API key')) {
+        setError('Service de recherche temporairement indisponible. Réessaie plus tard.')
+      } else if (errorMessage.includes('ZERO_RESULTS') || errorMessage.includes('not found')) {
+        setError('Aucun garage trouvé dans cette zone. Essaie d\'élargir ta recherche.')
+      } else {
+        setError('Impossible de trouver des garages. Vérifie ta connexion et réessaie.')
+      }
       setGarages([])
     } finally {
       setLoading(false)
@@ -249,9 +257,20 @@ export default function Garages() {
 
     try {
       const results = await searchGarages(query)
+      if (results.length === 0) {
+        setError(`Aucun garage trouvé à "${query}". Vérifie l'orthographe ou essaie une autre ville.`)
+      }
       setGarages(results)
-    } catch {
-      setError('Impossible de trouver des garages. Vérifie ta recherche.')
+    } catch (err) {
+      console.error('Garage search error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Erreur inconnue'
+      if (errorMessage.includes('Ville non trouvée') || errorMessage.includes('Geocode')) {
+        setError(`Ville "${query}" non trouvée. Vérifie l'orthographe ou entre un code postal.`)
+      } else if (errorMessage.includes('API key')) {
+        setError('Service de recherche temporairement indisponible. Réessaie plus tard.')
+      } else {
+        setError('Impossible de trouver des garages. Vérifie ta connexion et réessaie.')
+      }
       setGarages([])
     } finally {
       setLoading(false)

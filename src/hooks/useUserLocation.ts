@@ -90,8 +90,8 @@ export function useUserLocation(): UseUserLocationResult {
         setLocation(PARIS_LOCATION);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 10000,
+        enableHighAccuracy: false, // false is faster on mobile
+        timeout: 15000, // 15 seconds for slow mobile networks
         maximumAge: 300000, // 5 minutes
       }
     );

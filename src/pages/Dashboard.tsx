@@ -104,19 +104,44 @@ export default function Dashboard() {
             {/* Status Card */}
             {!isPremium ? (
               <Card className="mb-6 border-primary/20 bg-primary/5">
-                <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 gap-3">
-                  <div>
-                    <h3 className="font-semibold text-sm sm:text-base mb-0.5">Version gratuite</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {diagnosticsRemaining} diagnostic{diagnosticsRemaining !== 1 ? 's' : ''} restant{diagnosticsRemaining !== 1 ? 's' : ''} ce mois
-                    </p>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                    <div>
+                      <h3 className="font-semibold text-sm sm:text-base mb-0.5">Version gratuite</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Limites mensuelles - se réinitialisent chaque mois
+                      </p>
+                    </div>
+                    <Link to="/pricing" className="w-full sm:w-auto">
+                      <Button size="sm" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600">
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Passer Premium
+                      </Button>
+                    </Link>
                   </div>
-                  <Link to="/pricing" className="w-full sm:w-auto">
-                    <Button size="sm" className="w-full sm:w-auto">
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Passer Premium
-                    </Button>
-                  </Link>
+                  {/* Limites restantes */}
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2">
+                      <div className={`w-2 h-2 rounded-full ${diagnosticsRemaining > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                      <span className="text-muted-foreground">Diagnostics:</span>
+                      <span className="font-medium">{diagnosticsRemaining}/2</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-muted-foreground">Devis:</span>
+                      <span className="font-medium">1/mois</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-muted-foreground">Chat:</span>
+                      <span className="font-medium">10/jour</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-background/50 rounded-lg px-3 py-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-muted-foreground">Véhicule:</span>
+                      <span className="font-medium">1 max</span>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -126,9 +151,9 @@ export default function Dashboard() {
                     <Sparkles className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm">✨ Premium actif</h3>
+                    <h3 className="font-semibold text-sm">Premium actif</h3>
                     <p className="text-xs text-muted-foreground">
-                      Toutes les fonctionnalités sont débloquées
+                      Toutes les fonctionnalités illimitées
                     </p>
                   </div>
                 </CardContent>

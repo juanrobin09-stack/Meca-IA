@@ -233,7 +233,12 @@ export default function Pricing() {
                       <td className="p-3 text-center font-medium text-primary">Illimités</td>
                     </tr>
                     <tr>
-                      <td className="p-3">Véhicules</td>
+                      <td className="p-3">Diagnostic PRO (recherche web)</td>
+                      <td className="p-3 text-center">2/mois</td>
+                      <td className="p-3 text-center font-medium text-primary">Illimité</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3">Véhicules enregistrés</td>
                       <td className="p-3 text-center">1</td>
                       <td className="p-3 text-center font-medium text-primary">Illimités</td>
                     </tr>
@@ -243,7 +248,7 @@ export default function Pricing() {
                       <td className="p-3 text-center font-medium text-primary">Illimité 24/7</td>
                     </tr>
                     <tr>
-                      <td className="p-3">Analyse de devis</td>
+                      <td className="p-3">Analyse de devis (anti-arnaque)</td>
                       <td className="p-3 text-center">1/mois</td>
                       <td className="p-3 text-center font-medium text-primary">Illimité</td>
                     </tr>
@@ -258,8 +263,18 @@ export default function Pricing() {
                       <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
                     </tr>
                     <tr>
-                      <td className="p-3">Historique</td>
-                      <td className="p-3 text-center"><X className="h-4 w-4 mx-auto text-gray-400" /></td>
+                      <td className="p-3">Recherche de garage</td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                    </tr>
+                    <tr>
+                      <td className="p-3">Recherche de pièces</td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                    </tr>
+                    <tr>
+                      <td className="p-3">Historique diagnostics</td>
+                      <td className="p-3 text-center">7 jours</td>
                       <td className="p-3 text-center font-medium text-primary">Complet + PDF</td>
                     </tr>
                     <tr>
