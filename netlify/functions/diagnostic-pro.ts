@@ -20,6 +20,22 @@ const anthropic = ANTHROPIC_KEY
 // Constants
 const FREE_DIAGNOSTICS_LIMIT = 2
 
+// Timeout helper for fetch requests
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 8000): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    })
+    return response
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 // Web search function using Brave API
 async function searchWeb(query: string): Promise<{ results: string; sources: string[] }> {
   if (!BRAVE_API_KEY) {
@@ -27,14 +43,15 @@ async function searchWeb(query: string): Promise<{ results: string; sources: str
   }
 
   try {
-    const response = await fetch(
+    const response = await fetchWithTimeout(
       `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=6&country=fr&search_lang=fr`,
       {
         headers: {
           'Accept': 'application/json',
           'X-Subscription-Token': BRAVE_API_KEY
         }
-      }
+      },
+      8000 // 8 secondes max pour la recherche
     )
 
     if (!response.ok) {
@@ -57,6 +74,10 @@ async function searchWeb(query: string): Promise<{ results: string; sources: str
 
     return { results: formattedResults, sources }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('[diagnostic-pro] Search timeout')
+      return { results: '[Recherche timeout - veuillez réessayer]', sources: [] }
+    }
     console.error('[diagnostic-pro] Search error:', error)
     return { results: '[Erreur de recherche]', sources: [] }
   }
@@ -560,27 +581,50 @@ export const handler: Handler = async (event) => {
       tools.push(webSearchTool)
     }
 
-    // 7. Tool use loop
+    // 7. Tool use loop with timeout protection
     let finalText = ''
     let finalDiagnosis: FinalDiagnosisPro | null = null
     let allSources: string[] = [...(session.sources_collected || [])]
     let iterations = 0
-    const maxIterations = 8
+    const maxIterations = 6 // Réduit de 8 à 6 pour éviter timeout
     let currentMessages = [...formattedMessages]
+    let searchCount = 0
+    const maxSearches = 3 // Limite les recherches web pour éviter timeout
+    const startTime = Date.now()
+    const maxTotalTime = 22000 // 22 secondes max (marge avant timeout Netlify de 26s)
 
     const systemPrompt = generateSystemPrompt(userMessageCount, forceFinalize)
 
     while (iterations < maxIterations) {
-      iterations++
-      console.log(`[diagnostic-pro] Iteration ${iterations}`)
+      // Vérifier le temps total écoulé
+      if (Date.now() - startTime > maxTotalTime) {
+        console.log('[diagnostic-pro] Total time limit reached, finalizing')
+        if (!finalText) {
+          finalText = 'Le diagnostic prend plus de temps que prévu. Basé sur les informations collectées, je vous recommande de réessayer ou de demander le diagnostic final.'
+        }
+        break
+      }
 
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        system: systemPrompt,
-        tools,
-        messages: currentMessages,
-      })
+      iterations++
+      console.log(`[diagnostic-pro] Iteration ${iterations}, searches: ${searchCount}, elapsed: ${Date.now() - startTime}ms`)
+
+      let response
+      try {
+        response = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4000,
+          system: systemPrompt,
+          tools,
+          messages: currentMessages,
+        })
+      } catch (apiError) {
+        console.error('[diagnostic-pro] Claude API error:', apiError)
+        // Si on a déjà du texte, on le garde, sinon on met un message d'erreur
+        if (!finalText) {
+          finalText = 'Une erreur temporaire est survenue lors de l\'analyse. Veuillez réessayer dans quelques instants.'
+        }
+        break
+      }
 
       // Find tool use block
       const toolUseBlock = response.content.find(
@@ -593,8 +637,18 @@ export const handler: Handler = async (event) => {
           const input = toolUseBlock.input as { query: string; search_type?: string }
           console.log(`[diagnostic-pro] Web search: ${input.query}`)
 
-          const searchResult = await searchWeb(input.query)
-          allSources = [...allSources, ...searchResult.sources]
+          let searchResult
+          if (searchCount >= maxSearches) {
+            console.log('[diagnostic-pro] Max searches reached, skipping')
+            searchResult = {
+              results: '[Limite de recherches atteinte pour cette session. Procédez au diagnostic avec les informations disponibles.]',
+              sources: []
+            }
+          } else {
+            searchCount++
+            searchResult = await searchWeb(input.query)
+            allSources = [...allSources, ...searchResult.sources]
+          }
 
           // Add assistant response with tool use
           currentMessages.push({
@@ -718,10 +772,25 @@ export const handler: Handler = async (event) => {
 
   } catch (error) {
     console.error('[diagnostic-pro] Error:', error)
+
+    // Déterminer le type d'erreur pour un message plus utile
+    let errorMessage = 'Une erreur est survenue lors du diagnostic.'
+
+    if (error instanceof Error) {
+      if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+        errorMessage = 'Le serveur met trop de temps à répondre. Veuillez réessayer.'
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet et réessayez.'
+      }
+    }
+
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({
+        error: errorMessage,
+        canRetry: true
+      })
     }
   }
 }

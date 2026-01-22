@@ -214,9 +214,12 @@ export default function DiagnosticPro() {
 
     } catch (error) {
       console.error('[DiagnosticPro] Error:', error)
+      const errorMessage = error instanceof Error && error.message !== 'Erreur serveur'
+        ? error.message
+        : 'Erreur lors de la communication avec le serveur. Veuillez réessayer dans quelques instants.'
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Erreur lors de la communication avec le serveur. Veuillez réessayer.'
+        content: errorMessage
       }])
     } finally {
       setLoading(false)
