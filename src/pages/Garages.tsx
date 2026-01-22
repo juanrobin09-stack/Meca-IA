@@ -595,7 +595,7 @@ export default function Garages() {
                   </p>
                 </div>
                 <Button variant="outline" className="rounded-xl shrink-0" asChild>
-                  <a href="mailto:partenaires@mymecai.com?subject=Partenariat garage">
+                  <a href="mailto:contact@mymecai.com?subject=Partenariat garage">
                     Devenir partenaire
                   </a>
                 </Button>

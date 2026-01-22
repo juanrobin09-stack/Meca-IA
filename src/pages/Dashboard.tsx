@@ -142,6 +142,12 @@ export default function Dashboard() {
                       <span className="font-medium">1 max</span>
                     </div>
                   </div>
+                  {/* Lien comparatif */}
+                  <Link to="/pricing" className="block mt-3">
+                    <p className="text-xs text-primary hover:underline text-center">
+                      Voir le comparatif Free vs Premium →
+                    </p>
+                  </Link>
                 </CardContent>
               </Card>
             ) : (
