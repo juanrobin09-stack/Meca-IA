@@ -105,19 +105,11 @@ export default function Dashboard() {
             {!isPremium ? (
               <Card className="mb-6 border-primary/20 bg-primary/5">
                 <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                    <div>
-                      <h3 className="font-semibold text-sm sm:text-base mb-0.5">Version gratuite</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Limites mensuelles - se réinitialisent chaque mois
-                      </p>
-                    </div>
-                    <Link to="/pricing" className="w-full sm:w-auto">
-                      <Button size="sm" className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Passer Premium
-                      </Button>
-                    </Link>
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-sm sm:text-base mb-0.5">Version gratuite</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Limites mensuelles - se réinitialisent chaque mois
+                    </p>
                   </div>
                   {/* Limites restantes */}
                   <div className="grid grid-cols-2 gap-2 text-xs">
@@ -142,12 +134,6 @@ export default function Dashboard() {
                       <span className="font-medium">1 max</span>
                     </div>
                   </div>
-                  {/* Lien comparatif */}
-                  <Link to="/pricing" className="block mt-3">
-                    <p className="text-xs text-primary hover:underline text-center">
-                      Voir le comparatif Free vs Premium →
-                    </p>
-                  </Link>
                 </CardContent>
               </Card>
             ) : (
