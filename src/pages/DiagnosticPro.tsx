@@ -344,13 +344,18 @@ export default function DiagnosticPro() {
             </div>
 
             {/* Counter */}
-            <div className="px-2 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-              {isPremium ? '∞' : `${currentRemaining}/2`}
-              {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
-            </div>
+            {isPremium ? (
+              <div className="px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40">
+                Illimité
+              </div>
+            ) : (
+              <div className="px-2 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                {currentRemaining}/2
+                {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
+              </div>
+            )}
           </div>
-
-                  </div>
+        </div>
 
         {/* MESSAGES */}
         <div style={{
