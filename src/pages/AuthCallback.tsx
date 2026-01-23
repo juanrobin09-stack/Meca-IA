@@ -1,15 +1,60 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import Logo from '@/components/Logo'
+import { Button } from '@/components/ui/button'
 
 export default function AuthCallback() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'consent'>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [errorDetails, setErrorDetails] = useState<string | null>(null)
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [consentLoading, setConsentLoading] = useState(false)
+
+  const handleAcceptTerms = async () => {
+    if (!acceptedTerms || !userId) return
+
+    setConsentLoading(true)
+    try {
+      const now = new Date().toISOString()
+      // Enregistrer le consentement dans le profil
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          terms_accepted: true,
+          terms_accepted_at: now,
+          privacy_accepted: true,
+          privacy_accepted_at: now,
+          terms_version: '1.0',
+        })
+        .eq('id', userId)
+
+      if (error) {
+        console.error('Error saving consent:', error)
+        setStatus('error')
+        setErrorMessage('Erreur lors de l\'enregistrement du consentement')
+        return
+      }
+
+      // Marquer que c'est une nouvelle inscription pour afficher l'onboarding
+      localStorage.setItem('mecaia_show_onboarding', 'true')
+
+      setStatus('success')
+      setTimeout(() => {
+        navigate('/app')
+      }, 1000)
+    } catch (error) {
+      console.error('Error saving consent:', error)
+      setStatus('error')
+      setErrorMessage('Erreur lors de l\'enregistrement du consentement')
+    } finally {
+      setConsentLoading(false)
+    }
+  }
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -55,16 +100,17 @@ export default function AuthCallback() {
 
         if (session) {
           console.log('Connecté avec Google:', session.user.email)
+          setUserId(session.user.id)
 
           // Vérifier/créer le profil
-          const { error: profileError } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single()
 
           if (profileError && profileError.code === 'PGRST116') {
-            // Profil n'existe pas, le créer
+            // Profil n'existe pas, le créer (sans consentement pour l'instant)
             const displayName = session.user.user_metadata?.full_name ||
                                session.user.user_metadata?.name ||
                                session.user.email?.split('@')[0]
@@ -74,8 +120,20 @@ export default function AuthCallback() {
               display_name: displayName,
             })
             console.log('Profil créé pour:', displayName)
+
+            // Nouvel utilisateur Google → demander consentement
+            setStatus('consent')
+            return
           }
 
+          // Vérifier si l'utilisateur a déjà accepté les CGU
+          if (!profile?.terms_accepted) {
+            // Utilisateur existant sans consentement → demander consentement
+            setStatus('consent')
+            return
+          }
+
+          // Consentement déjà donné → rediriger
           setStatus('success')
 
           // Rediriger vers le dashboard
@@ -123,6 +181,59 @@ export default function AuthCallback() {
             <p className="text-muted-foreground">
               Redirection vers votre tableau de bord...
             </p>
+          </>
+        )}
+
+        {status === 'consent' && (
+          <>
+            <h2 className="text-xl font-semibold mb-2">Dernière étape !</h2>
+            <p className="text-muted-foreground mb-6">
+              Pour finaliser ton inscription, tu dois accepter nos conditions.
+            </p>
+
+            <div className="bg-muted/50 border border-border rounded-lg p-4 mb-6 text-left">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-1 w-5 h-5 text-primary border-input rounded focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm text-foreground flex-1">
+                  J'accepte les{' '}
+                  <Link
+                    to="/cgu"
+                    target="_blank"
+                    className="text-primary hover:underline font-semibold"
+                  >
+                    Conditions Générales d'Utilisation
+                  </Link>
+                  {' '}et la{' '}
+                  <Link
+                    to="/confidentialite"
+                    target="_blank"
+                    className="text-primary hover:underline font-semibold"
+                  >
+                    Politique de Confidentialité
+                  </Link>
+                  {' '}de MECAI.
+                </span>
+              </label>
+
+              <p className="text-xs text-muted-foreground mt-3 ml-8">
+                En cochant cette case, tu consens au traitement de tes données personnelles
+                conformément au RGPD.
+              </p>
+            </div>
+
+            <Button
+              onClick={handleAcceptTerms}
+              disabled={!acceptedTerms || consentLoading}
+              className="w-full"
+            >
+              {consentLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Continuer
+            </Button>
           </>
         )}
 

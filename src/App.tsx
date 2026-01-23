@@ -33,6 +33,7 @@ const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
 const VehicleHistory = lazy(() => import('@/pages/VehicleHistory'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess'))
+const EmailConfirmation = lazy(() => import('@/pages/EmailConfirmation'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -123,6 +124,7 @@ export default function App() {
             />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/email-confirmation" element={<EmailConfirmation />} />
 
             {/* Protected routes */}
             <Route

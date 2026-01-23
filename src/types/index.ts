@@ -16,6 +16,15 @@ export interface User {
   subscription_status: 'free' | 'premium'
   stripe_customer_id?: string
   stripe_subscription_id?: string
+  // GDPR Consent fields
+  terms_accepted?: boolean
+  terms_accepted_at?: string
+  terms_version?: string
+  privacy_accepted?: boolean
+  privacy_accepted_at?: string
+  marketing_consent?: boolean
+  marketing_consent_at?: string
+  // Timestamps
   created_at: string
   updated_at: string
 }

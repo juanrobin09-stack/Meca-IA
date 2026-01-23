@@ -14,6 +14,7 @@ export default function Signup() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { signUp } = useAuth()
@@ -22,6 +23,12 @@ export default function Signup() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+
+    // Validation consentement RGPD
+    if (!acceptedTerms) {
+      setError('Tu dois accepter les conditions d\'utilisation et la politique de confidentialité')
+      return
+    }
 
     // Validation du prénom
     const trimmedName = displayName.trim()
@@ -33,7 +40,7 @@ export default function Signup() {
     setLoading(true)
 
     try {
-      await signUp(email, password, trimmedName)
+      await signUp(email, password, trimmedName, true)
       // Marquer que c'est une nouvelle inscription pour afficher l'onboarding
       localStorage.setItem('mecaia_show_onboarding', 'true')
       navigate('/app')
@@ -121,9 +128,45 @@ export default function Signup() {
                 Minimum 6 caractères
               </p>
             </div>
+
+            {/* Consentement RGPD */}
+            <div className="bg-muted/50 border border-border rounded-lg p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  className="mt-1 w-5 h-5 text-primary border-input rounded focus:ring-2 focus:ring-primary"
+                />
+                <span className="text-sm text-foreground flex-1">
+                  J'accepte les{' '}
+                  <Link
+                    to="/cgu"
+                    target="_blank"
+                    className="text-primary hover:underline font-semibold"
+                  >
+                    Conditions Générales d'Utilisation
+                  </Link>
+                  {' '}et la{' '}
+                  <Link
+                    to="/confidentialite"
+                    target="_blank"
+                    className="text-primary hover:underline font-semibold"
+                  >
+                    Politique de Confidentialité
+                  </Link>
+                  {' '}de MECAI. <span className="text-red-500">*</span>
+                </span>
+              </label>
+
+              <p className="text-xs text-muted-foreground mt-3 ml-8">
+                En cochant cette case, tu consens au traitement de tes données personnelles
+                conformément au RGPD. Tu peux retirer ton consentement à tout moment.
+              </p>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Créer mon compte
             </Button>

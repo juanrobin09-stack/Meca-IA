@@ -92,14 +92,20 @@ export function useAuth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function signUp(email: string, password: string, displayName?: string) {
-    // Include display_name in user metadata so the database trigger can use it
+  async function signUp(email: string, password: string, displayName?: string, termsAccepted?: boolean) {
+    // Include display_name and GDPR consent in user metadata so the database trigger can use it
+    const now = new Date().toISOString()
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           display_name: displayName,
+          terms_accepted: termsAccepted || false,
+          terms_accepted_at: termsAccepted ? now : null,
+          privacy_accepted: termsAccepted || false,
+          privacy_accepted_at: termsAccepted ? now : null,
+          terms_version: '1.0',
         }
       }
     })
@@ -121,7 +127,29 @@ export function useAuth() {
         .single()
 
       if (profileData) {
-        setState((prev) => ({ ...prev, profile: profileData as Profile }))
+        // Update profile with GDPR consent data
+        if (termsAccepted) {
+          const { data: updatedProfile } = await supabase
+            .from('profiles')
+            .update({
+              terms_accepted: true,
+              terms_accepted_at: now,
+              privacy_accepted: true,
+              privacy_accepted_at: now,
+              terms_version: '1.0',
+            })
+            .eq('id', data.user.id)
+            .select()
+            .single()
+
+          if (updatedProfile) {
+            setState((prev) => ({ ...prev, profile: updatedProfile as Profile }))
+          } else {
+            setState((prev) => ({ ...prev, profile: profileData as Profile }))
+          }
+        } else {
+          setState((prev) => ({ ...prev, profile: profileData as Profile }))
+        }
       }
     }
 
