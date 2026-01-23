@@ -11,7 +11,6 @@ export const stripePromise = stripePublicKey ? loadStripe(stripePublicKey) : nul
 export const STRIPE_PRICES = {
   PREMIUM_MONTHLY: import.meta.env.VITE_STRIPE_PRICE_MONTHLY || 'price_monthly',
   PREMIUM_YEARLY: import.meta.env.VITE_STRIPE_PRICE_YEARLY || 'price_yearly',
-  PAY_PER_USE: import.meta.env.VITE_STRIPE_PRICE_SINGLE || 'price_single',
   PAY_PER_DEVIS: import.meta.env.VITE_STRIPE_PRICE_DEVIS || 'price_devis',
 }
 
@@ -32,8 +31,6 @@ export async function createCheckoutSession(
   if (!isSubscription && !productType) {
     if (priceId === STRIPE_PRICES.PAY_PER_DEVIS) {
       detectedProductType = 'devis'
-    } else if (priceId === STRIPE_PRICES.PAY_PER_USE) {
-      detectedProductType = 'diagnostic'
     }
   }
 
