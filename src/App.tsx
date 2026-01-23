@@ -31,6 +31,7 @@ const Settings = lazy(() => import('@/pages/Settings'))
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
 const VehicleHistory = lazy(() => import('@/pages/VehicleHistory'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
+const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess'))
 
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
@@ -191,6 +192,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Success />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payment-success"
+              element={
+                <ProtectedRoute>
+                  <PaymentSuccess />
                 </ProtectedRoute>
               }
             />

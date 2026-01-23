@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useUserLimits } from '@/hooks/useUserLimits'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { DarkModeToggle } from '@/components/DarkModeToggle'
 import { Tooltip } from '@/components/ui/tooltip'
 import Logo from '@/components/Logo'
+import PremiumBadge from '@/components/PremiumBadge'
 import {
   Home,
   History,
@@ -67,8 +69,15 @@ export default function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { profile, signOut } = useAuth()
-  const { isPremium, diagnosticsRemaining } = useSubscription(profile)
+  useSubscription(profile) // Keep for any side effects
+  const userLimits = useUserLimits()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Refresh user limits on location change (page navigation)
+  useEffect(() => {
+    userLimits.refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname])
 
   async function handleSignOut() {
     setMobileMenuOpen(false)
@@ -98,14 +107,12 @@ export default function Sidebar() {
 
           {/* Status Badge */}
           <div className="px-4 py-4">
-            {isPremium ? (
-              <Badge variant="premium" className="w-full justify-center py-1">
-                ✨ Premium
-              </Badge>
+            {userLimits.isPremium ? (
+              <PremiumBadge className="w-full justify-center py-1.5" />
             ) : (
-              <Tooltip content="Passe Premium pour des diagnostics illimités !">
+              <Tooltip content="Passe Premium pour des diagnostics illimites !">
                 <Badge variant="secondary" className="w-full justify-center py-1 cursor-help">
-                  Gratuit: {diagnosticsRemaining}/2 restants
+                  Gratuit: {Math.max(0, userLimits.diagnosticsLimit - userLimits.diagnosticsThisMonth)}/2 restants
                   <HelpCircle className="h-3 w-3 ml-1" />
                 </Badge>
               </Tooltip>
@@ -118,7 +125,7 @@ export default function Sidebar() {
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = location.pathname === item.href
-              const isLocked = item.tier === 'premium' && !isPremium
+              const isLocked = item.tier === 'premium' && !userLimits.isPremium
 
               return (
                 <motion.div
@@ -138,7 +145,7 @@ export default function Sidebar() {
                   >
                     <item.icon className="h-5 w-5" />
                     <span className="flex-1">{item.label}</span>
-                    {item.tier === 'premium' && !isPremium && (
+                    {item.tier === 'premium' && !userLimits.isPremium && (
                       <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
                         Premium
                       </Badge>
@@ -150,7 +157,7 @@ export default function Sidebar() {
           </nav>
 
           {/* Upgrade CTA for free users */}
-          {!isPremium && (
+          {!userLimits.isPremium && (
             <div className="px-3 pb-2">
               <Link to="/pricing">
                 <Button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700">
@@ -256,14 +263,12 @@ export default function Sidebar() {
 
               {/* Status Badge */}
               <div className="px-4 py-4">
-                {isPremium ? (
-                  <Badge variant="premium" className="w-full justify-center py-2 text-sm">
-                    ✨ Premium Actif
-                  </Badge>
+                {userLimits.isPremium ? (
+                  <PremiumBadge className="w-full justify-center py-2" />
                 ) : (
                   <div className="space-y-2">
                     <Badge variant="secondary" className="w-full justify-center py-2 text-sm">
-                      Gratuit: {diagnosticsRemaining}/2 restants
+                      Gratuit: {Math.max(0, userLimits.diagnosticsLimit - userLimits.diagnosticsThisMonth)}/2 restants
                     </Badge>
                     <Button
                       className="w-full bg-gradient-to-r from-blue-600 to-violet-600"
@@ -284,7 +289,7 @@ export default function Sidebar() {
                   .filter(item => !mobileNavItems.some(m => m.href === item.href))
                   .map((item) => {
                     const isActive = location.pathname === item.href
-                    const isLocked = item.tier === 'premium' && !isPremium
+                    const isLocked = item.tier === 'premium' && !userLimits.isPremium
 
                     return (
                       <button
@@ -303,7 +308,7 @@ export default function Sidebar() {
                           isActive && 'text-primary'
                         )} />
                         <span className="flex-1 font-medium">{item.label}</span>
-                        {item.tier === 'premium' && !isPremium && (
+                        {item.tier === 'premium' && !userLimits.isPremium && (
                           <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] px-2">
                             Premium
                           </Badge>

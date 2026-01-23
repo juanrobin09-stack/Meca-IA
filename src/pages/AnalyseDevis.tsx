@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useUserLimits } from '@/hooks/useUserLimits'
 import { useDevis } from '@/hooks/useDevis'
 import { useConfetti } from '@/hooks/useConfetti'
 import { DevisHashService } from '@/services/devisHashService'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
+import PremiumDisclaimer from '@/components/PremiumDisclaimer'
 import PageTransition from '@/components/PageTransition'
 import ResultatAnalysePro from '@/components/ResultatAnalysePro'
 import { Button } from '@/components/ui/button'
@@ -29,6 +31,7 @@ import { Link } from 'react-router-dom'
 export default function AnalyseDevis() {
   const { user, profile, refreshProfile } = useAuth()
   const { isPremium, devisRemaining, purchasedDevisCredits, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
+  const userLimits = useUserLimits()
   const { saveDevis, devisList } = useDevis(user?.id)
   const { celebrateSuccess } = useConfetti()
 
@@ -55,6 +58,12 @@ export default function AnalyseDevis() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Refresh user limits on mount
+  useEffect(() => {
+    userLimits.refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const limitCheckedRef = useRef(false)
@@ -348,6 +357,11 @@ export default function AnalyseDevis() {
               </p>
             </div>
           </div>
+
+          {/* Premium Disclaimer - shown only when no analysis yet */}
+          {!analysisResult && !userLimits.isPremium && (
+            <PremiumDisclaimer feature="devis" className="mb-6" />
+          )}
 
           {/* Analysis Result - Professional Design */}
           {analysisResult && (

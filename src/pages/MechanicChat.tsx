@@ -2,8 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import ReactMarkdown from 'react-markdown'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
+import PremiumDisclaimer from '@/components/PremiumDisclaimer'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useUserLimits } from '@/hooks/useUserLimits'
 import { supabase } from '@/lib/supabase'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 
@@ -32,6 +34,7 @@ interface Message {
 export default function MechanicChat() {
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
+  const userLimits = useUserLimits()
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
@@ -63,6 +66,12 @@ export default function MechanicChat() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
+
+  // Refresh user limits on mount
+  useEffect(() => {
+    userLimits.refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const loadDailyMessageCount = async () => {
     if (!user || isPremium) {
@@ -413,9 +422,14 @@ export default function MechanicChat() {
           WebkitOverflowScrolling: 'touch'
         }}>
           <div style={{ maxWidth: '768px', margin: '0 auto' }}>
+            {/* Premium Disclaimer - shown only when no conversation started */}
+            {messages.length === 0 && !userLimits.isPremium && (
+              <PremiumDisclaimer feature="chat" className="mb-4" />
+            )}
+
             {messages.length === 0 ? (
               /* Empty State */
-              <div style={{ textAlign: 'center', paddingTop: '15vh' }}>
+              <div style={{ textAlign: 'center', paddingTop: '10vh' }}>
                 <div style={{
                   width: 64,
                   height: 64,

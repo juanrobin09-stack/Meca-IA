@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
+import { useUserLimits } from '@/hooks/useUserLimits'
 import { supabase } from '@/lib/supabase'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
+import PremiumDisclaimer from '@/components/PremiumDisclaimer'
 import DiagnosticProResult from '@/components/DiagnosticProResult'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { FinalDiagnosisPro } from '@/types'
@@ -28,6 +30,7 @@ export default function DiagnosticPro() {
   const navigate = useNavigate()
   const { user, profile, refreshProfile } = useAuth()
   const { isPremium, diagnosticsRemaining, purchasedDiagnosticCredits, checkDiagnosticLimit } = useSubscription(profile)
+  const userLimits = useUserLimits()
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -89,6 +92,12 @@ export default function DiagnosticPro() {
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px'
     }
   }, [input])
+
+  // Refresh user limits on mount
+  useEffect(() => {
+    userLimits.refresh()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files
@@ -364,6 +373,11 @@ export default function DiagnosticPro() {
           WebkitOverflowScrolling: 'touch'
         }} className="p-3 md:p-4">
           <div className="max-w-[900px] mx-auto">
+            {/* Premium Disclaimer - shown only when no conversation started */}
+            {messages.length === 0 && !userLimits.isPremium && (
+              <PremiumDisclaimer feature="diagnostic" className="mb-4" />
+            )}
+
             {messages.length === 0 ? (
               /* Empty State */
               <div className="text-center pt-[5vh] md:pt-[10vh]">
