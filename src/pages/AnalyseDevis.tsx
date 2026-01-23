@@ -316,7 +316,7 @@ export default function AnalyseDevis() {
                 <motion.div whileHover={{ rotate: 10 }}>
                   <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                 </motion.div>
-                <span className="hidden sm:inline">Analyseur de Devis Pro</span>
+                <span className="hidden sm:inline">Analyseur de Devis</span>
                 <span className="sm:hidden">Analyse Devis</span>
               </h1>
               <div className="flex items-center gap-1.5 sm:gap-2">
