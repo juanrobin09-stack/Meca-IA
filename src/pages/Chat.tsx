@@ -304,7 +304,7 @@ export default function Chat() {
 
             {/* Name */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600 }} className="text-neutral-900 dark:text-white">Diagnostic IA</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }} className="text-neutral-900 dark:text-white">Diagnostic Pro</div>
               <div style={{ fontSize: 12 }} className="text-neutral-500 dark:text-neutral-400">Expert auto • En ligne</div>
             </div>
 

@@ -367,7 +367,7 @@ export default function Landing() {
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-5xl mx-auto">
             {[
-              { icon: MessageSquare, title: "Diagnostic IA", desc: "Décris ton problème, l'IA analyse", color: "blue" },
+              { icon: MessageSquare, title: "Diagnostic Pro", desc: "Décris ton problème, l'IA analyse", color: "blue" },
               { icon: FileText, title: "Analyse de devis", desc: "Vérifie si ton devis est honnête", color: "emerald" },
               { icon: Car, title: "Mes véhicules", desc: "Enregistre tes voitures", color: "violet" },
               { icon: MapPin, title: "Trouver un garage", desc: "Garages de confiance près de toi", color: "rose" },
