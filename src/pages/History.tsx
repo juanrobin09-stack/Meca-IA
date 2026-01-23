@@ -2,12 +2,10 @@ import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
-import { useDiagnostics } from '@/hooks/useDiagnostics'
 import { useDevis } from '@/hooks/useDevis'
 import { useVideoDiagnostics } from '@/hooks/useVideoDiagnostics'
 import { useDiagnosticProSessions } from '@/hooks/useDiagnosticProSessions'
 import Sidebar from '@/components/Sidebar'
-import DiagnosticCard from '@/components/DiagnosticCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,7 +13,6 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Search,
-  MessageSquarePlus,
   AlertCircle,
   Sparkles,
   FileText,
@@ -129,50 +126,18 @@ function formatAnalysisObject(obj: AnalysisObject): string {
 export default function History() {
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
-  const { diagnostics, loading: loadingDiagnostics, deleteDiagnostic } = useDiagnostics(user?.id)
   const { devisList, loading: loadingDevis, deleteDevis } = useDevis(user?.id)
   const { videoDiagnostics, loading: loadingVideo, deleteVideoDiagnostic } = useVideoDiagnostics(user?.id)
   const { sessions: diagnosticProSessions, loading: loadingDiagnosticPro, deleteSession: deleteDiagnosticProSession } = useDiagnosticProSessions(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [search, setSearch] = useState('')
-  const [urgencyFilter, setUrgencyFilter] = useState<string>('all')
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'diagnostics')
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'diagnostic-pro')
 
   // Update URL when tab changes
   useEffect(() => {
     setSearchParams({ tab: activeTab })
   }, [activeTab, setSearchParams])
-
-  // Filter diagnostics based on search and urgency
-  const filteredDiagnostics = useMemo(() => {
-    let filtered = diagnostics
-
-    // Filter by time for free users (7 days as per plans.ts)
-    if (!isPremium) {
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      filtered = filtered.filter((d) => new Date(d.created_at) > sevenDaysAgo)
-    }
-
-    // Filter by search
-    if (search) {
-      const searchLower = search.toLowerCase()
-      filtered = filtered.filter(
-        (d) =>
-          d.problem_description?.toLowerCase().includes(searchLower) ||
-          d.car_brand?.toLowerCase().includes(searchLower) ||
-          d.car_model?.toLowerCase().includes(searchLower)
-      )
-    }
-
-    // Filter by urgency
-    if (urgencyFilter !== 'all') {
-      filtered = filtered.filter((d) => d.urgency_level === urgencyFilter)
-    }
-
-    return filtered
-  }, [diagnostics, search, urgencyFilter, isPremium])
 
   // Filter devis
   const filteredDevis = useMemo(() => {
@@ -247,7 +212,6 @@ export default function History() {
     return filtered
   }, [diagnosticProSessions, search, isPremium])
 
-  const hasOlderDiagnostics = !isPremium && diagnostics.length > filteredDiagnostics.length
   const hasOlderDevis = !isPremium && devisList.length > filteredDevis.length
   const hasOlderVideo = !isPremium && videoDiagnostics.length > filteredVideoDiagnostics.length
   const hasOlderDiagnosticPro = !isPremium && diagnosticProSessions.length > filteredDiagnosticProSessions.length
@@ -261,10 +225,10 @@ export default function History() {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <h1 className="text-2xl md:text-3xl font-bold">Mon historique</h1>
             <div className="flex gap-2">
-              <Link to="/app/chat">
+              <Link to="/app/diagnostic-pro">
                 <Button>
-                  <MessageSquarePlus className="h-4 w-4 mr-2" />
-                  Diagnostic
+                  <Stethoscope className="h-4 w-4 mr-2" />
+                  Diagnostic Pro
                 </Button>
               </Link>
               <Link to="/app/analyser-devis">
@@ -278,14 +242,10 @@ export default function History() {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full max-w-2xl grid-cols-4">
-              <TabsTrigger value="diagnostics" className="flex items-center gap-2">
-                <MessageSquarePlus className="h-4 w-4" />
-                <span className="hidden sm:inline">Diagnostics</span> ({diagnostics.length})
-              </TabsTrigger>
+            <TabsList className="grid w-full max-w-xl grid-cols-3">
               <TabsTrigger value="diagnostic-pro" className="flex items-center gap-2">
                 <Stethoscope className="h-4 w-4" />
-                <span className="hidden sm:inline">Pro</span> ({diagnosticProSessions.length})
+                <span className="hidden sm:inline">Diagnostics Pro</span> ({diagnosticProSessions.length})
               </TabsTrigger>
               <TabsTrigger value="devis" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -296,107 +256,6 @@ export default function History() {
                 <span className="hidden sm:inline">Vidéo</span> ({videoDiagnostics.length})
               </TabsTrigger>
             </TabsList>
-
-            {/* Diagnostics Tab */}
-            <TabsContent value="diagnostics">
-              {/* Filters */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Rechercher un diagnostic..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  {[
-                    { value: 'all', label: 'Tous' },
-                    { value: 'high', label: 'Urgent' },
-                    { value: 'medium', label: 'Moyen' },
-                    { value: 'low', label: 'Faible' },
-                  ].map((filter) => (
-                    <Button
-                      key={filter.value}
-                      variant={urgencyFilter === filter.value ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setUrgencyFilter(filter.value)}
-                    >
-                      {filter.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Warning for free users */}
-              {hasOlderDiagnostics && (
-                <Card className="mb-6 border-amber-200 bg-amber-50">
-                  <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-amber-800">Historique limité à 7 jours</p>
-                        <p className="text-sm text-amber-700">
-                          Passe Premium pour accéder à tout ton historique.
-                        </p>
-                      </div>
-                    </div>
-                    <Link to="/app/account">
-                      <Button size="sm">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Passer Premium
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Diagnostics list */}
-              {loadingDiagnostics ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <Card key={i} className="animate-pulse">
-                      <CardContent className="p-4">
-                        <div className="h-4 bg-muted rounded w-1/3 mb-2" />
-                        <div className="h-3 bg-muted rounded w-2/3 mb-2" />
-                        <div className="h-3 bg-muted rounded w-1/4" />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : filteredDiagnostics.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                    <MessageSquarePlus className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <h2 className="text-lg font-semibold mb-2">
-                    {search || urgencyFilter !== 'all'
-                      ? 'Aucun résultat'
-                      : 'Aucun diagnostic'}
-                  </h2>
-                  <p className="text-muted-foreground mb-4">
-                    {search || urgencyFilter !== 'all'
-                      ? 'Essaie de modifier tes filtres.'
-                      : 'Commence par faire ton premier diagnostic.'}
-                  </p>
-                  {!search && urgencyFilter === 'all' && (
-                    <Link to="/app/chat">
-                      <Button>
-                        <MessageSquarePlus className="h-4 w-4 mr-2" />
-                        Faire un diagnostic
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredDiagnostics.map((diagnostic) => (
-                    <DiagnosticCard key={diagnostic.id} diagnostic={diagnostic} onDelete={deleteDiagnostic} />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
 
             {/* Diagnostic Pro Tab */}
             <TabsContent value="diagnostic-pro">
