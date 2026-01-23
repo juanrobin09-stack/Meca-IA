@@ -209,7 +209,7 @@ export default function Settings() {
                       <ul className="space-y-1 text-sm">
                         <li className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          Diagnostics IA illimités
+                          Diagnostics Pro illimités
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -250,7 +250,7 @@ export default function Settings() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Diagnostics IA</span>
+                    <span className="text-sm">Diagnostics Pro</span>
                     <span className="text-sm font-medium">{diagnosticsUsed}/2</span>
                   </div>
                   <div className="w-full bg-muted rounded-full h-2">

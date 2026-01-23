@@ -38,7 +38,7 @@ export default function Footer() {
             MECAI - Votre copilote mécanique 🚗
           </p>
           <p className="max-w-3xl mx-auto">
-            ⚠️ Les diagnostics IA sont fournis à titre indicatif.
+            ⚠️ Les Diagnostics Pro sont fournis à titre indicatif.
             Pour toute intervention mécanique, consultez un professionnel certifié.
             MECAI ne saurait être tenu responsable des décisions prises suite à l'utilisation du service.
           </p>

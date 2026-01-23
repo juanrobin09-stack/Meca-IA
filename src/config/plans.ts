@@ -10,7 +10,7 @@ export const PLANS = {
     maxChatMessagesPerDay: 10,  // par jour
     historyDays: 7,
     features: [
-      '2 diagnostics IA par mois',
+      '2 Diagnostics Pro par mois',
       '1 véhicule enregistré',
       '10 messages chat mécanicien/jour',
       '1 analyse de devis par mois',
@@ -42,8 +42,7 @@ export const PLANS = {
     maxChatMessagesPerDay: Infinity,
     historyDays: Infinity,
     features: [
-      'Diagnostics IA illimités',
-      'Diagnostic PRO avec recherche web',
+      'Diagnostics Pro illimités',
       'Diagnostic vidéo IA',
       'Prévision de pannes intelligente',
       'Chat mécanicien 24/7 illimité',

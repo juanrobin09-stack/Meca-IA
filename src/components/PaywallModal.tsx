@@ -43,8 +43,7 @@ const defaultContent: Record<PaywallMode, {
     productType: 'diagnostic',
     hideUnitPurchase: true, // No single purchase - only Premium
     features: [
-      'Diagnostics IA illimités',
-      'Diagnostic PRO avec recherche web',
+      'Diagnostics Pro illimités',
       'Diagnostic vidéo IA',
       'Prévision de pannes intelligente',
       'Chat mécanicien 24/7 illimité',
@@ -65,7 +64,7 @@ const defaultContent: Record<PaywallMode, {
       'Analyses de devis illimitées',
       'Détection arnaques automatique',
       'Comparaison prix du marché',
-      'Diagnostics IA illimités',
+      'Diagnostics Pro illimités',
       'Chat mécanicien 24/7 illimité',
     ],
   },
@@ -80,7 +79,7 @@ const defaultContent: Record<PaywallMode, {
     features: [
       'Diagnostic vidéo illimité',
       'Analyse audio + visuelle par IA',
-      'Diagnostics IA illimités',
+      'Diagnostics Pro illimités',
       'Prévision de pannes',
       'Chat mécanicien 24/7 illimité',
     ],
@@ -97,7 +96,7 @@ const defaultContent: Record<PaywallMode, {
       'Prévision de pannes illimitée',
       'Budget entretien estimé',
       'Alertes préventives',
-      'Diagnostics IA illimités',
+      'Diagnostics Pro illimités',
       'Historique complet + export PDF',
     ],
   },
@@ -113,7 +112,7 @@ const defaultContent: Record<PaywallMode, {
     features: [
       'Chat mécanicien 24/7 illimité',
       'Contexte véhicule automatique',
-      'Diagnostics IA illimités',
+      'Diagnostics Pro illimités',
       'Diagnostic vidéo IA',
       'Prévision de pannes',
     ],

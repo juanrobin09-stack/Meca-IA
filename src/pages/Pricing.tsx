@@ -228,14 +228,9 @@ export default function Pricing() {
                   </thead>
                   <tbody className="divide-y">
                     <tr>
-                      <td className="p-3">Diagnostics IA</td>
+                      <td className="p-3">Diagnostics Pro</td>
                       <td className="p-3 text-center">2/mois</td>
                       <td className="p-3 text-center font-medium text-primary">Illimités</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3">Diagnostic PRO (recherche web)</td>
-                      <td className="p-3 text-center">2/mois</td>
-                      <td className="p-3 text-center font-medium text-primary">Illimité</td>
                     </tr>
                     <tr>
                       <td className="p-3">Véhicules enregistrés</td>
@@ -308,7 +303,7 @@ export default function Pricing() {
               </a>
             </p>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              Les diagnostics IA sont fournis à titre indicatif.
+              Les Diagnostics Pro sont fournis à titre indicatif.
               Pour toute intervention mécanique, consultez un professionnel certifié.
             </p>
           </div>
