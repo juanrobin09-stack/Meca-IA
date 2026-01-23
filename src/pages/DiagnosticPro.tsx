@@ -334,8 +334,6 @@ export default function DiagnosticPro() {
             <div className="flex-1 min-w-0">
               <div className="text-sm md:text-base font-bold flex items-center gap-1.5 text-neutral-900 dark:text-white">
                 <span className="truncate">Diagnostic PRO</span>
-                <span className="text-[8px] md:text-[9px] font-semibold px-1.5 py-0.5 rounded"
-                  style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', color: '#fff' }}>PRO</span>
               </div>
               <div className="text-[10px] md:text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
                 <span>Expert auto</span>
@@ -352,19 +350,7 @@ export default function DiagnosticPro() {
             </div>
           </div>
 
-          {/* Pro features banner - hidden on small mobile, compact on larger */}
-          <div className="hidden xs:block max-w-[900px] mx-auto mt-2">
-            <div className="flex items-center gap-2 md:gap-3 px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-[9px] md:text-[11px] overflow-x-auto scrollbar-hide bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800 text-violet-700 dark:text-violet-400">
-              <span className="whitespace-nowrap">🔍 TSB</span>
-              <span className="text-violet-300 dark:text-violet-600">•</span>
-              <span className="whitespace-nowrap">📷 Vision IA</span>
-              <span className="text-violet-300 dark:text-violet-600">•</span>
-              <span className="whitespace-nowrap">💰 Prix</span>
-              <span className="text-violet-300 dark:text-violet-600">•</span>
-              <span className="whitespace-nowrap">📋 Rapport</span>
-            </div>
-          </div>
-        </div>
+                  </div>
 
         {/* MESSAGES */}
         <div style={{
@@ -388,7 +374,7 @@ export default function DiagnosticPro() {
                   <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
                 </div>
                 <h2 className="text-lg md:text-[22px] font-bold mb-1 md:mb-2 text-neutral-900 dark:text-white">
-                  Diagnostic PRO
+                  Diagnostic
                 </h2>
                 <p className="text-xs md:text-sm max-w-[300px] md:max-w-[400px] mx-auto mb-4 md:mb-6 text-neutral-500 dark:text-neutral-400">
                   Analyse approfondie avec TSB, prix vérifiés et rapport complet
