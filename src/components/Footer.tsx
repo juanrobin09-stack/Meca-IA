@@ -29,7 +29,7 @@ export default function Footer() {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            © {currentYear} MECAI - Juan Robin - SIREN 994 221 653
+            © {currentYear} MECAI - J.R - SIREN 994 221 653
           </p>
         </div>
 

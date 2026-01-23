@@ -15,7 +15,7 @@ export default function Confidentialite() {
         <div className="space-y-1">
           <p className="font-semibold text-lg">MECAI</p>
           <p><span className="text-muted-foreground">SIREN :</span> 994 221 653</p>
-          <p><span className="text-muted-foreground">Responsable :</span> Juan Robin</p>
+          <p><span className="text-muted-foreground">Responsable :</span> J.R</p>
           <p><span className="text-muted-foreground">Email :</span> contact@mymecai.com</p>
         </div>
       )

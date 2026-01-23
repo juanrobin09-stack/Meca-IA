@@ -15,7 +15,7 @@ export default function MentionsLegales() {
           <p className="font-semibold text-lg">MECAI</p>
           <p className="text-muted-foreground">Entreprise individuelle</p>
           <p><span className="text-muted-foreground">SIREN :</span> 994 221 653</p>
-          <p><span className="text-muted-foreground">Propriétaire :</span> Juan Robin</p>
+          <p><span className="text-muted-foreground">Propriétaire :</span> J.R</p>
           <p><span className="text-muted-foreground">Email :</span> contact@mymecai.com</p>
         </div>
       )
