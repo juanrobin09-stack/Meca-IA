@@ -353,7 +353,7 @@ export default function AnalyseDevis() {
             <div>
               <p className="font-medium mb-1">Analyse professionnelle garantie</p>
               <p className="text-blue-700 dark:text-blue-300">
-                Même devis = Même résultat. Prix comparés aux tarifs marché 2026.
+                Prix comparés aux tarifs marché 2026.
               </p>
             </div>
           </div>
