@@ -255,7 +255,7 @@ RETURNS INTEGER AS $$
 DECLARE
   new_count INTEGER;
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET
     free_diagnostics_used = free_diagnostics_used + 1,
     updated_at = NOW()
@@ -264,7 +264,7 @@ BEGIN
 
   RETURN new_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Incrémenter le compteur de devis
 CREATE OR REPLACE FUNCTION increment_devis_count(p_user_id UUID)
@@ -272,7 +272,7 @@ RETURNS INTEGER AS $$
 DECLARE
   new_count INTEGER;
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET
     free_devis_used = free_devis_used + 1,
     updated_at = NOW()
@@ -281,7 +281,7 @@ BEGIN
 
   RETURN new_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Incrémenter le compteur de messages chat
 CREATE OR REPLACE FUNCTION increment_chat_count(p_user_id UUID)
@@ -291,11 +291,11 @@ DECLARE
   current_reset TIMESTAMPTZ;
 BEGIN
   -- Vérifier si on doit reset (nouveau jour)
-  SELECT free_chat_reset_at INTO current_reset FROM profiles WHERE id = p_user_id;
+  SELECT free_chat_reset_at INTO current_reset FROM public.profiles WHERE id = p_user_id;
 
   IF current_reset::date < CURRENT_DATE THEN
     -- Reset le compteur
-    UPDATE profiles
+    UPDATE public.profiles
     SET
       free_chat_messages_today = 1,
       free_chat_reset_at = NOW(),
@@ -304,7 +304,7 @@ BEGIN
     RETURNING free_chat_messages_today INTO new_count;
   ELSE
     -- Incrémenter
-    UPDATE profiles
+    UPDATE public.profiles
     SET
       free_chat_messages_today = free_chat_messages_today + 1,
       updated_at = NOW()
@@ -314,13 +314,13 @@ BEGIN
 
   RETURN new_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Réinitialiser les compteurs mensuels
 CREATE OR REPLACE FUNCTION reset_monthly_counters(p_user_id UUID)
 RETURNS VOID AS $$
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET
     free_diagnostics_used = 0,
     free_devis_used = 0,
@@ -328,7 +328,7 @@ BEGIN
     updated_at = NOW()
   WHERE id = p_user_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ============================================
 -- FONCTIONS RPC pour crédits achetés
@@ -340,7 +340,7 @@ RETURNS INTEGER AS $$
 DECLARE
   new_credits INTEGER;
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET
     purchased_diagnostic_credits = purchased_diagnostic_credits + 1,
     updated_at = NOW()
@@ -349,7 +349,7 @@ BEGIN
 
   RETURN new_credits;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Ajouter un crédit devis
 CREATE OR REPLACE FUNCTION add_devis_credit(p_user_id UUID)
@@ -357,7 +357,7 @@ RETURNS INTEGER AS $$
 DECLARE
   new_credits INTEGER;
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET
     purchased_devis_credits = purchased_devis_credits + 1,
     updated_at = NOW()
@@ -366,7 +366,7 @@ BEGIN
 
   RETURN new_credits;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Ajouter des crédits chat
 CREATE OR REPLACE FUNCTION add_chat_credits(p_user_id UUID, p_credits INTEGER DEFAULT 10)
@@ -374,7 +374,7 @@ RETURNS INTEGER AS $$
 DECLARE
   new_credits INTEGER;
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET
     purchased_chat_credits = purchased_chat_credits + p_credits,
     updated_at = NOW()
@@ -383,7 +383,7 @@ BEGIN
 
   RETURN new_credits;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Utiliser un crédit diagnostic (retourne true si ok, false si pas de crédit)
 CREATE OR REPLACE FUNCTION use_diagnostic_credit(p_user_id UUID)
@@ -392,10 +392,10 @@ DECLARE
   current_credits INTEGER;
 BEGIN
   SELECT purchased_diagnostic_credits INTO current_credits
-  FROM profiles WHERE id = p_user_id;
+  FROM public.profiles WHERE id = p_user_id;
 
   IF current_credits > 0 THEN
-    UPDATE profiles
+    UPDATE public.profiles
     SET
       purchased_diagnostic_credits = purchased_diagnostic_credits - 1,
       updated_at = NOW()
@@ -405,7 +405,7 @@ BEGIN
 
   RETURN false;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Utiliser un crédit devis (retourne true si ok, false si pas de crédit)
 CREATE OR REPLACE FUNCTION use_devis_credit(p_user_id UUID)
@@ -414,10 +414,10 @@ DECLARE
   current_credits INTEGER;
 BEGIN
   SELECT purchased_devis_credits INTO current_credits
-  FROM profiles WHERE id = p_user_id;
+  FROM public.profiles WHERE id = p_user_id;
 
   IF current_credits > 0 THEN
-    UPDATE profiles
+    UPDATE public.profiles
     SET
       purchased_devis_credits = purchased_devis_credits - 1,
       updated_at = NOW()
@@ -427,7 +427,7 @@ BEGIN
 
   RETURN false;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Utiliser un crédit chat (retourne true si ok, false si pas de crédit)
 CREATE OR REPLACE FUNCTION use_chat_credit(p_user_id UUID)
@@ -436,10 +436,10 @@ DECLARE
   current_credits INTEGER;
 BEGIN
   SELECT purchased_chat_credits INTO current_credits
-  FROM profiles WHERE id = p_user_id;
+  FROM public.profiles WHERE id = p_user_id;
 
   IF current_credits > 0 THEN
-    UPDATE profiles
+    UPDATE public.profiles
     SET
       purchased_chat_credits = purchased_chat_credits - 1,
       updated_at = NOW()
@@ -449,7 +449,7 @@ BEGIN
 
   RETURN false;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ============================================
 -- TRIGGER: Créer un profil quand un user s'inscrit
@@ -457,7 +457,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, email, display_name)
+  INSERT INTO public.profiles (id, email, display_name)
   VALUES (
     NEW.id,
     NEW.email,
@@ -465,7 +465,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Trigger sur auth.users
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -482,7 +482,7 @@ BEGIN
   NEW.updated_at = NOW();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 -- Appliquer sur toutes les tables avec updated_at
 DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
@@ -547,6 +547,7 @@ ALTER TABLE devis_analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE video_diagnostics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pannes_predictions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE mechanic_chats ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour profiles
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
@@ -660,6 +661,23 @@ CREATE POLICY "Users can view own payments" ON payments
 DROP POLICY IF EXISTS "Users can view own predictions" ON pannes_predictions;
 CREATE POLICY "Users can view own predictions" ON pannes_predictions
   FOR SELECT USING (auth.uid() = user_id);
+
+-- Policies pour mechanic_chats
+DROP POLICY IF EXISTS "Users can view own mechanic_chats" ON mechanic_chats;
+CREATE POLICY "Users can view own mechanic_chats" ON mechanic_chats
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own mechanic_chats" ON mechanic_chats;
+CREATE POLICY "Users can insert own mechanic_chats" ON mechanic_chats
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own mechanic_chats" ON mechanic_chats;
+CREATE POLICY "Users can update own mechanic_chats" ON mechanic_chats
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own mechanic_chats" ON mechanic_chats;
+CREATE POLICY "Users can delete own mechanic_chats" ON mechanic_chats
+  FOR DELETE USING (auth.uid() = user_id);
 
 -- ============================================
 -- GRANT permissions aux fonctions RPC

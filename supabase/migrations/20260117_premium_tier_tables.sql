@@ -11,14 +11,14 @@ RETURNS INTEGER AS $$
 DECLARE
   new_count INTEGER;
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET free_diagnostics_used = COALESCE(free_diagnostics_used, 0) + 1
   WHERE id = p_user_id
   RETURNING free_diagnostics_used INTO new_count;
 
   RETURN new_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Atomic increment for devis counter
 CREATE OR REPLACE FUNCTION increment_devis_count(p_user_id UUID)
@@ -26,14 +26,14 @@ RETURNS INTEGER AS $$
 DECLARE
   new_count INTEGER;
 BEGIN
-  UPDATE profiles
+  UPDATE public.profiles
   SET free_devis_used = COALESCE(free_devis_used, 0) + 1
   WHERE id = p_user_id
   RETURNING free_devis_used INTO new_count;
 
   RETURN new_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- Check and reset counters if new month (atomic operation)
 CREATE OR REPLACE FUNCTION check_and_reset_monthly_counters(p_user_id UUID)
@@ -53,14 +53,14 @@ BEGIN
     COALESCE(free_diagnostics_used, 0),
     COALESCE(free_devis_used, 0)
   INTO v_reset_date, v_diagnostics, v_devis
-  FROM profiles
+  FROM public.profiles
   WHERE id = p_user_id;
 
   -- Check if different month
   IF v_reset_date IS NULL OR
      DATE_TRUNC('month', v_reset_date) < DATE_TRUNC('month', NOW()) THEN
     -- Reset counters
-    UPDATE profiles
+    UPDATE public.profiles
     SET
       free_diagnostics_used = 0,
       free_devis_used = 0,
@@ -74,7 +74,7 @@ BEGIN
 
   RETURN QUERY SELECT v_diagnostics, v_devis, v_was_reset;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 -- ============================================
 -- PREMIUM FEATURE: Vehicle limit based on subscription
@@ -89,11 +89,11 @@ DECLARE
 BEGIN
   -- Get user's subscription status
   SELECT COALESCE(subscription_status, 'free') INTO user_status
-  FROM profiles WHERE id = NEW.user_id;
+  FROM public.profiles WHERE id = NEW.user_id;
 
   -- Count existing vehicles
   SELECT COUNT(*) INTO vehicle_count
-  FROM vehicles WHERE user_id = NEW.user_id;
+  FROM public.vehicles WHERE user_id = NEW.user_id;
 
   -- Set max based on status (Free: 1, Premium: 5)
   max_vehicles := CASE user_status
@@ -107,7 +107,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 DROP TRIGGER IF EXISTS enforce_vehicle_limit ON vehicles;
 CREATE TRIGGER enforce_vehicle_limit
