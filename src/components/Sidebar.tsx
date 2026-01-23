@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
@@ -73,11 +73,8 @@ export default function Sidebar() {
   const userLimits = useUserLimits()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Refresh user limits on location change (page navigation)
-  useEffect(() => {
-    userLimits.refresh()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname])
+  // Note: User limits are now managed globally via context
+  // No need to refresh on route change - the context handles auto-refresh
 
   async function handleSignOut() {
     setMobileMenuOpen(false)

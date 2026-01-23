@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { User as Profile } from '@/types'
+import { clearUserLimitsCache } from '@/hooks/useUserLimits'
 
 interface AuthState {
   user: User | null
@@ -156,6 +157,8 @@ export function useAuth() {
   async function signOut() {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
+    // Clear the user limits cache to prevent stale data on next login
+    clearUserLimitsCache()
     setState({ user: null, profile: null, session: null, loading: false })
   }
 

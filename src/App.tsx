@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense, memo } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
+import { UserLimitsProvider } from '@/contexts/UserLimitsContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import LoadingSkeleton from '@/components/LoadingSkeleton'
 
@@ -91,6 +92,7 @@ const OnboardingWrapper = memo(function OnboardingWrapper({ children }: { childr
 export default function App() {
   return (
     <BrowserRouter>
+      <UserLimitsProvider>
       <OnboardingWrapper>
         <Suspense fallback={<LoadingSkeleton />}>
           <Routes>
@@ -277,6 +279,7 @@ export default function App() {
           <CookieBanner />
         </Suspense>
       </OnboardingWrapper>
+      </UserLimitsProvider>
     </BrowserRouter>
   )
 }
