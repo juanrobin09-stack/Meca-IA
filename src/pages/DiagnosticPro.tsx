@@ -496,14 +496,16 @@ export default function DiagnosticPro() {
                   <div className="flex justify-center mb-3 md:mb-4">
                     <button
                       onClick={requestFinalDiagnosis}
-                      className="px-4 py-2.5 md:px-6 md:py-3 rounded-full text-xs md:text-sm font-semibold flex items-center gap-2 text-white hover:scale-105 active:scale-95 transition-transform"
+                      className="group relative px-5 py-3 md:px-7 md:py-3.5 rounded-2xl text-sm md:text-base font-bold flex items-center gap-2.5 text-white hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 overflow-hidden"
                       style={{
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
-                        boxShadow: '0 4px 16px rgba(139, 92, 246, 0.4)'
+                        background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%)',
+                        boxShadow: '0 8px 32px rgba(79, 70, 229, 0.4), 0 2px 8px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)'
                       }}
                     >
-                      <span>📋</span>
-                      <span className="hidden xs:inline">Obtenir mon</span> diagnostic PRO
+                      <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                      <span className="text-lg">📋</span>
+                      <span><span className="hidden xs:inline">Obtenir mon </span>diagnostic PRO</span>
+                      <span className="ml-1 opacity-70">→</span>
                     </button>
                   </div>
                 )}
