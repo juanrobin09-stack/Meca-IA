@@ -302,16 +302,28 @@ export default function MechanicChat() {
             </div>
 
             {/* Counter */}
-            <div style={{
-              padding: '4px 10px',
-              borderRadius: 999,
-              fontSize: 12,
-              fontWeight: 500,
-              whiteSpace: 'nowrap'
-            }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-              {isPremium ? '∞' : messagesRemaining !== null ? `${messagesRemaining}/10` : '...'}
-              {purchasedCredits > 0 && <span className="text-emerald-500"> +{purchasedCredits}</span>}
-            </div>
+            {isPremium ? (
+              <div style={{
+                padding: '4px 10px',
+                borderRadius: 999,
+                fontSize: 11,
+                fontWeight: 500,
+                whiteSpace: 'nowrap'
+              }} className="bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400">
+                Illimité
+              </div>
+            ) : (
+              <div style={{
+                padding: '4px 10px',
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 500,
+                whiteSpace: 'nowrap'
+              }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                {messagesRemaining !== null ? `${messagesRemaining}/10` : '...'}
+                {purchasedCredits > 0 && <span className="text-emerald-500"> +{purchasedCredits}</span>}
+              </div>
+            )}
 
             {/* History button */}
             <button
