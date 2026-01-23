@@ -270,7 +270,12 @@ export default function Pricing() {
                     <tr>
                       <td className="p-3">Historique diagnostics</td>
                       <td className="p-3 text-center">7 jours</td>
-                      <td className="p-3 text-center font-medium text-primary">Complet + PDF</td>
+                      <td className="p-3 text-center font-medium text-primary">Illimité</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3">Export PDF</td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
                     </tr>
                     <tr>
                       <td className="p-3">Support</td>

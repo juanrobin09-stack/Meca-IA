@@ -49,7 +49,7 @@ const defaultContent: Record<PaywallMode, {
       'Chat mécanicien 24/7 illimité',
       'Analyses de devis illimitées',
       'Véhicules illimités',
-      'Historique complet + export PDF',
+      'Historique complet illimité',
     ],
   },
   devis: {
@@ -97,7 +97,7 @@ const defaultContent: Record<PaywallMode, {
       'Budget entretien estimé',
       'Alertes préventives',
       'Diagnostics Pro illimités',
-      'Historique complet + export PDF',
+      'Historique complet illimité',
     ],
   },
   chat: {
