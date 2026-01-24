@@ -304,13 +304,100 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
 
     console.log(`📝 Réponse reçue après ${iterations} itération(s)`)
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // DEBUG LOGS - Pour diagnostiquer les échecs d'extraction
+    // ══════════════════════════════════════════════════════════════════════════
+    console.log('═══════════════════════════════════════════════════')
+    console.log('📸 EXTRACTION DEBUG:')
+    console.log(`   Réponse brute (longueur): ${responseText.length} caractères`)
+    console.log(`   Réponse brute (premiers 500 chars):`)
+    console.log(responseText.substring(0, 500))
+    console.log(`   Réponse brute (derniers 200 chars):`)
+    console.log(responseText.substring(Math.max(0, responseText.length - 200)))
+    console.log('═══════════════════════════════════════════════════')
+
+    // Si réponse vide, c'est un problème de vision/image
+    if (!responseText || responseText.trim().length === 0) {
+      console.error('🚨 ERREUR: Réponse vide de Claude - Problème de lecture de l\'image')
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: 'L\'IA n\'a pas pu lire l\'image. Vérifie que c\'est bien une photo de devis et réessaie.',
+          debug: 'EMPTY_RESPONSE'
+        })
+      }
+    }
+
     let parsed
     try {
-      const clean = responseText.replace(/```json\n?|\n?```/g, '').trim()
+      // Nettoyage robuste du JSON
+      let clean = responseText
+
+      // Supprimer les blocs markdown ```json ... ```
+      clean = clean.replace(/```json\s*/gi, '').replace(/```\s*/g, '')
+
+      // Trouver le JSON dans la réponse (chercher { ... })
+      const jsonMatch = clean.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        clean = jsonMatch[0]
+      }
+
+      clean = clean.trim()
+
+      console.log('🔧 JSON après nettoyage (premiers 300 chars):')
+      console.log(clean.substring(0, 300))
+
       parsed = JSON.parse(clean)
-    } catch {
-      console.error('❌ Parse error:', responseText.substring(0, 200))
-      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Impossible de lire le devis. Photo plus nette SVP.' }) }
+      console.log('✅ JSON parsé avec succès')
+    } catch (parseError) {
+      console.error('❌ ERREUR PARSING JSON:')
+      console.error(`   Message: ${parseError}`)
+      console.error(`   Réponse brute complète:`)
+      console.error(responseText)
+
+      // Analyser le type d'erreur pour un meilleur message
+      const isNoQuoteDetected = responseText.toLowerCase().includes('pas un devis') ||
+                                 responseText.toLowerCase().includes('cannot read') ||
+                                 responseText.toLowerCase().includes('not a quote')
+
+      const isImageProblem = responseText.toLowerCase().includes('image') &&
+                              (responseText.toLowerCase().includes('floue') ||
+                               responseText.toLowerCase().includes('illisible') ||
+                               responseText.toLowerCase().includes('blurry'))
+
+      if (isNoQuoteDetected) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Cette image ne semble pas être un devis automobile. Envoie une photo de ton devis garage.',
+            debug: 'NOT_A_QUOTE'
+          })
+        }
+      }
+
+      if (isImageProblem) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'L\'image est difficile à lire. Prends une nouvelle photo avec un meilleur éclairage.',
+            debug: 'IMAGE_QUALITY'
+          })
+        }
+      }
+
+      // Erreur générique avec plus de contexte
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: 'Erreur lors de l\'analyse. L\'IA n\'a pas retourné un format valide. Réessaie.',
+          debug: 'JSON_PARSE_ERROR',
+          hint: responseText.substring(0, 100)
+        })
+      }
     }
 
     // ══════════════════════════════════════════════════════════════════════════
