@@ -1,140 +1,52 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Handler } from '@netlify/functions'
+import {
+  getPrixReferenceDatabase,
+  logPrixReferenceInfo,
+  matchPiece,
+  getPrixReference,
+  formatPriceRange,
+  calculateEcart,
+  getVerdict,
+  detectVspBrand,
+  getMainOeuvreRate
+} from './utils/price-matcher'
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// 🚨 STABILITÉ CRITIQUE - Version 2.0 (25 jan 2026)
+// 🚨 STABILITÉ CRITIQUE - Version 3.0 (24 jan 2026)
 // ═══════════════════════════════════════════════════════════════════════════════
 // PROBLÈME RÉSOLU: La recherche web Brave retournait des résultats DIFFÉRENTS
 // à chaque appel, causant des écarts de 71% sur le même devis!
 //
-// SOLUTION: Utiliser des prix de référence FIXES et DÉTERMINISTES
+// SOLUTION v3.0: Base de données EXTERNE + Système de matching intelligent
 // - Pas de recherche web (non déterministe)
-// - Prix basés sur moyennes Oscaro/Yakarouler janvier 2026
-// - TOUJOURS utiliser la MÉDIANE des fourchettes
+// - Prix dans fichier JSON externe (data/prix-reference-2026.json)
+// - Matching intelligent par keywords (utils/price-matcher.ts)
+// - Prix spécifiques par marque VSP (Aixam, Ligier, Microcar)
+// - TOUJOURS utiliser la MOYENNE (avg) des fourchettes
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// BASE DE PRIX DE RÉFÉRENCE JANVIER 2026 - DÉTERMINISTE
-// Source: Moyennes Oscaro, Yakarouler, Mister-Auto (janvier 2026)
-// ═══════════════════════════════════════════════════════════════════════════════
-const PRIX_REFERENCE_2026 = {
-  // Main d'œuvre (€/heure) - MÉDIANE des fourchettes
-  mainOeuvre: {
-    mecanique: { min: 70, max: 95, mediane: 82.5 },        // Garage indépendant
-    carrosserie: { min: 80, max: 110, mediane: 95 },       // Carrossier
-    peinture: { min: 85, max: 120, mediane: 102.5 },       // Peinture auto
-    concession: { min: 90, max: 140, mediane: 115 },       // Concession officielle
-    specialiste: { min: 100, max: 150, mediane: 125 }      // Spécialiste (turbo, injection)
-  },
-
-  // Pièces carrosserie (€ TTC) - Prix ADAPTABLE (origine = x1.8 à x2.5)
-  carrosserie: {
-    parechocAvant: { min: 120, max: 280, mediane: 200 },
-    parechocArriere: { min: 100, max: 250, mediane: 175 },
-    aileAvant: { min: 80, max: 200, mediane: 140 },
-    aileArriere: { min: 150, max: 350, mediane: 250 },     // Souvent soudée
-    capot: { min: 200, max: 500, mediane: 350 },
-    portiere: { min: 250, max: 600, mediane: 425 },
-    hayon: { min: 300, max: 700, mediane: 500 },
-    toit: { min: 400, max: 1000, mediane: 700 },
-    retroviseur: { min: 60, max: 180, mediane: 120 },
-    calandre: { min: 50, max: 150, mediane: 100 },
-    bavette: { min: 20, max: 60, mediane: 40 },
-    jonc: { min: 30, max: 80, mediane: 55 }
-  },
-
-  // Éclairage (€ TTC)
-  eclairage: {
-    phareAvant: { min: 150, max: 450, mediane: 300 },      // Halogène
-    phareAvantLED: { min: 400, max: 900, mediane: 650 },   // LED/Xénon
-    phareAvantMatrix: { min: 800, max: 1800, mediane: 1300 }, // Matrix LED
-    feuArriere: { min: 80, max: 250, mediane: 165 },
-    feuArriereComplet: { min: 150, max: 400, mediane: 275 },
-    antibrouillard: { min: 40, max: 120, mediane: 80 },
-    clignotant: { min: 30, max: 80, mediane: 55 }
-  },
-
-  // Vitrage (€ TTC pose incluse)
-  vitrage: {
-    parebriseStandard: { min: 250, max: 500, mediane: 375 },
-    parebriseChauffant: { min: 400, max: 800, mediane: 600 },
-    parebriseCapteurs: { min: 500, max: 1200, mediane: 850 }, // Avec caméra/radar
-    lunette: { min: 150, max: 400, mediane: 275 },
-    vitrePortiere: { min: 100, max: 250, mediane: 175 }
-  },
-
-  // Mécanique courante (€ TTC pièce + MO)
-  mecanique: {
-    embrayageKit: { min: 400, max: 900, mediane: 650 },    // Kit complet
-    freinsPlaqueAvant: { min: 80, max: 200, mediane: 140 },
-    freinsPlaquetArriere: { min: 60, max: 150, mediane: 105 },
-    disqueAvant: { min: 80, max: 180, mediane: 130 },       // Les 2
-    disqueArriere: { min: 70, max: 150, mediane: 110 },     // Les 2
-    amortisseurAvant: { min: 150, max: 350, mediane: 250 }, // Les 2 + MO
-    amortisseurArriere: { min: 120, max: 280, mediane: 200 },
-    silentbloc: { min: 80, max: 200, mediane: 140 },
-    biellette: { min: 50, max: 120, mediane: 85 },
-    rotule: { min: 60, max: 150, mediane: 105 },
-    roulement: { min: 100, max: 250, mediane: 175 },
-    triangleSuspension: { min: 150, max: 350, mediane: 250 }
-  },
-
-  // Moteur/Transmission (€ TTC pièce + MO)
-  moteur: {
-    turbo: { min: 900, max: 2500, mediane: 1700 },
-    turboEchange: { min: 600, max: 1500, mediane: 1050 },   // Échange standard
-    injecteur: { min: 150, max: 400, mediane: 275 },        // À l'unité
-    pompeInjection: { min: 500, max: 1500, mediane: 1000 },
-    fap: { min: 800, max: 2000, mediane: 1400 },
-    catalyseur: { min: 400, max: 1200, mediane: 800 },
-    egr: { min: 300, max: 800, mediane: 550 },
-    demarreur: { min: 200, max: 450, mediane: 325 },
-    alternateur: { min: 250, max: 550, mediane: 400 },
-    courroieDistribution: { min: 450, max: 900, mediane: 675 }, // Kit complet + MO
-    pompeEau: { min: 150, max: 350, mediane: 250 },
-    radiateur: { min: 200, max: 500, mediane: 350 },
-    ventilateur: { min: 150, max: 400, mediane: 275 }
-  },
-
-  // VSP - Voitures Sans Permis (prix spécifiques Aixam, Ligier, Microcar)
-  vsp: {
-    parechocAvant: { min: 150, max: 350, mediane: 250 },
-    parechocArriere: { min: 130, max: 300, mediane: 215 },
-    aile: { min: 100, max: 250, mediane: 175 },
-    phare: { min: 100, max: 280, mediane: 190 },
-    feuArriere: { min: 60, max: 180, mediane: 120 },
-    capot: { min: 250, max: 550, mediane: 400 },
-    portiere: { min: 300, max: 650, mediane: 475 },
-    parebrise: { min: 200, max: 450, mediane: 325 },
-    variateur: { min: 300, max: 700, mediane: 500 },
-    courroie: { min: 80, max: 200, mediane: 140 },
-    mainOeuvre: { min: 55, max: 85, mediane: 70 }           // Souvent moins cher
-  },
-
-  // Services additionnels
-  services: {
-    geometrie: { min: 60, max: 120, mediane: 90 },
-    diagnostic: { min: 40, max: 80, mediane: 60 },
-    climatisationRecharge: { min: 80, max: 150, mediane: 115 },
-    climatisationReparation: { min: 200, max: 600, mediane: 400 },
-    vidangeSimple: { min: 60, max: 120, mediane: 90 },
-    vidangeComplete: { min: 150, max: 300, mediane: 225 },  // Filtres inclus
-    nettoyageInjecteurs: { min: 80, max: 180, mediane: 130 }
-  }
-}
+// Charger la base de prix depuis le fichier JSON externe
+const PRIX_REFERENCE_2026 = getPrixReferenceDatabase()
 
 // Fonction pour afficher la base de prix dans les logs (debug)
 function logPrixReference(): void {
+  logPrixReferenceInfo()
   console.log('═══════════════════════════════════════════════════════════════')
-  console.log('📊 BASE DE PRIX DE RÉFÉRENCE JANVIER 2026 (DÉTERMINISTE)')
+  console.log('📊 BASE DE PRIX DE RÉFÉRENCE (EXTERNE JSON)')
   console.log('═══════════════════════════════════════════════════════════════')
-  console.log('Main d\'œuvre:')
-  Object.entries(PRIX_REFERENCE_2026.mainOeuvre).forEach(([k, v]) => {
-    console.log(`  ${k}: ${v.mediane}€/h (fourchette ${v.min}-${v.max}€)`)
+  console.log('Main d\'œuvre 2026:')
+  const mainOeuvre = PRIX_REFERENCE_2026['main-oeuvre']['2026'] as Record<string, { min: number; max: number; avg: number }>
+  Object.entries(mainOeuvre).forEach(([k, v]) => {
+    console.log(`  ${k}: ${v.avg}€/h (fourchette ${v.min}-${v.max}€)`)
   })
-  console.log('Carrosserie (pièce seule):')
-  Object.entries(PRIX_REFERENCE_2026.carrosserie).slice(0, 5).forEach(([k, v]) => {
-    console.log(`  ${k}: ${v.mediane}€ (fourchette ${v.min}-${v.max}€)`)
+  console.log('Pièces VSP Aixam (exemple):')
+  const aixam = PRIX_REFERENCE_2026.pieces.aixam as Record<string, Record<string, { min: number; max: number; avg: number }>>
+  Object.entries(aixam).slice(0, 4).forEach(([k, types]) => {
+    const adaptable = types.adaptable
+    if (adaptable) {
+      console.log(`  ${k}: ${adaptable.avg}€ (fourchette ${adaptable.min}-${adaptable.max}€)`)
+    }
   })
   console.log('═══════════════════════════════════════════════════════════════')
 }
@@ -273,7 +185,7 @@ export const handler: Handler = async (event) => {
 ═══════════════════════════════════════════════════════════════
 Tu DOIS retourner des résultats IDENTIQUES pour le même devis.
 Pour garantir cette cohérence, utilise UNIQUEMENT les prix ci-dessous.
-NE PAS estimer "au feeling" - TOUJOURS utiliser la MÉDIANE des fourchettes.
+NE PAS estimer "au feeling" - TOUJOURS utiliser la MOYENNE des fourchettes.
 
 ═══════════════════════════════════════════════════════════════
 RÈGLE #1 - EXTRACTION EXACTE
@@ -283,10 +195,10 @@ Lis les montants EXACTEMENT comme sur le devis. Pas d'estimation pour les prix f
 ═══════════════════════════════════════════════════════════════
 RÈGLE #2 - PRIX DE RÉFÉRENCE FIXES JANVIER 2026
 ═══════════════════════════════════════════════════════════════
-UTILISE TOUJOURS LA MÉDIANE (pas min ni max, LA MÉDIANE!)
+UTILISE TOUJOURS LA MOYENNE (pas min ni max, LA MOYENNE!)
 Source: Moyennes Oscaro, Yakarouler, Mister-Auto janvier 2026
 
-MAIN D'ŒUVRE (€/heure) - Utilise la MÉDIANE:
+MAIN D'ŒUVRE (€/heure) - Utilise la MOYENNE:
 - Mécanique garage indépendant: 82.5€/h (fourchette 70-95€)
 - Carrosserie: 95€/h (fourchette 80-110€)
 - Peinture: 102.5€/h (fourchette 85-120€)
@@ -294,7 +206,7 @@ MAIN D'ŒUVRE (€/heure) - Utilise la MÉDIANE:
 - Spécialiste (turbo, injection): 125€/h (fourchette 100-150€)
 - VSP (voiture sans permis): 70€/h (fourchette 55-85€)
 
-CARROSSERIE - Pièces ADAPTABLES (€ TTC) - Utilise la MÉDIANE:
+CARROSSERIE - Pièces ADAPTABLES (€ TTC) - Utilise la MOYENNE:
 - Pare-choc avant: 200€ (fourchette 120-280€)
 - Pare-choc arrière: 175€ (fourchette 100-250€)
 - Aile avant: 140€ (fourchette 80-200€)
@@ -306,20 +218,20 @@ CARROSSERIE - Pièces ADAPTABLES (€ TTC) - Utilise la MÉDIANE:
 - Calandre: 100€ (fourchette 50-150€)
 → Si pièce ORIGINE: multiplier par 1.8 à 2.2
 
-ÉCLAIRAGE (€ TTC) - Utilise la MÉDIANE:
+ÉCLAIRAGE (€ TTC) - Utilise la MOYENNE:
 - Phare avant halogène: 300€ (fourchette 150-450€)
 - Phare avant LED/Xénon: 650€ (fourchette 400-900€)
 - Phare Matrix LED: 1300€ (fourchette 800-1800€)
 - Feu arrière: 165€ (fourchette 80-250€)
 - Antibrouillard: 80€ (fourchette 40-120€)
 
-VITRAGE (€ TTC pose incluse) - Utilise la MÉDIANE:
+VITRAGE (€ TTC pose incluse) - Utilise la MOYENNE:
 - Pare-brise standard: 375€ (fourchette 250-500€)
 - Pare-brise chauffant: 600€ (fourchette 400-800€)
 - Pare-brise avec capteurs: 850€ (fourchette 500-1200€)
 - Lunette arrière: 275€ (fourchette 150-400€)
 
-MÉCANIQUE COURANTE (€ TTC pièce + MO) - Utilise la MÉDIANE:
+MÉCANIQUE COURANTE (€ TTC pièce + MO) - Utilise la MOYENNE:
 - Kit embrayage complet: 650€ (fourchette 400-900€)
 - Plaquettes frein avant: 140€ (fourchette 80-200€)
 - Plaquettes frein arrière: 105€ (fourchette 60-150€)
@@ -329,7 +241,7 @@ MÉCANIQUE COURANTE (€ TTC pièce + MO) - Utilise la MÉDIANE:
 - Triangle suspension: 250€ (fourchette 150-350€)
 - Roulement: 175€ (fourchette 100-250€)
 
-MOTEUR (€ TTC pièce + MO) - Utilise la MÉDIANE:
+MOTEUR (€ TTC pièce + MO) - Utilise la MOYENNE:
 - Turbo neuf: 1700€ (fourchette 900-2500€)
 - Turbo échange standard: 1050€ (fourchette 600-1500€)
 - Injecteur (unité): 275€ (fourchette 150-400€)
@@ -342,13 +254,35 @@ MOTEUR (€ TTC pièce + MO) - Utilise la MÉDIANE:
 - Kit distribution complet: 675€ (fourchette 450-900€)
 - Radiateur: 350€ (fourchette 200-500€)
 
-VSP - VOITURES SANS PERMIS (Aixam, Ligier, Microcar):
-- Pare-choc avant: 250€ (fourchette 150-350€)
-- Pare-choc arrière: 215€ (fourchette 130-300€)
-- Aile: 175€ (fourchette 100-250€)
-- Phare: 190€ (fourchette 100-280€)
-- Capot: 400€ (fourchette 250-550€)
+VSP - VOITURES SANS PERMIS - PRIX SPÉCIFIQUES PAR MARQUE:
+
+🚗 AIXAM (prix adaptables):
+- Pare-choc avant: 104€ (fourchette 50-159€)
+- Pare-choc arrière: 107€ (fourchette 50-165€)
+- Custode (vitre latérale): 175€ (fourchette 150-200€)
+- Aile avant: 109€ (fourchette 80-139€)
+- Capot: 140€ (fourchette 100-180€)
+- Porte: 200€ (fourchette 150-250€)
+- Phare: 115€ (fourchette 80-150€)
+- Feu arrière: 75€ (fourchette 50-100€)
+→ Pièce ORIGINE Aixam: multiplier par 2.0 à 2.5
+
+🚗 LIGIER (prix adaptables):
+- Pare-choc avant: 115€ (fourchette 60-170€)
+- Pare-choc arrière: 120€ (fourchette 60-180€)
+- Aile avant: 120€ (fourchette 90-150€)
+- Capot: 160€ (fourchette 120-200€)
+
+🚗 MICROCAR (prix adaptables):
+- Pare-choc avant: 110€ (fourchette 55-165€)
+- Pare-choc arrière: 112€ (fourchette 55-170€)
+- Aile avant: 115€ (fourchette 85-145€)
+
+VSP GÉNÉRIQUE (si marque non identifiée):
+- Pare-choc: 115€ (fourchette 50-180€)
+- Aile: 115€ (fourchette 80-150€)
 - Variateur: 500€ (fourchette 300-700€)
+- Courroie: 140€ (fourchette 80-200€)
 
 SERVICES:
 - Géométrie: 90€ (fourchette 60-120€)
@@ -362,7 +296,7 @@ RÈGLE #3 - MÉTHODOLOGIE DE CALCUL (OBLIGATOIRE)
 ═══════════════════════════════════════════════════════════════
 Pour CHAQUE ligne du devis:
 1. Identifier la catégorie (carrosserie, éclairage, mécanique, etc.)
-2. Prendre la MÉDIANE du prix de référence ci-dessus
+2. Prendre la MOYENNE du prix de référence ci-dessus
 3. Ajuster UNIQUEMENT si:
    - Pièce ORIGINE → multiplier par 1.8 à 2.2
    - Véhicule premium (BMW, Mercedes, Audi) → multiplier par 1.3
@@ -410,12 +344,12 @@ CALCUL: ecartPourcent = ((facturé - marché) / marché) × 100`
 🚨 ÉTAPES OBLIGATOIRES POUR RÉSULTATS STABLES:
 1. Lis CHAQUE montant EXACTEMENT comme écrit sur le devis
 2. Pour chaque ligne, identifie la catégorie dans les PRIX DE RÉFÉRENCE ci-dessus
-3. Utilise TOUJOURS la MÉDIANE du prix de référence (PAS une estimation au feeling!)
+3. Utilise TOUJOURS la MOYENNE du prix de référence (PAS une estimation au feeling!)
 4. Ajuste uniquement si pièce origine (+80%) ou véhicule premium (+30%)
 5. Compare et calcule les écarts avec les SEUILS NUANCÉS
 
-RAPPEL - TOUJOURS utiliser la MÉDIANE:
-- Tu reçois une fourchette (min-max) → UTILISE LA MÉDIANE fournie
+RAPPEL - TOUJOURS utiliser la MOYENNE:
+- Tu reçois une fourchette (min-max) → UTILISE LA MOYENNE fournie
 - Ex: Pare-choc avant 120-280€ → prix marché = 200€ (la médiane fournie)
 - NE PAS inventer tes propres estimations
 
@@ -471,7 +405,7 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
     console.log(`   Model: claude-sonnet-4-20250514`)
     console.log(`   Temperature: 0 (DÉTERMINISTE)`)
     console.log(`   Web search: ❌ DÉSACTIVÉ (stabilité)`)
-    console.log(`   Prix référence: ✅ MÉDIANES FIXES janvier 2026`)
+    console.log(`   Prix référence: ✅ MOYENNES FIXES janvier 2026`)
     console.log('═══════════════════════════════════════════════════════════════')
 
     try {
