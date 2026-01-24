@@ -20,15 +20,21 @@
 [functions]
   node_bundler = "esbuild"
 
-  # External modules pour les fonctions d'analyse
+  # External modules et timeout étendu pour les fonctions d'analyse
   [functions."analyze-devis-pro"]
     external_node_modules = ["@anthropic-ai/sdk"]
+    timeout = 60
+
+  [functions."analyze-quote"]
+    external_node_modules = ["@anthropic-ai/sdk"]
+    timeout = 60
 
   [functions."analyze-video-pro"]
     external_node_modules = ["@anthropic-ai/sdk"]
+    timeout = 60
 
   [functions."*"]
-    # 26 secondes max sur plan gratuit Netlify
+    # 26 secondes par défaut (plan gratuit), les fonctions lourdes ont 60s ci-dessus
     timeout = 26
 
 # Security Headers
