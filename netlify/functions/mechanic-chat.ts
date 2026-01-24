@@ -21,11 +21,15 @@ const FREE_MESSAGES_LIMIT_PER_DAY = 10
 
 // Web search function
 async function searchWeb(query: string): Promise<string> {
+  console.log(`🔍 searchWeb() appelée avec: "${query}"`)
+
   if (!BRAVE_API_KEY) {
-    return `[Recherche non disponible]`
+    console.warn('⚠️ BRAVE_API_KEY manquante dans searchWeb')
+    return `[Recherche non disponible - clé API manquante]`
   }
 
   try {
+    console.log(`🌐 Appel Brave API...`)
     const response = await fetch(
       `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&country=fr`,
       {
@@ -36,23 +40,38 @@ async function searchWeb(query: string): Promise<string> {
       }
     )
 
+    console.log(`📡 Brave API status: ${response.status} ${response.statusText}`)
+
     if (!response.ok) {
-      return `[Recherche échouée]`
+      const errorText = await response.text().catch(() => 'N/A')
+      console.error(`❌ Brave API erreur: ${response.status} - ${errorText}`)
+      if (response.status === 401) {
+        return `[Clé API Brave invalide ou expirée]`
+      } else if (response.status === 429) {
+        return `[Rate limit Brave API atteint]`
+      }
+      return `[Recherche échouée: ${response.status}]`
     }
 
     const data = await response.json()
     const results = data.web?.results || []
+    console.log(`✅ Brave API: ${results.length} résultats`)
 
     if (results.length === 0) {
-      return `[Aucun résultat]`
+      return `[Aucun résultat pour: ${query}]`
     }
 
     return results.slice(0, 4).map((r: { title: string; description: string; url: string }) =>
       `- ${r.title}: ${r.description}\n  Source: ${r.url}`
     ).join('\n\n')
   } catch (error) {
-    console.error('Search error:', error)
-    return `[Erreur de recherche]`
+    const err = error as { message?: string; name?: string }
+    console.error('💥 searchWeb erreur:', {
+      name: err.name,
+      message: err.message,
+      error
+    })
+    return `[Erreur de recherche: ${err.message || 'inconnue'}]`
   }
 }
 
@@ -447,6 +466,10 @@ export const handler: Handler = async (event) => {
   console.log('🤖 MECHANIC-CHAT START')
   console.log(`📅 ${new Date().toISOString()}`)
   console.log(`🔑 BRAVE_SEARCH_API_KEY: ${BRAVE_API_KEY ? '✅ Présente' : '❌ MANQUANTE'}`)
+  console.log(`🔑 Longueur clé BRAVE: ${BRAVE_API_KEY?.length || 0}`)
+  if (BRAVE_API_KEY && BRAVE_API_KEY.length < 10) {
+    console.error('⚠️ BRAVE_SEARCH_API_KEY semble invalide (trop courte)')
+  }
   console.log('═══════════════════════════════════════════════════════════════')
 
   if (event.httpMethod === 'OPTIONS') {
@@ -775,27 +798,39 @@ Réponds maintenant de manière naturelle et conversationnelle !`
           continue
         }
 
-        // Extract final response
-        const textBlock = response.content.find(
+        // Extract final response - chercher tous les blocs texte
+        const textBlocks = response.content.filter(
           (block): block is Anthropic.Messages.TextBlock => block.type === 'text'
         )
 
-        if (textBlock) {
-          aiResponse = textBlock.text
-          console.log(`✅ Réponse finale: ${aiResponse.length} chars`)
+        if (textBlocks.length > 0) {
+          aiResponse = textBlocks.map(b => b.text).join('\n')
+          console.log(`✅ Réponse finale: ${aiResponse.length} chars (${textBlocks.length} blocs)`)
         } else {
           console.warn('⚠️ Pas de bloc texte dans la réponse!')
+          console.warn('   Content types:', response.content.map(c => c.type).join(', '))
         }
 
         break
       } catch (claudeError) {
-        console.error(`❌ [Iteration ${iterations}] Erreur Claude:`, claudeError)
+        const err = claudeError as { message?: string; status?: number; name?: string }
+        console.error(`❌ [Iteration ${iterations}] Erreur Claude:`, {
+          name: err.name,
+          message: err.message,
+          status: err.status
+        })
         throw claudeError
       }
     }
 
     const totalDuration = Date.now() - startTime
     console.log(`\n📊 TOTAL: ${iterations} itérations en ${totalDuration}ms`)
+
+    // Fallback si aiResponse est vide après toutes les itérations
+    if (!aiResponse || aiResponse.trim() === '') {
+      console.warn('⚠️ aiResponse vide après toutes les itérations!')
+      aiResponse = "Hmm, je n'ai pas réussi à formuler ma réponse. Tu peux reformuler ta question ? 🤔"
+    }
 
     // 8. Save messages to database
     const userMessageContent = image ? `[IMAGE]\n${message}` : message
@@ -844,23 +879,36 @@ Réponds maintenant de manière naturelle et conversationnelle !`
 
   } catch (error: unknown) {
     const totalDuration = Date.now() - startTime
-    const err = error as { message?: string; status?: number }
+    const err = error as { message?: string; status?: number; name?: string; error?: { type?: string; message?: string } }
 
     console.error('═══════════════════════════════════════════════════════════════')
     console.error('💥 MECHANIC-CHAT ERROR')
     console.error(`   Duration: ${totalDuration}ms`)
+    console.error(`   Name: ${err.name}`)
     console.error(`   Message: ${err.message}`)
     console.error(`   Status: ${err.status}`)
-    console.error('   Full error:', error)
+    console.error(`   Error type: ${err.error?.type}`)
+    console.error(`   Error message: ${err.error?.message}`)
+    console.error('   Full error:', JSON.stringify(error, null, 2))
     console.error('═══════════════════════════════════════════════════════════════')
 
+    // Message d'erreur plus informatif basé sur le type d'erreur
+    let userMessage = "Désolé, j'ai un petit problème technique là 🔧 Peux-tu reformuler ta question ou réessayer dans quelques secondes ?"
+
+    if (err.message?.includes('timeout') || err.name === 'AbortError') {
+      userMessage = "Ma réponse prend trop de temps... Essaie avec une question plus courte ! ⏱️"
+    } else if (err.status === 401 || err.error?.type === 'authentication_error') {
+      userMessage = "Oups, problème de configuration côté serveur. L'équipe est prévenue ! 🔧"
+    } else if (err.status === 429 || err.error?.type === 'rate_limit_error') {
+      userMessage = "Beaucoup de demandes en ce moment, réessaie dans quelques secondes ! 🚦"
+    }
+
     // TOUJOURS retourner une réponse valide pour éviter le freeze frontend
-    // Même en cas d'erreur, on renvoie un message d'erreur user-friendly
     return {
       statusCode: 200, // ← 200 pas 500, pour que le frontend puisse afficher le message
       headers,
       body: JSON.stringify({
-        response: "Désolé, j'ai un petit problème technique là 🔧 Peux-tu reformuler ta question ou réessayer dans quelques secondes ?",
+        response: userMessage,
         error: true,
         errorDetails: err.message,
         conversationId: null
