@@ -107,6 +107,17 @@ export const handler: Handler = async (event) => {
 
 DATE ACTUELLE: 25 janvier 2026
 
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ RÈGLE ABSOLUE #1 - EXTRACTION LITTÉRALE DES MONTANTS
+═══════════════════════════════════════════════════════════════════════════════
+Tu DOIS extraire les montants EXACTEMENT comme ils apparaissent sur le devis.
+- Si le devis affiche "1562,00€", tu retournes 1562.00
+- Si le devis affiche "TOTAL TTC: 847.50€", tu retournes 847.50
+- JAMAIS d'estimation, JAMAIS d'arrondi, JAMAIS d'invention
+- Les prix du devis sont SACRÉS et IMMUABLES
+- En cas de doute, relis l'image et cite le montant EXACT
+═══════════════════════════════════════════════════════════════════════════════
+
 CAPACITÉ RECHERCHE WEB:
 Tu as accès à l'outil search_prices pour rechercher les prix ACTUELS (2026) sur internet.
 ${BRAVE_API_KEY ? 'IMPORTANT: Fais MAX 3-4 recherches pour les pièces/prestations PRINCIPALES du devis (les plus chères). Pour les petites lignes, utilise tes connaissances.' : 'Note: Recherche web non disponible, utilise tes connaissances 2025 + inflation +3%.'}
@@ -128,40 +139,48 @@ TARIFS INDICATIFS MAIN D'ŒUVRE 2026:
 - Carrosserie-peinture: 80-120€/h
 - Concession: 90-140€/h
 
+═══════════════════════════════════════════════════════════════════════════════
 RÈGLES CRITIQUES DE CALCUL:
-1. totalTTC = le total EXACT du devis (prix facturé par le garage)
-2. prixMarcheEstime = prix trouvé par recherche web OU estimation 2026
-3. totalMarcheEstime = SOMME de tous les prixMarcheEstime
-4. ecartPourcent = ((totalTTC_ligne - prixMarcheEstime) / prixMarcheEstime) * 100
+═══════════════════════════════════════════════════════════════════════════════
+1. totalTTC = le total EXACT LU SUR LE DEVIS (pas estimé, pas calculé)
+2. Chaque ligne.totalTTC = montant EXACT LU SUR LE DEVIS pour cette ligne
+3. prixMarcheEstime = prix trouvé par recherche web OU estimation 2026
+4. totalMarcheEstime = SOMME de tous les prixMarcheEstime
+5. ecartPourcent = ((totalTTC_ligne - prixMarcheEstime) / prixMarcheEstime) * 100
 
 ⚠️ CALCUL DIFFÉRENCE CRITIQUE:
 economiesPotentielles.montant = totalTTC - totalMarcheEstime
 C'est la DIFFÉRENCE GLOBALE, PAS la somme des écarts individuels!
 
 EXEMPLE:
-- Ligne 1: facturé 800€, marché 700€, écart +14%
-- Ligne 2: facturé 762€, marché 615€, écart +24%
-- Total facturé: 1562€
+- Ligne 1: facturé 800€ (lu sur devis), marché 700€, écart +14%
+- Ligne 2: facturé 762€ (lu sur devis), marché 615€, écart +24%
+- Total facturé: 1562€ (lu sur devis)
 - Total marché: 1315€ (700 + 615)
 - Différence = 1562 - 1315 = 247€ ✅
-- NE PAS FAIRE: 100 + 147 = 247€ (même résultat par chance, mais méthode incorrecte si % différents)
 
 BARÈME VERDICT: ok=écart<15%, eleve=15-40%, arnaque=>40%`
 
     const userPrompt = `Analyse ce devis automobile.
 
+⚠️ EXTRACTION LITTÉRALE OBLIGATOIRE:
+- Lis CHAQUE montant EXACTEMENT comme écrit sur le devis
+- Le "totalTTC" de chaque ligne = montant EXACT sur le devis (pas estimé)
+- Le "totalTTC" global = TOTAL TTC EXACT affiché sur le devis
+- NE JAMAIS inventer ou estimer les prix facturés
+
 ÉTAPES:
-1. Extrais les informations du devis (garage, lignes, montants)
-2. ${BRAVE_API_KEY ? 'Pour CHAQUE ligne, fais une recherche web avec search_prices' : 'Estime les prix marché 2026'}
-3. Calcule les écarts et donne ton verdict
+1. LIS ATTENTIVEMENT chaque montant sur le devis (prix exact, pas d'estimation)
+2. ${BRAVE_API_KEY ? 'Pour les 3-4 lignes principales, recherche les prix marché 2026' : 'Estime les prix marché 2026'}
+3. Compare prix facturés (lus) vs prix marché (estimés)
 
 RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
 {
   "garage": {"nom": "...", "adresse": "..."},
   "lignes": [
-    {"designation": "...", "totalTTC": 0, "prixMarcheEstime": 0, "ecartPourcent": 0, "verdict": "ok|eleve|arnaque"}
+    {"designation": "...", "totalTTC": <MONTANT_EXACT_LU_SUR_DEVIS>, "prixMarcheEstime": 0, "ecartPourcent": 0, "verdict": "ok|eleve|arnaque"}
   ],
-  "totalTTC": 0,
+  "totalTTC": <TOTAL_TTC_EXACT_LU_SUR_DEVIS>,
   "totalMarcheEstime": 0,
   "verdict": {
     "note": 7,
@@ -199,6 +218,7 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
       const response = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4000,
+        temperature: 0,  // ⚠️ CRITIQUE: Force extraction DÉTERMINISTE des montants
         system: systemPrompt,
         tools: BRAVE_API_KEY ? [webSearchTool] : [],
         messages,
@@ -257,6 +277,27 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
     } catch {
       console.error('❌ Parse error:', responseText.substring(0, 200))
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Impossible de lire le devis. Photo plus nette SVP.' }) }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // VALIDATION: Vérifier cohérence des montants extraits
+    // ══════════════════════════════════════════════════════════════════════════
+    const totalFromLines = parsed.lignes?.reduce((s: number, l: { totalTTC?: number }) => s + (l.totalTTC || 0), 0) || 0
+    const declaredTotal = parsed.totalTTC || 0
+    const tolerance = 5 // 5€ de tolérance pour les arrondis
+
+    if (Math.abs(totalFromLines - declaredTotal) > tolerance && totalFromLines > 0) {
+      console.warn('⚠️ INCOHÉRENCE DÉTECTÉE:')
+      console.warn(`   Somme des lignes: ${totalFromLines}€`)
+      console.warn(`   Total déclaré: ${declaredTotal}€`)
+      console.warn(`   Écart: ${Math.abs(totalFromLines - declaredTotal)}€`)
+      // On utilise le total déclaré car c'est ce qui est affiché sur le devis
+    }
+
+    // Vérifier que le total n'est pas aberrant (ex: 0€ ou négatif)
+    if (declaredTotal <= 0) {
+      console.error('❌ Total invalide:', declaredTotal)
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'Impossible de lire le total du devis. Assure-toi que le montant TTC est visible.' }) }
     }
 
     // Construire résultat

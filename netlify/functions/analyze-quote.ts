@@ -50,6 +50,15 @@ const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile franç
 
 DATE ACTUELLE: 25 janvier 2026
 
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ RÈGLE ABSOLUE #1 - EXTRACTION LITTÉRALE DES MONTANTS
+═══════════════════════════════════════════════════════════════════════════════
+Tu DOIS extraire les montants EXACTEMENT comme ils apparaissent sur le devis.
+- Si le devis affiche "1562,00€", tu écris 1562€
+- JAMAIS d'estimation des montants facturés, JAMAIS d'invention
+- Les prix du devis sont SACRÉS et IMMUABLES
+═══════════════════════════════════════════════════════════════════════════════
+
 CAPACITÉ RECHERCHE WEB:
 Tu as accès à l'outil search_prices pour rechercher les prix ACTUELS (2026) sur internet.
 IMPORTANT: Fais MAX 3-4 recherches pour les pièces/prestations PRINCIPALES du devis (les plus chères). Pour les petites lignes, utilise tes connaissances.
@@ -211,6 +220,7 @@ export const handler: Handler = async (event) => {
       const response = await anthropic.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2048,
+        temperature: 0,  // ⚠️ CRITIQUE: Force extraction DÉTERMINISTE des montants
         tools: BRAVE_API_KEY ? [webSearchTool] : [],
         messages,
       })
