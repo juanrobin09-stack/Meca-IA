@@ -7,19 +7,26 @@ const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY
 async function searchWeb(query: string): Promise<string> {
   if (!BRAVE_API_KEY) {
     console.log('[analyze-devis-pro] No Brave API key - using AI memory only')
-    return `[Recherche non disponible - clé API manquante. Utilise ta mémoire pour estimer les prix 2026.]`
+    return `[Recherche non disponible - utilise les prix de référence du prompt.]`
   }
 
   try {
+    // ⚡ Timeout 5s pour éviter les blocages
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+
     const response = await fetch(
-      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&country=fr`,
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=3&country=fr`,
       {
         headers: {
           'Accept': 'application/json',
           'X-Subscription-Token': BRAVE_API_KEY
-        }
+        },
+        signal: controller.signal
       }
     )
+
+    clearTimeout(timeout)
 
     if (!response.ok) {
       console.error('[analyze-devis-pro] Brave Search error:', response.status)
@@ -33,13 +40,14 @@ async function searchWeb(query: string): Promise<string> {
       return `[Aucun résultat trouvé pour: ${query}]`
     }
 
-    // Format results with prices if found
-    return results.slice(0, 4).map((r: { title: string; description: string; url: string }) =>
-      `- ${r.title}: ${r.description} (${r.url})`
+    // Format results - compact pour vitesse
+    return results.slice(0, 3).map((r: { title: string; description: string }) =>
+      `${r.title}: ${r.description}`
     ).join('\n')
   } catch (error) {
     console.error('[analyze-devis-pro] Search error:', error)
-    return `[Erreur de recherche: ${error}]`
+    // En cas d'erreur/timeout, on continue sans web search
+    return `[Recherche timeout - utilise les prix de référence]`
   }
 }
 
@@ -165,58 +173,26 @@ export const handler: Handler = async (event) => {
     console.log(`🌐 Temperature: 0 (déterministe)`)
     console.log(`📅 Date analyse: ${new Date().toISOString()}`)
 
-    // ✅ PROMPT COMPLET pour Sonnet - qualité d'analyse
-    const systemPrompt = `Tu es un expert en tarification automobile française avec 20 ans d'expérience.
-DATE: Janvier 2026
+    // ✅ PROMPT OPTIMISÉ: Sonnet + 1 recherche web groupée
+    const systemPrompt = `Expert tarification auto France. Date: janvier 2026.
 
-═══ RÈGLE #1 - EXTRACTION EXACTE ═══
-Tu DOIS extraire les montants EXACTEMENT comme sur le devis.
-- "1562,00€" → 1562.00
-- JAMAIS d'estimation pour les prix FACTURÉS
+RÈGLE #1 - EXTRACTION EXACTE:
+Lis les montants EXACTEMENT comme sur le devis. Pas d'estimation pour les prix facturés.
 
-═══ RÈGLE #2 - PRIX MARCHÉ 2026 RÉALISTES ═══
-NE PAS SOUS-ESTIMER ! En cas de doute, arrondis À LA HAUSSE.
+RÈGLE #2 - RECHERCHE WEB:
+${BRAVE_API_KEY ? `Fais UNE SEULE recherche groupée avec search_prices pour vérifier les prix 2026.
+Ex: "pare-choc aile [marque modèle] prix 2026 oscaro tarif carrosserie"` : 'Pas de recherche web, utilise les fourchettes ci-dessous.'}
 
-TARIFS MAIN D'ŒUVRE 2026:
-- Mécanique générale: 70-95€/h TTC
-- Carrosserie-peinture: 80-110€/h TTC
-- Concession/spécialiste: 100-150€/h TTC
+PRIX DE RÉFÉRENCE 2026 (si pas de recherche):
+- MO mécanique: 70-95€/h | MO carrosserie: 80-110€/h
+- Pare-choc: 200-500€ | Aile: 150-400€ | Phare: 150-600€
+- Embrayage: 300-700€ | Turbo: 800-2500€ | FAP: 800-2000€
 
-PRIX PIÈCES 2026 (fourchettes réalistes):
-- Pare-choc avant/arrière: 200-500€
-- Aile avant: 150-400€
-- Capot: 300-600€
-- Phare complet: 150-600€
-- Feu arrière: 80-300€
-- Rétroviseur: 80-300€
-- Radiateur: 150-400€
-- Alternateur: 200-450€
-- Démarreur: 150-350€
-- Embrayage kit: 300-700€
-- Amortisseur (x2): 150-400€
-- Plaquettes frein (jeu): 40-120€
-- Disques frein (x2): 80-200€
-- Pneu (unité): 60-200€
-- Batterie: 80-200€
-- Filtre à particules: 800-2000€
-- Turbo: 800-2500€
-- Injecteur: 150-400€
+RÈGLE #3 - VERDICTS:
+- ok: écart < 15% | eleve: 15-30% | arnaque: > 30%
+- NE PAS SOUS-ESTIMER les prix marché !
 
-PEINTURE AUTO 2026:
-- Peinture + vernis élément: 80-200€/élément
-- Raccord peinture: 50-150€
-
-VSP (voitures sans permis Aixam, Ligier, etc.):
-- Pièces souvent +30-50% plus chères que voitures normales !
-
-═══ RÈGLE #3 - VERDICTS ═══
-- ok: écart < 15% (tarif normal)
-- eleve: écart 15-30% (négociable)
-- arnaque: écart > 30% (surfacturation)
-
-CALCUL:
-- ecartPourcent = ((prixFacturé - prixMarché) / prixMarché) × 100
-- economiesPotentielles = totalFacturé - totalMarché`
+CALCUL: ecartPourcent = ((facturé - marché) / marché) × 100`
 
     const userPrompt = `Analyse ce devis automobile.
 
@@ -257,17 +233,16 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
       ]
     }]
 
-    // ⚡ SINGLE CALL - pas de tool use pour respecter 26s Netlify free
-    // Sonnet pour la qualité, mais SANS recherche web (trop lent)
+    // ⚡ OPTIMISÉ: Sonnet + 1 recherche web max pour rester < 26s
     let responseText = ''
     let iterations = 0
-    const maxIterations = 1  // UN SEUL appel, pas de tool use
+    const maxIterations = 2  // 1 initial + 1 tool use max
 
     console.log('═══════════════════════════════════════════════════════════════')
     console.log('🤖 DEBUT APPEL CLAUDE VISION API')
     console.log(`   Model: claude-sonnet-4-20250514 (QUALITÉ)`)
-    console.log(`   Max iterations: ${maxIterations} (single call, no tools)`)
-    console.log(`   Web search: DÉSACTIVÉ (trop lent pour Netlify free)`)
+    console.log(`   Max iterations: ${maxIterations} (1 search max)`)
+    console.log(`   Web search: ${BRAVE_API_KEY ? '✅ ACTIVÉ (1 recherche groupée)' : '❌ Non configuré'}`)
     console.log('═══════════════════════════════════════════════════════════════')
 
     while (iterations < maxIterations) {
@@ -277,10 +252,10 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
       try {
         const response = await anthropic.messages.create({
           model: 'claude-sonnet-4-20250514',  // ✅ QUALITÉ: Sonnet pour analyse précise
-          max_tokens: 3000,
+          max_tokens: 2500,
           temperature: 0,  // ⚠️ CRITIQUE: Force extraction DÉTERMINISTE des montants
           system: systemPrompt,
-          tools: [],  // ⚡ PAS DE TOOLS = single call = rapide
+          tools: BRAVE_API_KEY ? [webSearchTool] : [],  // ✅ Web search si disponible
           messages,
         })
 
