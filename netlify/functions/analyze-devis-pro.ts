@@ -100,8 +100,11 @@ export const handler: Handler = async (event) => {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     // Analyse avec recherche web temps réel (2026)
-    console.log('🚀 Analyse en cours...')
-    console.log(`🔍 Brave Search API: ${BRAVE_API_KEY ? 'Configurée' : 'Non configurée'}`)
+    console.log('═══ DEBUT ANALYSE DEVIS PRO ═══')
+    console.log(`📄 Image reçue: ${imageSizeKB}KB`)
+    console.log(`🔍 Brave Search API: ${BRAVE_API_KEY ? '✅ Configurée' : '❌ Non configurée - PRIX MARCHÉ RISQUENT D\'ÊTRE SOUS-ESTIMÉS'}`)
+    console.log(`🌐 Temperature: 0 (déterministe)`)
+    console.log(`📅 Date analyse: ${new Date().toISOString()}`)
 
     const systemPrompt = `Tu es un expert en tarification automobile française avec 20 ans d'expérience.
 
@@ -118,33 +121,62 @@ Tu DOIS extraire les montants EXACTEMENT comme ils apparaissent sur le devis.
 - En cas de doute, relis l'image et cite le montant EXACT
 ═══════════════════════════════════════════════════════════════════════════════
 
-CAPACITÉ RECHERCHE WEB:
-Tu as accès à l'outil search_prices pour rechercher les prix ACTUELS (2026) sur internet.
-${BRAVE_API_KEY ? 'IMPORTANT: Fais MAX 3-4 recherches pour les pièces/prestations PRINCIPALES du devis (les plus chères). Pour les petites lignes, utilise tes connaissances.' : 'Note: Recherche web non disponible, utilise tes connaissances 2025 + inflation +3%.'}
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ RÈGLE ABSOLUE #2 - RECHERCHE WEB OBLIGATOIRE POUR PRIX MARCHÉ
+═══════════════════════════════════════════════════════════════════════════════
+${BRAVE_API_KEY ? `TU DOIS OBLIGATOIREMENT utiliser search_prices pour CHAQUE pièce/prestation du devis.
+NE JAMAIS utiliser uniquement ta mémoire (coupure janvier 2025) - les prix évoluent !
 
-REQUÊTES DE RECHERCHE À UTILISER:
-- "[pièce] [marque] [modèle] prix 2026 oscaro"
-- "[pièce] prix janvier 2026 yakarouler"
-- "tarif horaire main d'œuvre [mécanique/carrosserie] 2026 france"
+NOMBRE DE RECHERCHES: Fais 4-6 recherches minimum pour couvrir:
+- Chaque pièce principale (pare-choc, phare, aile, etc.)
+- Chaque prestation MO (carrosserie, peinture, mécanique)
+- Consommables (peinture, vernis, apprêt)` : 'Note: Recherche web non disponible, utilise tes connaissances 2025 + inflation +5%.'}
+
+REQUÊTES DE RECHERCHE OPTIMALES:
+- "[pièce exacte] [marque] [modèle] prix 2026 oscaro"
+- "[pièce] prix janvier 2026 yakarouler mister-auto"
+- "tarif horaire main d'œuvre carrosserie garage 2026 france"
+- "tarif horaire peinture automobile 2026"
+
+POUR VOITURES SANS PERMIS (VSP) - TRÈS IMPORTANT:
+Si le devis concerne Aixam, Ligier, Microcar, Chatenet, Bellier:
+- Recherche: "[pièce] Aixam prix 2026 piecesanspermis"
+- Recherche: "[pièce] VSP voiture sans permis prix 2026"
+- Sites spécialisés: Piecesanspermis.fr, VSPieces.com, MisterVSP.fr
+- ⚠️ Les pièces VSP sont souvent PLUS CHÈRES que les voitures normales !
 
 SITES DE RÉFÉRENCE:
 - Oscaro.com (leader France pièces auto)
-- Yakarouler.com
-- Mister-Auto.com
-- AutoDoc.fr
-- Feu-Vert.fr (tarifs main d'œuvre)
-
-TARIFS INDICATIFS MAIN D'ŒUVRE 2026:
-- Mécanique générale: 70-100€/h
-- Carrosserie-peinture: 80-120€/h
-- Concession: 90-140€/h
+- Yakarouler.com, Mister-Auto.com, AutoDoc.fr
+- Feu-Vert.fr, Norauto.fr (tarifs main d'œuvre)
+- Piecesanspermis.fr (VSP)
 
 ═══════════════════════════════════════════════════════════════════════════════
+⚠️ RÈGLE ABSOLUE #3 - NE PAS SOUS-ESTIMER LES PRIX MARCHÉ
+═══════════════════════════════════════════════════════════════════════════════
+ERREUR FATALE À ÉVITER: Sous-estimer les prix = accuser un garage honnête d'arnaque !
+
+TARIFS MAIN D'ŒUVRE 2026 RÉALISTES (France métropolitaine):
+- Mécanique générale: 70-95€/h TTC
+- Carrosserie-peinture: 80-110€/h TTC (travail qualifié!)
+- Concession/spécialiste: 100-150€/h TTC
+- Garage rural: 55-75€/h TTC
+
+EXEMPLES DE PRIX PIÈCES 2026 (ordre de grandeur):
+- Pare-choc origine: 200-450€ (pas 80-100€!)
+- Aile avant: 150-350€
+- Phare complet: 150-500€
+- Rétroviseur: 80-250€
+- Peinture + vernis auto: 80-150€/élément
+
+RÈGLE D'OR: En cas de doute, ARRONDIR À LA HAUSSE le prix marché.
+Mieux vaut dire "devis correct" que "arnaque" par erreur !
+═══════════════════════════════════════════════════════════════════════════════
+
 RÈGLES CRITIQUES DE CALCUL:
-═══════════════════════════════════════════════════════════════════════════════
 1. totalTTC = le total EXACT LU SUR LE DEVIS (pas estimé, pas calculé)
 2. Chaque ligne.totalTTC = montant EXACT LU SUR LE DEVIS pour cette ligne
-3. prixMarcheEstime = prix trouvé par recherche web OU estimation 2026
+3. prixMarcheEstime = prix trouvé par recherche web OU estimation RÉALISTE 2026
 4. totalMarcheEstime = SOMME de tous les prixMarcheEstime
 5. ecartPourcent = ((totalTTC_ligne - prixMarcheEstime) / prixMarcheEstime) * 100
 
@@ -152,14 +184,16 @@ RÈGLES CRITIQUES DE CALCUL:
 economiesPotentielles.montant = totalTTC - totalMarcheEstime
 C'est la DIFFÉRENCE GLOBALE, PAS la somme des écarts individuels!
 
-EXEMPLE:
-- Ligne 1: facturé 800€ (lu sur devis), marché 700€, écart +14%
-- Ligne 2: facturé 762€ (lu sur devis), marché 615€, écart +24%
-- Total facturé: 1562€ (lu sur devis)
-- Total marché: 1315€ (700 + 615)
-- Différence = 1562 - 1315 = 247€ ✅
+EXEMPLE CORRECT:
+- Pare-choc facturé 350€ → marché 280-320€ → écart ~10-20%
+- Main d'œuvre facturé 400€ (5h × 80€) → marché 350-450€ → correct
+- Total facturé: 750€ → Total marché: ~700€ → Différence: ~50€ (+7%)
+- Verdict: CORRECT ✅
 
-BARÈME VERDICT: ok=écart<15%, eleve=15-40%, arnaque=>40%`
+BARÈME VERDICT (basé sur écart % par rapport au marché):
+- ok: écart < 15% (devis normal)
+- eleve: écart 15-30% (négociable mais pas arnaque)
+- arnaque: écart > 30% (surfacturation claire)`
 
     const userPrompt = `Analyse ce devis automobile.
 
@@ -332,6 +366,12 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
     const difference = Math.round((totalFacture - totalMarche) * 100) / 100
     const pourcentage = totalMarche > 0 ? Math.round(((difference / totalMarche) * 100) * 10) / 10 : 0
 
+    // ══════════════════════════════════════════════════════════════════════════
+    // VALIDATION CRITIQUE: Détecter prix marché anormalement bas
+    // Si ratio < 60%, l'IA a probablement sous-estimé les prix !
+    // ══════════════════════════════════════════════════════════════════════════
+    const ratioMarcheFacture = totalMarche / totalFacture
+
     // Log détaillé pour debug et vérification
     console.log('═══════════════════════════════════════════════════')
     console.log('💰 CALCUL DIFFÉRENCE:')
@@ -341,9 +381,34 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
     console.log(`   Total marché utilisé: ${totalMarche}€`)
     console.log(`   ➤ DIFFÉRENCE = ${totalFacture} - ${totalMarche} = ${difference}€`)
     console.log(`   ➤ Pourcentage: ${pourcentage}%`)
+    console.log(`   📊 Ratio marché/facturé: ${(ratioMarcheFacture * 100).toFixed(1)}%`)
     if (parsed.economiesPotentielles?.montant) {
       console.log(`   ⚠️ Montant retourné par IA: ${parsed.economiesPotentielles.montant}€ (ignoré, on utilise notre calcul)`)
     }
+
+    // ALERTE si prix marché suspicieusement bas
+    if (ratioMarcheFacture < 0.60 && totalMarche > 0) {
+      console.warn('🚨 ALERTE: Prix marché possiblement SOUS-ESTIMÉ!')
+      console.warn(`   Le prix marché (${totalMarche}€) est inférieur à 60% du prix facturé (${totalFacture}€)`)
+      console.warn('   Cela peut indiquer une sous-estimation des prix par l\'IA')
+      console.warn('   Vérifier manuellement les prix des pièces principales')
+
+      // Log des lignes pour investigation
+      console.log('📝 Détail des lignes pour investigation:')
+      parsed.lignes?.forEach((l: LigneDevis, i: number) => {
+        const ligneRatio = l.prixMarcheEstime / l.totalTTC
+        const flag = ligneRatio < 0.5 ? '🔴' : ligneRatio < 0.7 ? '🟡' : '🟢'
+        console.log(`   ${flag} Ligne ${i+1}: "${l.designation}" - Facturé: ${l.totalTTC}€, Marché: ${l.prixMarcheEstime}€ (ratio: ${(ligneRatio * 100).toFixed(0)}%)`)
+      })
+    } else if (ratioMarcheFacture >= 0.85) {
+      console.log('✅ Prix marché cohérent avec prix facturé (ratio >= 85%)')
+    }
+
+    // Validation prix marché pas aberrant
+    if (totalMarche <= 0) {
+      console.error('🚨 ERREUR: Prix marché invalide (<=0)')
+    }
+
     console.log('═══════════════════════════════════════════════════')
 
     const result = {
