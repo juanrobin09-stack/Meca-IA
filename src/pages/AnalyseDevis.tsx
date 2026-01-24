@@ -208,20 +208,24 @@ export default function AnalyseDevis() {
       const contentType = response.headers.get('content-type')
 
       if (!response.ok) {
-        if (contentType && contentType.includes('text/html')) {
-          throw new Error('Service temporairement indisponible. Réessaie dans quelques minutes.')
-        }
-        const errorData = await response.json().catch(() => ({}))
+        console.error('❌ Erreur HTTP:', response.status, response.statusText)
 
         if (response.status === 429) {
           throw new Error('Trop de requêtes. Attends 1 minute et réessaie.')
         } else if (response.status === 401 || response.status === 403) {
           throw new Error('Erreur d\'authentification. Reconnecte-toi et réessaie.')
-        } else if (response.status >= 500) {
-          throw new Error('Erreur serveur. Réessaie dans quelques minutes.')
         }
 
-        throw new Error(errorData.error || 'Erreur lors de l\'analyse. Réessaie.')
+        // Si HTML (page d'erreur Netlify), donner plus de détails
+        if (contentType && contentType.includes('text/html')) {
+          if (response.status === 502 || response.status === 504) {
+            throw new Error('L\'analyse a pris trop de temps (timeout). Réessaie avec une photo plus légère.')
+          }
+          throw new Error(`Erreur serveur (${response.status}). Réessaie dans quelques minutes.`)
+        }
+
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Erreur ${response.status}. Réessaie.`)
       }
 
       const result = await response.json()

@@ -52,7 +52,7 @@ DATE ACTUELLE: 25 janvier 2026
 
 CAPACITÉ RECHERCHE WEB:
 Tu as accès à l'outil search_prices pour rechercher les prix ACTUELS (2026) sur internet.
-OBLIGATOIRE: Utilise search_prices pour CHAQUE pièce/prestation importante du devis.
+IMPORTANT: Fais MAX 3-4 recherches pour les pièces/prestations PRINCIPALES du devis (les plus chères). Pour les petites lignes, utilise tes connaissances.
 
 REQUÊTES DE RECHERCHE À UTILISER:
 - "[pièce] [marque] [modèle] prix 2026 oscaro"
@@ -200,10 +200,10 @@ export const handler: Handler = async (event) => {
       },
     ]
 
-    // Tool use loop - allow up to 5 search calls
+    // Tool use loop - limit to 4 searches to stay under 60s timeout
     let finalText = ''
     let iterations = 0
-    const maxIterations = 6
+    const maxIterations = 5
 
     while (iterations < maxIterations) {
       iterations++

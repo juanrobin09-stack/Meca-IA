@@ -109,7 +109,7 @@ DATE ACTUELLE: 25 janvier 2026
 
 CAPACITÉ RECHERCHE WEB:
 Tu as accès à l'outil search_prices pour rechercher les prix ACTUELS (2026) sur internet.
-${BRAVE_API_KEY ? 'OBLIGATOIRE: Utilise search_prices pour CHAQUE pièce/prestation du devis.' : 'Note: Recherche web non disponible, utilise tes connaissances 2025 + inflation +3%.'}
+${BRAVE_API_KEY ? 'IMPORTANT: Fais MAX 3-4 recherches pour les pièces/prestations PRINCIPALES du devis (les plus chères). Pour les petites lignes, utilise tes connaissances.' : 'Note: Recherche web non disponible, utilise tes connaissances 2025 + inflation +3%.'}
 
 REQUÊTES DE RECHERCHE À UTILISER:
 - "[pièce] [marque] [modèle] prix 2026 oscaro"
@@ -188,10 +188,10 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
       ]
     }]
 
-    // Tool use loop - allow up to 8 search calls for comprehensive price checking
+    // Tool use loop - limit to 4 searches to stay under 60s timeout
     let responseText = ''
     let iterations = 0
-    const maxIterations = 10
+    const maxIterations = 5
 
     while (iterations < maxIterations) {
       iterations++
