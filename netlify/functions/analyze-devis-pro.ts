@@ -63,6 +63,7 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown):
     {"designation": "...", "totalTTC": 0, "prixMarcheEstime": 0, "ecartPourcent": 0, "verdict": "ok|eleve|arnaque"}
   ],
   "totalTTC": 0,
+  "totalMarcheEstime": 0,
   "verdict": {
     "note": 7,
     "statut": "honnete|reserve|arnaque",
@@ -72,8 +73,17 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown):
   "economiesPotentielles": {"montant": 0, "conseils": ["..."]}
 }
 
-BARÈME: ok=écart<15%, eleve=15-40%, arnaque=>40%
-PRIX 2026: Main d'œuvre 60-90€/h, Plaquettes 25-60€, Vidange 60-120€, Révision 150-300€`
+RÈGLES CRITIQUES DE CALCUL:
+1. totalTTC = le total EXACT du devis (prix facturé par le garage)
+2. prixMarcheEstime = prix RÉALISTE de chaque prestation sur le marché français
+3. totalMarcheEstime = SOMME des prixMarcheEstime de toutes les lignes
+4. ecartPourcent = ((totalTTC_ligne - prixMarcheEstime) / prixMarcheEstime) * 100
+5. economiesPotentielles.montant = totalTTC - totalMarcheEstime (DIFFÉRENCE GLOBALE)
+
+VÉRIFICATION: Si totalTTC=1562€ et totalMarcheEstime=1315€, alors montant=247€ (PAS la somme des écarts!)
+
+BARÈME VERDICT: ok=écart<15%, eleve=15-40%, arnaque=>40%
+PRIX MARCHÉ 2026: Main d'œuvre 60-90€/h, Plaquettes 25-60€, Vidange 60-120€, Révision 150-300€`
           }
         ]
       }]
@@ -104,11 +114,21 @@ PRIX 2026: Main d'œuvre 60-90€/h, Plaquettes 25-60€, Vidange 60-120€, Ré
     const lignesArnaques = parsed.lignes?.filter((l: LigneDevis) => l.verdict === 'arnaque').length || 0
 
     // CALCUL CORRECT de la différence (surfacturation)
-    // On calcule côté serveur pour éviter les erreurs de calcul de l'IA
+    // On utilise le totalMarcheEstime de l'IA ou on calcule à partir des lignes
     const totalFacture = parsed.totalTTC || 0
-    const totalMarche = parsed.lignes?.reduce((s: number, l: LigneDevis) => s + (l.prixMarcheEstime || 0), 0) || 0
+    const totalMarcheFromLines = parsed.lignes?.reduce((s: number, l: LigneDevis) => s + (l.prixMarcheEstime || 0), 0) || 0
+
+    // Préférer le total marché global si l'IA l'a fourni, sinon utiliser la somme des lignes
+    const totalMarche = parsed.totalMarcheEstime && parsed.totalMarcheEstime > 0
+      ? parsed.totalMarcheEstime
+      : totalMarcheFromLines
+
+    // Calcul de la différence : prix facturé - prix marché
     const difference = Math.round((totalFacture - totalMarche) * 100) / 100
     const pourcentage = totalMarche > 0 ? Math.round(((difference / totalMarche) * 100) * 10) / 10 : 0
+
+    // Log pour debug
+    console.log(`💰 Calcul: Facturé=${totalFacture}€, Marché=${totalMarche}€, Diff=${difference}€ (${pourcentage}%)`)
 
     const result = {
       garage: parsed.garage || { nom: 'Non identifié' },

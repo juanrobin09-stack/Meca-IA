@@ -68,7 +68,9 @@ Prix marché estimation: [Y-Z]€
 (Continue pour chaque ligne identifiable)
 
 ## ÉCONOMIE POTENTIELLE
+Différence totale: [Total facturé] - [Total marché] = [X]€
 Tu peux économiser [X]€ à [Y]€ en négociant.
+IMPORTANT: Calcule TOUJOURS la différence comme: prix_total_facturé - somme_prix_marché (PAS la somme des écarts individuels!)
 
 ## SCRIPT DE NÉGOCIATION
 « [Phrase exacte à dire au garagiste, polie mais ferme, mentionnant les prix du marché] »
