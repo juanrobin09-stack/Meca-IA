@@ -48,9 +48,23 @@ async function searchWeb(query: string): Promise<string> {
 
 const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile française avec 20 ans d'expérience. Analyse ce devis de garage.
 
-DATE ACTUELLE: ${new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+DATE ACTUELLE: 25 janvier 2026
 
-CAPACITÉ: Tu as accès à des recherches web en temps réel pour vérifier les prix actuels.
+CAPACITÉ RECHERCHE WEB:
+Tu as accès à l'outil search_prices pour rechercher les prix ACTUELS (2026) sur internet.
+OBLIGATOIRE: Utilise search_prices pour CHAQUE pièce/prestation importante du devis.
+
+REQUÊTES DE RECHERCHE À UTILISER:
+- "[pièce] [marque] [modèle] prix 2026 oscaro"
+- "[pièce] prix janvier 2026 yakarouler"
+- "tarif horaire main d'œuvre [mécanique/carrosserie] 2026 france"
+
+SITES DE RÉFÉRENCE:
+- Oscaro.com (leader France pièces auto)
+- Yakarouler.com
+- Mister-Auto.com
+- AutoDoc.fr
+- Feu-Vert.fr (tarifs main d'œuvre)
 
 STRUCTURE EXACTE DE TA RÉPONSE :
 
@@ -68,9 +82,13 @@ Prix marché estimation: [Y-Z]€
 (Continue pour chaque ligne identifiable)
 
 ## ÉCONOMIE POTENTIELLE
+⚠️ CALCUL CRITIQUE:
+Différence = Total facturé - Somme des prix marché
+Exemple: 1562€ - 1315€ = 247€
+NE PAS additionner les écarts individuels!
+
 Différence totale: [Total facturé] - [Total marché] = [X]€
-Tu peux économiser [X]€ à [Y]€ en négociant.
-IMPORTANT: Calcule TOUJOURS la différence comme: prix_total_facturé - somme_prix_marché (PAS la somme des écarts individuels!)
+Tu peux économiser [X]€ en négociant.
 
 ## SCRIPT DE NÉGOCIATION
 « [Phrase exacte à dire au garagiste, polie mais ferme, mentionnant les prix du marché] »
@@ -81,25 +99,27 @@ IMPORTANT: Calcule TOUJOURS la différence comme: prix_total_facturé - somme_pr
 - [Conseil 3 si pertinent]
 
 ## SOURCES
-[Liste les sources de prix utilisées si recherche web effectuée]
+Prix recherchés le 25 janvier 2026 via: [liste des sources utilisées]
 
 RÈGLES :
-- Utilise les résultats de recherche web pour les prix actuels
-- Compare aux prix moyens France (garage indépendant)
-- Main d'œuvre normale : 50-70€/h (80-100€/h réseau constructeur)
+- TOUJOURS faire des recherches web pour les prix actuels 2026
+- Ne JAMAIS te baser uniquement sur ta mémoire (coupure janvier 2025)
+- Tarifs main d'œuvre 2026 : 70-100€/h (garage indépendant), 90-140€/h (concession)
 - Sois précis sur les écarts de prix
 - Si image illisible ou pas un devis auto, dis-le clairement`
 
 // Tool definition for web search
 const webSearchTool: Anthropic.Messages.Tool = {
   name: 'search_prices',
-  description: 'Recherche les prix actuels des pièces auto et prestations garage sur le web français (Oscaro, Yakarouler, forums). Utilise cet outil pour chaque pièce ou prestation du devis.',
+  description: `Recherche les prix actuels (janvier 2026) des pièces auto et prestations garage sur le web français.
+OBLIGATOIRE: Utilise cet outil pour CHAQUE pièce ou prestation du devis.
+Sites de référence: Oscaro.com, Yakarouler.com, Mister-Auto.com, AutoDoc.fr, Feu-Vert.fr`,
   input_schema: {
     type: 'object' as const,
     properties: {
       query: {
         type: 'string',
-        description: 'La requête de recherche (ex: "prix plaquettes frein Peugeot 308 2024" ou "tarif vidange garage France 2024")'
+        description: 'La requête de recherche (ex: "plaquettes frein Peugeot 308 prix 2026 oscaro" ou "tarif horaire carrosserie garage 2026 france")'
       }
     },
     required: ['query']
