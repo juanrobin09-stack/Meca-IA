@@ -444,29 +444,29 @@ export const handler: Handler = async (event) => {
             const searchResults = await searchWeb(input.query)
             console.log(`   Résultats en ${Date.now() - searchStart}ms`)
 
-          // Add assistant message with tool use
-          currentMessages.push({
-            role: 'assistant',
-            content: response.content,
-          })
+            // Add assistant message with tool use
+            currentMessages.push({
+              role: 'assistant',
+              content: response.content,
+            })
 
-          // Add tool result
-          currentMessages.push({
-            role: 'user',
-            content: [
-              {
-                type: 'tool_result',
-                tool_use_id: toolUseBlock.id,
-                content: searchResults,
-              },
-            ],
-          })
+            // Add tool result
+            currentMessages.push({
+              role: 'user',
+              content: [
+                {
+                  type: 'tool_result',
+                  tool_use_id: toolUseBlock.id,
+                  content: searchResults,
+                },
+              ],
+            })
 
-          continue
-        }
+            continue
+          }
 
-        // Handle generate_final_diagnosis tool
-        if (toolUseBlock.name === 'generate_final_diagnosis') {
+          // Handle generate_final_diagnosis tool
+          if (toolUseBlock.name === 'generate_final_diagnosis') {
           finalDiagnosis = toolUseBlock.input as FinalDiagnosisInput
           console.log(`[chat] Generating final diagnosis:`, finalDiagnosis.diagnosis_summary)
 
