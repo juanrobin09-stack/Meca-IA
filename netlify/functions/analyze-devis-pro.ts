@@ -89,12 +89,13 @@ export const handler: Handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || '{}')
-    const { imageBase64 } = body
+    let { imageBase64 } = body
+    let detectedMediaType = 'image/jpeg' // Default, sera mis à jour si data: URL détectée
 
     console.log('📦 Body reçu:', {
       hasImageBase64: !!imageBase64,
       imageBase64Length: imageBase64?.length || 0,
-      imageBase64Start: imageBase64?.substring(0, 50) || 'N/A',
+      imageBase64Start: imageBase64?.substring(0, 100) || 'N/A',
       bodyKeys: Object.keys(body)
     })
 
@@ -103,30 +104,57 @@ export const handler: Handler = async (event) => {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Image requise' }) }
     }
 
-    // Vérifier que le base64 est valide (pas de préfixe data:)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🔧 FIX CRITIQUE: Nettoyer le base64 si nécessaire
+    // ═══════════════════════════════════════════════════════════════════════════
     if (imageBase64.startsWith('data:')) {
-      console.error('❌ Base64 contient le préfixe data: - ce n\'est pas attendu!')
-      // Essayer de le corriger automatiquement
-      const cleanBase64 = imageBase64.split(',')[1] || imageBase64
-      console.log('🔧 Correction: extraction du base64 pur')
-      // Note: On continue avec le base64 original car la correction est risquée
+      console.log('🔧 Base64 contient préfixe data: URL - Nettoyage en cours...')
+
+      // Extraire le type MIME depuis la data URL
+      const mimeMatch = imageBase64.match(/^data:([^;]+);base64,/)
+      if (mimeMatch) {
+        detectedMediaType = mimeMatch[1]
+        console.log(`   Type MIME détecté: ${detectedMediaType}`)
+      }
+
+      // Extraire le base64 pur (après la virgule)
+      const commaIndex = imageBase64.indexOf(',')
+      if (commaIndex !== -1) {
+        imageBase64 = imageBase64.substring(commaIndex + 1)
+        console.log(`   ✅ Base64 nettoyé: ${imageBase64.length} chars`)
+        console.log(`   Nouveaux premiers 50 chars: ${imageBase64.substring(0, 50)}`)
+      } else {
+        console.error('❌ Format data: URL invalide - pas de virgule trouvée!')
+      }
     }
 
     const imageSizeKB = Math.round((imageBase64.length * 3) / 4 / 1024)
     console.log(`📦 Image: ${imageSizeKB}KB (${imageBase64.length} chars base64)`)
+    console.log(`📸 Type MIME utilisé: ${detectedMediaType}`)
 
     if (imageSizeKB > 4000) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Image trop grosse (max 4MB)' }) }
     }
 
-    // Vérifier si le base64 semble valide
+    // Vérifier si le base64 semble valide (après nettoyage)
     const base64Regex = /^[A-Za-z0-9+/=]+$/
-    const isValidBase64 = base64Regex.test(imageBase64.substring(0, 100))
+    const sampleToCheck = imageBase64.substring(0, 100).replace(/\s/g, '') // Ignorer espaces/newlines
+    const isValidBase64 = base64Regex.test(sampleToCheck)
     console.log(`🔍 Base64 valide: ${isValidBase64 ? '✅' : '❌'}`)
 
     if (!isValidBase64) {
       console.error('❌ Le base64 contient des caractères invalides')
       console.error('   Premiers 100 chars:', imageBase64.substring(0, 100))
+      console.error('   Chars problématiques:', sampleToCheck.match(/[^A-Za-z0-9+/=]/g))
+
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: 'Image corrompue. Reprends une photo avec l\'appareil photo.',
+          debug: 'INVALID_BASE64'
+        })
+      }
     }
 
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -264,7 +292,7 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
       content: [
         {
           type: 'image',
-          source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 }
+          source: { type: 'base64', media_type: detectedMediaType as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp', data: imageBase64 }
         },
         {
           type: 'text',
