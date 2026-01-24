@@ -222,6 +222,46 @@ Le diagnostic doit être COMPLET avec sources et données vérifiées.`,
   }
 }
 
+// Helper: Clean and validate base64 image data
+function cleanBase64Image(base64: string): { valid: boolean; data: string; error?: string } {
+  if (!base64 || typeof base64 !== 'string') {
+    return { valid: false, data: '', error: 'Image vide ou invalide' }
+  }
+
+  // Remove data URL prefix if present
+  let cleanData = base64
+  if (base64.includes(',')) {
+    cleanData = base64.split(',').pop() || ''
+  }
+
+  // Remove whitespace and newlines
+  cleanData = cleanData.replace(/[\s\n\r]/g, '')
+
+  // Remove any non-base64 characters
+  cleanData = cleanData.replace(/[^A-Za-z0-9+/=]/g, '')
+
+  // Validate minimum length
+  if (cleanData.length < 100) {
+    return { valid: false, data: '', error: 'Image trop petite ou corrompue' }
+  }
+
+  // Validate base64 pattern
+  const base64Regex = /^[A-Za-z0-9+/]+=*$/
+  if (!base64Regex.test(cleanData)) {
+    return { valid: false, data: '', error: 'Format base64 invalide' }
+  }
+
+  // Check if it's a valid base64 length (must be divisible by 4)
+  if (cleanData.length % 4 !== 0) {
+    // Pad with = to make it valid
+    const padding = 4 - (cleanData.length % 4)
+    cleanData = cleanData + '='.repeat(padding)
+  }
+
+  console.log(`[diagnostic-pro] Base64 cleaned: ${cleanData.length} chars`)
+  return { valid: true, data: cleanData }
+}
+
 // Types
 interface DiagnosticProCause {
   cause: string
@@ -429,7 +469,28 @@ export const handler: Handler = async (event) => {
 
     const { message, userId, sessionId, images = [], forceFinalize = false } = JSON.parse(event.body) as RequestBody
 
-    console.log('[diagnostic-pro] Request:', { userId, sessionId, hasImages: images.length > 0, forceFinalize })
+    console.log('═══════════════════════════════════════════════════════════════')
+    console.log('[diagnostic-pro] REQUEST RECEIVED')
+    console.log('═══════════════════════════════════════════════════════════════')
+    console.log('[diagnostic-pro] userId:', userId)
+    console.log('[diagnostic-pro] sessionId:', sessionId)
+    console.log('[diagnostic-pro] forceFinalize:', forceFinalize)
+    console.log('[diagnostic-pro] message length:', message?.length || 0)
+    console.log('[diagnostic-pro] images count:', images.length)
+
+    // Log image details for debugging
+    if (images.length > 0) {
+      images.forEach((img, i) => {
+        const hasPrefix = img?.includes('data:') || img?.includes('base64,')
+        const rawLength = img?.length || 0
+        const sample = img?.substring(0, 50) || 'empty'
+        console.log(`[diagnostic-pro] Image ${i + 1}:`)
+        console.log(`  - Length: ${rawLength} chars`)
+        console.log(`  - Has data URL prefix: ${hasPrefix}`)
+        console.log(`  - Sample (first 50): ${sample}...`)
+      })
+    }
+    console.log('═══════════════════════════════════════════════════════════════')
 
     // 1. Get or create user profile and check limits
     const { data: profile } = await supabase
@@ -529,21 +590,39 @@ export const handler: Handler = async (event) => {
     const existingMessages: DiagnosticMessage[] = session.messages || []
     const userMessageCount = existingMessages.filter((m: DiagnosticMessage) => m.role === 'user').length + 1
 
-    // 4. Build user message with images
+    // 4. Build user message with images (with validation)
     const userContent: Anthropic.Messages.ContentBlockParam[] = []
+    const validatedImages: string[] = []
+
+    console.log(`[diagnostic-pro] Processing ${images.length} images...`)
 
     if (images.length > 0) {
-      for (const imageBase64 of images) {
+      for (let i = 0; i < images.length; i++) {
+        const imageBase64 = images[i]
+        console.log(`[diagnostic-pro] Image ${i + 1}: original length=${imageBase64?.length || 0}`)
+
+        const cleaned = cleanBase64Image(imageBase64)
+
+        if (!cleaned.valid) {
+          console.error(`[diagnostic-pro] Image ${i + 1} invalid: ${cleaned.error}`)
+          // Skip invalid images but continue with others
+          continue
+        }
+
+        validatedImages.push(cleaned.data)
         userContent.push({
           type: 'image',
           source: {
             type: 'base64',
             media_type: 'image/jpeg',
-            data: imageBase64
+            data: cleaned.data
           }
         })
+        console.log(`[diagnostic-pro] Image ${i + 1} validated: ${cleaned.data.length} chars`)
       }
     }
+
+    console.log(`[diagnostic-pro] Valid images: ${validatedImages.length}/${images.length}`)
 
     userContent.push({
       type: 'text',
@@ -618,10 +697,38 @@ export const handler: Handler = async (event) => {
           messages: currentMessages,
         })
       } catch (apiError) {
-        console.error('[diagnostic-pro] Claude API error:', apiError)
-        // Si on a déjà du texte, on le garde, sinon on met un message d'erreur
-        if (!finalText) {
-          finalText = 'Une erreur temporaire est survenue lors de l\'analyse. Veuillez réessayer dans quelques instants.'
+        const errorMessage = apiError instanceof Error ? apiError.message : String(apiError)
+        console.error('[diagnostic-pro] Claude API error:', errorMessage)
+
+        // Check for base64/pattern validation error
+        if (errorMessage.includes('did not match') || errorMessage.includes('expected pattern') || errorMessage.includes('base64')) {
+          console.error('[diagnostic-pro] Base64 image validation failed - removing images and retrying')
+
+          // Remove image blocks from the current message and retry once
+          if (currentMessages.length > 0) {
+            const lastMessage = currentMessages[currentMessages.length - 1]
+            if (Array.isArray(lastMessage.content)) {
+              // Filter out image blocks
+              const textOnlyContent = (lastMessage.content as Anthropic.Messages.ContentBlockParam[])
+                .filter(block => block.type !== 'image')
+
+              if (textOnlyContent.length > 0) {
+                currentMessages[currentMessages.length - 1] = {
+                  ...lastMessage,
+                  content: textOnlyContent
+                }
+                console.log('[diagnostic-pro] Retrying without images...')
+                continue // Retry the loop without images
+              }
+            }
+          }
+
+          finalText = 'Une image n\'a pas pu être analysée. Pouvez-vous décrire votre problème en texte ou prendre une nouvelle photo ?'
+        } else {
+          // Si on a déjà du texte, on le garde, sinon on met un message d'erreur
+          if (!finalText) {
+            finalText = 'Une erreur temporaire est survenue lors de l\'analyse. Veuillez réessayer dans quelques instants.'
+          }
         }
         break
       }
@@ -775,14 +882,21 @@ export const handler: Handler = async (event) => {
 
     // Déterminer le type d'erreur pour un message plus utile
     let errorMessage = 'Une erreur est survenue lors du diagnostic.'
+    const errorStr = error instanceof Error ? error.message : String(error)
 
-    if (error instanceof Error) {
-      if (error.message.includes('timeout') || error.message.includes('Timeout')) {
-        errorMessage = 'Le serveur met trop de temps à répondre. Veuillez réessayer.'
-      } else if (error.message.includes('network') || error.message.includes('fetch')) {
-        errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet et réessayez.'
-      }
+    if (errorStr.includes('timeout') || errorStr.includes('Timeout')) {
+      errorMessage = 'Le serveur met trop de temps à répondre. Veuillez réessayer.'
+    } else if (errorStr.includes('network') || errorStr.includes('fetch')) {
+      errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet et réessayez.'
+    } else if (errorStr.includes('did not match') || errorStr.includes('expected pattern') || errorStr.includes('base64')) {
+      // This is the specific error we're fixing
+      console.error('[diagnostic-pro] Base64 validation error - image format issue')
+      errorMessage = 'Une image n\'a pas pu être traitée. Essayez de prendre une nouvelle photo ou envoyez votre message sans image.'
+    } else if (errorStr.includes('invalid_request_error')) {
+      errorMessage = 'Format de requête invalide. Reformulez votre message.'
     }
+
+    console.error('[diagnostic-pro] Returning error:', errorMessage)
 
     return {
       statusCode: 500,

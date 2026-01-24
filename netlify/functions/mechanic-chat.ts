@@ -91,6 +91,46 @@ const webSearchTool: Anthropic.Messages.Tool = {
   }
 }
 
+// Helper: Clean and validate base64 image data
+function cleanBase64Image(base64: string): { valid: boolean; data: string; error?: string } {
+  if (!base64 || typeof base64 !== 'string') {
+    return { valid: false, data: '', error: 'Image vide ou invalide' }
+  }
+
+  // Remove data URL prefix if present
+  let cleanData = base64
+  if (base64.includes(',')) {
+    cleanData = base64.split(',').pop() || ''
+  }
+
+  // Remove whitespace and newlines
+  cleanData = cleanData.replace(/[\s\n\r]/g, '')
+
+  // Remove any non-base64 characters
+  cleanData = cleanData.replace(/[^A-Za-z0-9+/=]/g, '')
+
+  // Validate minimum length
+  if (cleanData.length < 100) {
+    return { valid: false, data: '', error: 'Image trop petite ou corrompue' }
+  }
+
+  // Validate base64 pattern
+  const base64Regex = /^[A-Za-z0-9+/]+=*$/
+  if (!base64Regex.test(cleanData)) {
+    return { valid: false, data: '', error: 'Format base64 invalide' }
+  }
+
+  // Check if it's a valid base64 length (must be divisible by 4)
+  if (cleanData.length % 4 !== 0) {
+    // Pad with = to make it valid
+    const padding = 4 - (cleanData.length % 4)
+    cleanData = cleanData + '='.repeat(padding)
+  }
+
+  console.log(`[mechanic-chat] Base64 cleaned: ${cleanData.length} chars`)
+  return { valid: true, data: cleanData }
+}
+
 interface RequestBody {
   userId: string
   conversationId: string
@@ -713,7 +753,19 @@ ${memoryContext}
 
 Réponds maintenant de manière naturelle et conversationnelle !`
 
-    // 6. Build messages array
+    // 6. Build messages array with image validation
+    let validatedImage: string | null = null
+    if (image) {
+      console.log(`[mechanic-chat] Processing image: original length=${image.length}`)
+      const cleaned = cleanBase64Image(image)
+      if (cleaned.valid) {
+        validatedImage = cleaned.data
+        console.log(`[mechanic-chat] Image validated: ${cleaned.data.length} chars`)
+      } else {
+        console.error(`[mechanic-chat] Image invalid: ${cleaned.error}`)
+      }
+    }
+
     const messages: Anthropic.Messages.MessageParam[] = [
       ...(history || []).map((h) => ({
         role: h.sender === 'user' ? 'user' as const : 'assistant' as const,
@@ -721,14 +773,14 @@ Réponds maintenant de manière naturelle et conversationnelle !`
       })),
       {
         role: 'user' as const,
-        content: image
+        content: validatedImage
           ? [
               {
                 type: 'image' as const,
                 source: {
                   type: 'base64' as const,
                   media_type: 'image/jpeg' as const,
-                  data: image
+                  data: validatedImage
                 }
               },
               { type: 'text' as const, text: message }
@@ -901,6 +953,8 @@ Réponds maintenant de manière naturelle et conversationnelle !`
       userMessage = "Oups, problème de configuration côté serveur. L'équipe est prévenue ! 🔧"
     } else if (err.status === 429 || err.error?.type === 'rate_limit_error') {
       userMessage = "Beaucoup de demandes en ce moment, réessaie dans quelques secondes ! 🚦"
+    } else if (err.message?.includes('did not match') || err.message?.includes('expected pattern') || err.message?.includes('base64')) {
+      userMessage = "L'image n'a pas pu être traitée 📷 Essaie de prendre une nouvelle photo ou envoie juste ton message texte !"
     }
 
     // TOUJOURS retourner une réponse valide pour éviter le freeze frontend
