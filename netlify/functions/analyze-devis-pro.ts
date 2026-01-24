@@ -158,43 +158,88 @@ export const handler: Handler = async (event) => {
 
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-    // Analyse avec recherche web temps réel (2026)
+    // Analyse SANS recherche web (single call pour respecter timeout Netlify)
     console.log('═══ DEBUT ANALYSE DEVIS PRO ═══')
     console.log(`📄 Image reçue: ${imageSizeKB}KB`)
-    console.log(`🔍 Brave Search API: ${BRAVE_API_KEY ? '✅ Configurée' : '❌ Non configurée - PRIX MARCHÉ RISQUENT D\'ÊTRE SOUS-ESTIMÉS'}`)
+    console.log(`🔍 Mode: Single call (pas de web search pour vitesse)`)
     console.log(`🌐 Temperature: 0 (déterministe)`)
     console.log(`📅 Date analyse: ${new Date().toISOString()}`)
 
-    // ⚡ PROMPT OPTIMISÉ pour Haiku (rapide, moins de tokens)
-    const systemPrompt = `Expert tarification auto France. Date: janvier 2026.
+    // ✅ PROMPT COMPLET pour Sonnet - qualité d'analyse
+    const systemPrompt = `Tu es un expert en tarification automobile française avec 20 ans d'expérience.
+DATE: Janvier 2026
 
-RÈGLES CRITIQUES:
-1. EXTRACTION EXACTE: Lis les montants EXACTEMENT comme sur le devis (pas d'estimation)
-2. PRIX MARCHÉ 2026: ${BRAVE_API_KEY ? 'Fais 1 recherche web groupée pour les pièces principales' : 'Utilise tes connaissances + 5% inflation'}
-3. NE PAS SOUS-ESTIMER: En cas de doute, arrondis à la hausse
+═══ RÈGLE #1 - EXTRACTION EXACTE ═══
+Tu DOIS extraire les montants EXACTEMENT comme sur le devis.
+- "1562,00€" → 1562.00
+- JAMAIS d'estimation pour les prix FACTURÉS
 
-TARIFS 2026 RÉALISTES:
-- MO mécanique: 70-95€/h | MO carrosserie: 80-110€/h
-- Pare-choc: 200-450€ | Aile: 150-350€ | Phare: 150-500€
+═══ RÈGLE #2 - PRIX MARCHÉ 2026 RÉALISTES ═══
+NE PAS SOUS-ESTIMER ! En cas de doute, arrondis À LA HAUSSE.
+
+TARIFS MAIN D'ŒUVRE 2026:
+- Mécanique générale: 70-95€/h TTC
+- Carrosserie-peinture: 80-110€/h TTC
+- Concession/spécialiste: 100-150€/h TTC
+
+PRIX PIÈCES 2026 (fourchettes réalistes):
+- Pare-choc avant/arrière: 200-500€
+- Aile avant: 150-400€
+- Capot: 300-600€
+- Phare complet: 150-600€
+- Feu arrière: 80-300€
+- Rétroviseur: 80-300€
+- Radiateur: 150-400€
+- Alternateur: 200-450€
+- Démarreur: 150-350€
+- Embrayage kit: 300-700€
+- Amortisseur (x2): 150-400€
+- Plaquettes frein (jeu): 40-120€
+- Disques frein (x2): 80-200€
+- Pneu (unité): 60-200€
+- Batterie: 80-200€
+- Filtre à particules: 800-2000€
+- Turbo: 800-2500€
+- Injecteur: 150-400€
+
+PEINTURE AUTO 2026:
+- Peinture + vernis élément: 80-200€/élément
+- Raccord peinture: 50-150€
+
+VSP (voitures sans permis Aixam, Ligier, etc.):
+- Pièces souvent +30-50% plus chères que voitures normales !
+
+═══ RÈGLE #3 - VERDICTS ═══
+- ok: écart < 15% (tarif normal)
+- eleve: écart 15-30% (négociable)
+- arnaque: écart > 30% (surfacturation)
 
 CALCUL:
-- totalTTC = montant EXACT lu sur le devis
-- prixMarcheEstime = estimation réaliste 2026
-- ecartPourcent = ((facturé - marché) / marché) × 100
-- Verdict: ok (<15%), eleve (15-30%), arnaque (>30%)`
+- ecartPourcent = ((prixFacturé - prixMarché) / prixMarché) × 100
+- economiesPotentielles = totalFacturé - totalMarché`
 
-    // ⚡ User prompt optimisé
-    const userPrompt = `Analyse ce devis auto. Lis les montants EXACTEMENT comme écrits.
-${BRAVE_API_KEY ? 'Fais UNE recherche web groupée pour estimer les prix marché 2026.' : ''}
+    const userPrompt = `Analyse ce devis automobile.
 
-RETOURNE CE JSON (pas de markdown):
+ÉTAPES:
+1. Lis CHAQUE montant EXACTEMENT comme écrit sur le devis
+2. Estime le prix marché 2026 pour chaque ligne (utilise les fourchettes du system prompt)
+3. Compare et calcule les écarts
+
+RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
 {
   "garage": {"nom": "...", "adresse": "..."},
-  "lignes": [{"designation": "...", "totalTTC": <EXACT>, "prixMarcheEstime": 0, "ecartPourcent": 0, "verdict": "ok|eleve|arnaque"}],
-  "totalTTC": <EXACT_DU_DEVIS>,
-  "totalMarcheEstime": 0,
-  "verdict": {"note": 7, "statut": "honnete|reserve|arnaque", "recommandation": "...", "commentaireExpert": "..."},
-  "economiesPotentielles": {"montant": 0, "conseils": ["..."]}
+  "lignes": [
+    {"designation": "...", "totalTTC": <MONTANT_EXACT_DU_DEVIS>, "prixMarcheEstime": <ESTIMATION_2026>, "ecartPourcent": <CALCUL>, "verdict": "ok|eleve|arnaque"}
+  ],
+  "totalTTC": <TOTAL_EXACT_DU_DEVIS>,
+  "totalMarcheEstime": <SOMME_ESTIMATIONS>,
+  "verdict": {
+    "note": <1-10>,
+    "statut": "honnete|reserve|arnaque",
+    "recommandation": "...",
+    "commentaireExpert": "..."
+  },
+  "economiesPotentielles": {"montant": <DIFFERENCE>, "conseils": ["..."]}
 }`
 
     // Initial message with image
@@ -212,17 +257,17 @@ RETOURNE CE JSON (pas de markdown):
       ]
     }]
 
-    // Tool use loop - STRICT LIMIT for Netlify free plan (26s max)
-    // Using haiku for speed, max 2 iterations (1 search max)
+    // ⚡ SINGLE CALL - pas de tool use pour respecter 26s Netlify free
+    // Sonnet pour la qualité, mais SANS recherche web (trop lent)
     let responseText = ''
     let iterations = 0
-    const maxIterations = 2  // RÉDUIT: 1 appel initial + 1 tool use max
+    const maxIterations = 1  // UN SEUL appel, pas de tool use
 
     console.log('═══════════════════════════════════════════════════════════════')
-    console.log('🤖 DEBUT APPELS CLAUDE VISION API')
-    console.log(`   Model: claude-3-5-haiku-latest (FAST)`)
-    console.log(`   Max iterations: ${maxIterations} (Netlify free = 26s limit)`)
-    console.log(`   Tools: ${BRAVE_API_KEY ? 'search_prices (1 max)' : 'aucun'}`)
+    console.log('🤖 DEBUT APPEL CLAUDE VISION API')
+    console.log(`   Model: claude-sonnet-4-20250514 (QUALITÉ)`)
+    console.log(`   Max iterations: ${maxIterations} (single call, no tools)`)
+    console.log(`   Web search: DÉSACTIVÉ (trop lent pour Netlify free)`)
     console.log('═══════════════════════════════════════════════════════════════')
 
     while (iterations < maxIterations) {
@@ -231,18 +276,18 @@ RETOURNE CE JSON (pas de markdown):
 
       try {
         const response = await anthropic.messages.create({
-          model: 'claude-3-5-haiku-latest',  // ⚡ FAST: Haiku pour respecter 26s Netlify
-          max_tokens: 2000,  // Réduit pour vitesse
+          model: 'claude-sonnet-4-20250514',  // ✅ QUALITÉ: Sonnet pour analyse précise
+          max_tokens: 3000,
           temperature: 0,  // ⚠️ CRITIQUE: Force extraction DÉTERMINISTE des montants
           system: systemPrompt,
-          tools: BRAVE_API_KEY ? [webSearchTool] : [],
+          tools: [],  // ⚡ PAS DE TOOLS = single call = rapide
           messages,
         })
 
         // 🔍 LOGS DÉTAILLÉS DE LA RÉPONSE CLAUDE
-        console.log(`✅ [Iteration ${iterations}] Réponse reçue en ${Date.now()}ms:`)
+        console.log(`✅ Réponse reçue:`)
         console.log(`   stop_reason: ${response.stop_reason}`)
-        console.log(`   model: ${response.model} (haiku=fast)`)
+        console.log(`   model: ${response.model}`)
         console.log(`   usage: input=${response.usage?.input_tokens}, output=${response.usage?.output_tokens}`)
         console.log(`   content blocks: ${response.content.length}`)
 
