@@ -43,18 +43,17 @@ async function searchWeb(query: string): Promise<string> {
   }
 }
 
-// Tool definition for web search
+// Tool definition for web search - LIMITÉ à 1 recherche pour vitesse
 const webSearchTool: Anthropic.Messages.Tool = {
   name: 'search_prices',
-  description: `Recherche les prix actuels (janvier 2026) des pièces auto et prestations garage sur le web français.
-OBLIGATOIRE: Utilise cet outil pour CHAQUE pièce ou prestation du devis.
-Sites de référence: Oscaro.com, Yakarouler.com, Mister-Auto.com, AutoDoc.fr, Feu-Vert.fr`,
+  description: `Recherche prix 2026 pièces/MO auto. LIMITE: 1 seule recherche groupée!
+Ex: "pare-choc aile phare Peugeot 308 prix 2026 oscaro tarif carrosserie"`,
   input_schema: {
     type: 'object' as const,
     properties: {
       query: {
         type: 'string',
-        description: 'La requête de recherche (ex: "plaquettes frein Peugeot 308 prix 2026 oscaro" ou "tarif horaire carrosserie garage 2026 france")'
+        description: 'Requête groupée (ex: "pare-choc aile Peugeot prix 2026 oscaro tarif MO carrosserie")'
       }
     },
     required: ['query']
@@ -166,124 +165,36 @@ export const handler: Handler = async (event) => {
     console.log(`🌐 Temperature: 0 (déterministe)`)
     console.log(`📅 Date analyse: ${new Date().toISOString()}`)
 
-    const systemPrompt = `Tu es un expert en tarification automobile française avec 20 ans d'expérience.
+    // ⚡ PROMPT OPTIMISÉ pour Haiku (rapide, moins de tokens)
+    const systemPrompt = `Expert tarification auto France. Date: janvier 2026.
 
-DATE ACTUELLE: 25 janvier 2026
+RÈGLES CRITIQUES:
+1. EXTRACTION EXACTE: Lis les montants EXACTEMENT comme sur le devis (pas d'estimation)
+2. PRIX MARCHÉ 2026: ${BRAVE_API_KEY ? 'Fais 1 recherche web groupée pour les pièces principales' : 'Utilise tes connaissances + 5% inflation'}
+3. NE PAS SOUS-ESTIMER: En cas de doute, arrondis à la hausse
 
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ RÈGLE ABSOLUE #1 - EXTRACTION LITTÉRALE DES MONTANTS
-═══════════════════════════════════════════════════════════════════════════════
-Tu DOIS extraire les montants EXACTEMENT comme ils apparaissent sur le devis.
-- Si le devis affiche "1562,00€", tu retournes 1562.00
-- Si le devis affiche "TOTAL TTC: 847.50€", tu retournes 847.50
-- JAMAIS d'estimation, JAMAIS d'arrondi, JAMAIS d'invention
-- Les prix du devis sont SACRÉS et IMMUABLES
-- En cas de doute, relis l'image et cite le montant EXACT
-═══════════════════════════════════════════════════════════════════════════════
+TARIFS 2026 RÉALISTES:
+- MO mécanique: 70-95€/h | MO carrosserie: 80-110€/h
+- Pare-choc: 200-450€ | Aile: 150-350€ | Phare: 150-500€
 
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ RÈGLE ABSOLUE #2 - RECHERCHE WEB OBLIGATOIRE POUR PRIX MARCHÉ
-═══════════════════════════════════════════════════════════════════════════════
-${BRAVE_API_KEY ? `TU DOIS OBLIGATOIREMENT utiliser search_prices pour CHAQUE pièce/prestation du devis.
-NE JAMAIS utiliser uniquement ta mémoire (coupure janvier 2025) - les prix évoluent !
+CALCUL:
+- totalTTC = montant EXACT lu sur le devis
+- prixMarcheEstime = estimation réaliste 2026
+- ecartPourcent = ((facturé - marché) / marché) × 100
+- Verdict: ok (<15%), eleve (15-30%), arnaque (>30%)`
 
-NOMBRE DE RECHERCHES: Fais 4-6 recherches minimum pour couvrir:
-- Chaque pièce principale (pare-choc, phare, aile, etc.)
-- Chaque prestation MO (carrosserie, peinture, mécanique)
-- Consommables (peinture, vernis, apprêt)` : 'Note: Recherche web non disponible, utilise tes connaissances 2025 + inflation +5%.'}
+    // ⚡ User prompt optimisé
+    const userPrompt = `Analyse ce devis auto. Lis les montants EXACTEMENT comme écrits.
+${BRAVE_API_KEY ? 'Fais UNE recherche web groupée pour estimer les prix marché 2026.' : ''}
 
-REQUÊTES DE RECHERCHE OPTIMALES:
-- "[pièce exacte] [marque] [modèle] prix 2026 oscaro"
-- "[pièce] prix janvier 2026 yakarouler mister-auto"
-- "tarif horaire main d'œuvre carrosserie garage 2026 france"
-- "tarif horaire peinture automobile 2026"
-
-POUR VOITURES SANS PERMIS (VSP) - TRÈS IMPORTANT:
-Si le devis concerne Aixam, Ligier, Microcar, Chatenet, Bellier:
-- Recherche: "[pièce] Aixam prix 2026 piecesanspermis"
-- Recherche: "[pièce] VSP voiture sans permis prix 2026"
-- Sites spécialisés: Piecesanspermis.fr, VSPieces.com, MisterVSP.fr
-- ⚠️ Les pièces VSP sont souvent PLUS CHÈRES que les voitures normales !
-
-SITES DE RÉFÉRENCE:
-- Oscaro.com (leader France pièces auto)
-- Yakarouler.com, Mister-Auto.com, AutoDoc.fr
-- Feu-Vert.fr, Norauto.fr (tarifs main d'œuvre)
-- Piecesanspermis.fr (VSP)
-
-═══════════════════════════════════════════════════════════════════════════════
-⚠️ RÈGLE ABSOLUE #3 - NE PAS SOUS-ESTIMER LES PRIX MARCHÉ
-═══════════════════════════════════════════════════════════════════════════════
-ERREUR FATALE À ÉVITER: Sous-estimer les prix = accuser un garage honnête d'arnaque !
-
-TARIFS MAIN D'ŒUVRE 2026 RÉALISTES (France métropolitaine):
-- Mécanique générale: 70-95€/h TTC
-- Carrosserie-peinture: 80-110€/h TTC (travail qualifié!)
-- Concession/spécialiste: 100-150€/h TTC
-- Garage rural: 55-75€/h TTC
-
-EXEMPLES DE PRIX PIÈCES 2026 (ordre de grandeur):
-- Pare-choc origine: 200-450€ (pas 80-100€!)
-- Aile avant: 150-350€
-- Phare complet: 150-500€
-- Rétroviseur: 80-250€
-- Peinture + vernis auto: 80-150€/élément
-
-RÈGLE D'OR: En cas de doute, ARRONDIR À LA HAUSSE le prix marché.
-Mieux vaut dire "devis correct" que "arnaque" par erreur !
-═══════════════════════════════════════════════════════════════════════════════
-
-RÈGLES CRITIQUES DE CALCUL:
-1. totalTTC = le total EXACT LU SUR LE DEVIS (pas estimé, pas calculé)
-2. Chaque ligne.totalTTC = montant EXACT LU SUR LE DEVIS pour cette ligne
-3. prixMarcheEstime = prix trouvé par recherche web OU estimation RÉALISTE 2026
-4. totalMarcheEstime = SOMME de tous les prixMarcheEstime
-5. ecartPourcent = ((totalTTC_ligne - prixMarcheEstime) / prixMarcheEstime) * 100
-
-⚠️ CALCUL DIFFÉRENCE CRITIQUE:
-economiesPotentielles.montant = totalTTC - totalMarcheEstime
-C'est la DIFFÉRENCE GLOBALE, PAS la somme des écarts individuels!
-
-EXEMPLE CORRECT:
-- Pare-choc facturé 350€ → marché 280-320€ → écart ~10-20%
-- Main d'œuvre facturé 400€ (5h × 80€) → marché 350-450€ → correct
-- Total facturé: 750€ → Total marché: ~700€ → Différence: ~50€ (+7%)
-- Verdict: CORRECT ✅
-
-BARÈME VERDICT (basé sur écart % par rapport au marché):
-- ok: écart < 15% (devis normal)
-- eleve: écart 15-30% (négociable mais pas arnaque)
-- arnaque: écart > 30% (surfacturation claire)`
-
-    const userPrompt = `Analyse ce devis automobile.
-
-⚠️ EXTRACTION LITTÉRALE OBLIGATOIRE:
-- Lis CHAQUE montant EXACTEMENT comme écrit sur le devis
-- Le "totalTTC" de chaque ligne = montant EXACT sur le devis (pas estimé)
-- Le "totalTTC" global = TOTAL TTC EXACT affiché sur le devis
-- NE JAMAIS inventer ou estimer les prix facturés
-
-ÉTAPES:
-1. LIS ATTENTIVEMENT chaque montant sur le devis (prix exact, pas d'estimation)
-2. ${BRAVE_API_KEY ? 'Pour les 3-4 lignes principales, recherche les prix marché 2026' : 'Estime les prix marché 2026'}
-3. Compare prix facturés (lus) vs prix marché (estimés)
-
-RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
+RETOURNE CE JSON (pas de markdown):
 {
   "garage": {"nom": "...", "adresse": "..."},
-  "lignes": [
-    {"designation": "...", "totalTTC": <MONTANT_EXACT_LU_SUR_DEVIS>, "prixMarcheEstime": 0, "ecartPourcent": 0, "verdict": "ok|eleve|arnaque"}
-  ],
-  "totalTTC": <TOTAL_TTC_EXACT_LU_SUR_DEVIS>,
+  "lignes": [{"designation": "...", "totalTTC": <EXACT>, "prixMarcheEstime": 0, "ecartPourcent": 0, "verdict": "ok|eleve|arnaque"}],
+  "totalTTC": <EXACT_DU_DEVIS>,
   "totalMarcheEstime": 0,
-  "verdict": {
-    "note": 7,
-    "statut": "honnete|reserve|arnaque",
-    "recommandation": "...",
-    "commentaireExpert": "..."
-  },
-  "economiesPotentielles": {"montant": 0, "conseils": ["..."]},
-  "sourcesPrix": "Recherche web janvier 2026 (Oscaro, Yakarouler, etc.)"
+  "verdict": {"note": 7, "statut": "honnete|reserve|arnaque", "recommandation": "...", "commentaireExpert": "..."},
+  "economiesPotentielles": {"montant": 0, "conseils": ["..."]}
 }`
 
     // Initial message with image
@@ -301,16 +212,17 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
       ]
     }]
 
-    // Tool use loop - limit to 4 searches to stay under 60s timeout
+    // Tool use loop - STRICT LIMIT for Netlify free plan (26s max)
+    // Using haiku for speed, max 2 iterations (1 search max)
     let responseText = ''
     let iterations = 0
-    const maxIterations = 5
+    const maxIterations = 2  // RÉDUIT: 1 appel initial + 1 tool use max
 
     console.log('═══════════════════════════════════════════════════════════════')
     console.log('🤖 DEBUT APPELS CLAUDE VISION API')
-    console.log(`   Model: claude-sonnet-4-20250514`)
-    console.log(`   Max iterations: ${maxIterations}`)
-    console.log(`   Tools: ${BRAVE_API_KEY ? 'search_prices (Brave)' : 'aucun'}`)
+    console.log(`   Model: claude-3-5-haiku-latest (FAST)`)
+    console.log(`   Max iterations: ${maxIterations} (Netlify free = 26s limit)`)
+    console.log(`   Tools: ${BRAVE_API_KEY ? 'search_prices (1 max)' : 'aucun'}`)
     console.log('═══════════════════════════════════════════════════════════════')
 
     while (iterations < maxIterations) {
@@ -319,8 +231,8 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
 
       try {
         const response = await anthropic.messages.create({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4000,
+          model: 'claude-3-5-haiku-latest',  // ⚡ FAST: Haiku pour respecter 26s Netlify
+          max_tokens: 2000,  // Réduit pour vitesse
           temperature: 0,  // ⚠️ CRITIQUE: Force extraction DÉTERMINISTE des montants
           system: systemPrompt,
           tools: BRAVE_API_KEY ? [webSearchTool] : [],
@@ -328,9 +240,9 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte avant/après):
         })
 
         // 🔍 LOGS DÉTAILLÉS DE LA RÉPONSE CLAUDE
-        console.log(`✅ [Iteration ${iterations}] Réponse reçue:`)
+        console.log(`✅ [Iteration ${iterations}] Réponse reçue en ${Date.now()}ms:`)
         console.log(`   stop_reason: ${response.stop_reason}`)
-        console.log(`   model: ${response.model}`)
+        console.log(`   model: ${response.model} (haiku=fast)`)
         console.log(`   usage: input=${response.usage?.input_tokens}, output=${response.usage?.output_tokens}`)
         console.log(`   content blocks: ${response.content.length}`)
 
