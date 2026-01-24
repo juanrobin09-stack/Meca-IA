@@ -200,6 +200,10 @@ export default function MechanicChat() {
     setMessages(prev => [...prev, tempMsg])
 
     try {
+      // Timeout de 90 secondes pour laisser le temps aux recherches web
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 90000)
+
       const response = await fetch('/.netlify/functions/mechanic-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -209,10 +213,27 @@ export default function MechanicChat() {
           message: text || 'Analyse cette image',
           vehicleId: selectedVehicleId || null,
           image: hasImage ? selectedImage.base64 : undefined
-        })
+        }),
+        signal: controller.signal
       })
 
+      clearTimeout(timeoutId)
+
       const result = await response.json()
+
+      // Gérer les erreurs retournées par le backend (même avec status 200)
+      if (result.error === true) {
+        // Afficher le message d'erreur comme réponse d'Alex
+        const errorMsg: Message = {
+          id: 'error-' + Date.now(),
+          conversation_id: convId,
+          sender: 'ai',
+          content: result.response || "Désolé, un problème technique est survenu. Réessaie !",
+          created_at: new Date().toISOString()
+        }
+        setMessages(prev => [...prev.filter(m => m.id !== tempMsg.id), tempMsg, errorMsg])
+        return
+      }
 
       if (!response.ok) {
         if (result.error === 'LIMIT_REACHED') {
@@ -231,8 +252,21 @@ export default function MechanicChat() {
       if (result.purchasedCredits !== undefined) setPurchasedCredits(result.purchasedCredits)
 
       setSelectedImage(null)
-    } catch {
-      setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
+    } catch (err) {
+      const error = err as { name?: string }
+      // Message d'erreur user-friendly
+      const errorMessage = error?.name === 'AbortError'
+        ? "La réponse prend trop de temps. Réessaie avec une question plus simple !"
+        : "Oups, un problème est survenu. Réessaie !"
+
+      const errorMsg: Message = {
+        id: 'error-' + Date.now(),
+        conversation_id: convId,
+        sender: 'ai',
+        content: `Désolé, ${errorMessage} 🔧`,
+        created_at: new Date().toISOString()
+      }
+      setMessages(prev => [...prev.filter(m => m.id !== tempMsg.id), tempMsg, errorMsg])
     } finally {
       setIsTyping(false)
     }

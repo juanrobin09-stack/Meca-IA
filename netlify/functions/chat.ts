@@ -297,12 +297,20 @@ interface RequestBody {
 }
 
 export const handler: Handler = async (event) => {
+  const startTime = Date.now()
+
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json',
   }
+
+  console.log('═══════════════════════════════════════════════════════════════')
+  console.log('🤖 CHAT (DIAGNOSTIC) START')
+  console.log(`📅 ${new Date().toISOString()}`)
+  console.log(`🔑 BRAVE_SEARCH_API_KEY: ${BRAVE_API_KEY ? '✅ Présente' : '❌ MANQUANTE'}`)
+  console.log('═══════════════════════════════════════════════════════════════')
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' }
@@ -395,6 +403,9 @@ export const handler: Handler = async (event) => {
     }
 
     // Tool use loop
+    console.log('🤖 Début appel Claude (diagnostic)...')
+    console.log(`   Tools: ${tools.map(t => t.name).join(', ')}`)
+
     let finalText = ''
     let finalDiagnosis: FinalDiagnosisInput | null = null
     let iterations = 0
@@ -403,26 +414,35 @@ export const handler: Handler = async (event) => {
 
     while (iterations < maxIterations) {
       iterations++
+      const iterationStart = Date.now()
+      console.log(`\n🔄 [Iteration ${iterations}/${maxIterations}] Appel Claude...`)
 
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
-        system: systemPrompt,
-        tools,
-        messages: currentMessages,
-      })
+      try {
+        const response = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2048,
+          system: systemPrompt,
+          tools,
+          messages: currentMessages,
+        })
 
-      // Check if model wants to use a tool
-      const toolUseBlock = response.content.find(
-        (block): block is Anthropic.Messages.ToolUseBlock => block.type === 'tool_use'
-      )
+        console.log(`✅ [Iteration ${iterations}] Réponse en ${Date.now() - iterationStart}ms`)
+        console.log(`   stop_reason: ${response.stop_reason}`)
+        console.log(`   content blocks: ${response.content.length}`)
 
-      if (toolUseBlock) {
-        // Handle web search tool
-        if (toolUseBlock.name === 'recherche_web') {
-          const input = toolUseBlock.input as { query: string }
-          console.log(`[chat] Searching: ${input.query}`)
-          const searchResults = await searchWeb(input.query)
+        // Check if model wants to use a tool
+        const toolUseBlock = response.content.find(
+          (block): block is Anthropic.Messages.ToolUseBlock => block.type === 'tool_use'
+        )
+
+        if (toolUseBlock) {
+          // Handle web search tool
+          if (toolUseBlock.name === 'recherche_web') {
+            const input = toolUseBlock.input as { query: string }
+            console.log(`🔍 Recherche web: "${input.query}"`)
+            const searchStart = Date.now()
+            const searchResults = await searchWeb(input.query)
+            console.log(`   Résultats en ${Date.now() - searchStart}ms`)
 
           // Add assistant message with tool use
           currentMessages.push({
@@ -503,10 +523,18 @@ export const handler: Handler = async (event) => {
 
       if (textBlock) {
         finalText = textBlock.text
+        console.log(`✅ Réponse finale: ${finalText.length} chars`)
       }
 
       break
+      } catch (claudeError) {
+        console.error(`❌ [Iteration ${iterations}] Erreur Claude:`, claudeError)
+        throw claudeError
+      }
     }
+
+    const totalDuration = Date.now() - startTime
+    console.log(`\n📊 CHAT TOTAL: ${iterations} itérations en ${totalDuration}ms`)
 
     // Return response with diagnosis data if available
     return {
@@ -518,12 +546,28 @@ export const handler: Handler = async (event) => {
         phase: finalDiagnosis ? 'completed' : 'collecting'
       }),
     }
-  } catch (error) {
-    console.error('Anthropic API error:', error)
+  } catch (error: unknown) {
+    const totalDuration = Date.now() - startTime
+    const err = error as { message?: string; status?: number }
+
+    console.error('═══════════════════════════════════════════════════════════════')
+    console.error('💥 CHAT (DIAGNOSTIC) ERROR')
+    console.error(`   Duration: ${totalDuration}ms`)
+    console.error(`   Message: ${err.message}`)
+    console.error(`   Status: ${err.status}`)
+    console.error('   Full error:', error)
+    console.error('═══════════════════════════════════════════════════════════════')
+
+    // TOUJOURS retourner une réponse valide pour éviter le freeze frontend
     return {
-      statusCode: 500,
+      statusCode: 200, // ← 200 pas 500, pour que le frontend puisse afficher le message
       headers,
-      body: JSON.stringify({ error: 'Failed to get AI response' }),
+      body: JSON.stringify({
+        content: "Désolé, j'ai un problème technique. Peux-tu reformuler ta question ou réessayer ? 🔧",
+        error: true,
+        errorDetails: err.message,
+        phase: 'error'
+      }),
     }
   }
 }

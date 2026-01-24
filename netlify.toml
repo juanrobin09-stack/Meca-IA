@@ -33,6 +33,23 @@
     external_node_modules = ["@anthropic-ai/sdk"]
     timeout = 60
 
+  # Chat functions - Besoin de temps pour recherches web multiples
+  [functions."chat"]
+    external_node_modules = ["@anthropic-ai/sdk"]
+    timeout = 60
+
+  [functions."mechanic-chat"]
+    external_node_modules = ["@anthropic-ai/sdk"]
+    timeout = 60
+
+  [functions."chat-mecanicien"]
+    external_node_modules = ["@anthropic-ai/sdk"]
+    timeout = 60
+
+  [functions."diagnostic-pro"]
+    external_node_modules = ["@anthropic-ai/sdk"]
+    timeout = 60
+
   [functions."*"]
     # 26 secondes par défaut (plan gratuit), les fonctions lourdes ont 60s ci-dessus
     timeout = 26

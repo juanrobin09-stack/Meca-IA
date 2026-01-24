@@ -434,12 +434,20 @@ async function buildContext(userId: string, vehicleId?: string): Promise<Vehicle
 }
 
 export const handler: Handler = async (event) => {
+  const startTime = Date.now()
+
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json',
   }
+
+  console.log('═══════════════════════════════════════════════════════════════')
+  console.log('🤖 MECHANIC-CHAT START')
+  console.log(`📅 ${new Date().toISOString()}`)
+  console.log(`🔑 BRAVE_SEARCH_API_KEY: ${BRAVE_API_KEY ? '✅ Présente' : '❌ MANQUANTE'}`)
+  console.log('═══════════════════════════════════════════════════════════════')
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' }
@@ -464,7 +472,7 @@ export const handler: Handler = async (event) => {
   try {
     // Check if clients are initialized
     if (!supabase || !anthropic) {
-      console.error('Missing env vars:', {
+      console.error('❌ Missing env vars:', {
         hasSupabaseUrl: !!SUPABASE_URL,
         hasSupabaseKey: !!SUPABASE_SERVICE_KEY,
         hasAnthropicKey: !!ANTHROPIC_KEY
@@ -707,63 +715,87 @@ Réponds maintenant de manière naturelle et conversationnelle !`
     ]
 
     // 7. Call Claude with tool use loop
+    console.log('🤖 Début appel Claude...')
+    console.log(`   Tools disponibles: ${BRAVE_API_KEY ? 'recherche_web (Brave)' : 'aucun'}`)
+
     let aiResponse = ''
     let iterations = 0
     const maxIterations = 4 // Limit tool use iterations
 
     while (iterations < maxIterations) {
       iterations++
+      const iterationStart = Date.now()
+      console.log(`\n🔄 [Iteration ${iterations}/${maxIterations}] Appel Claude...`)
 
-      const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: systemPrompt,
-        tools: BRAVE_API_KEY ? [webSearchTool] : [],
-        messages
-      })
-
-      // Check if model wants to use a tool
-      const toolUseBlock = response.content.find(
-        (block): block is Anthropic.Messages.ToolUseBlock => block.type === 'tool_use'
-      )
-
-      if (toolUseBlock && toolUseBlock.name === 'recherche_web') {
-        const input = toolUseBlock.input as { query: string }
-        console.log(`[mechanic-chat] Searching: ${input.query}`)
-        const searchResults = await searchWeb(input.query)
-
-        // Add assistant message with tool use
-        messages.push({
-          role: 'assistant',
-          content: response.content,
+      try {
+        const response = await anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          system: systemPrompt,
+          tools: BRAVE_API_KEY ? [webSearchTool] : [],
+          messages
         })
 
-        // Add tool result
-        messages.push({
-          role: 'user',
-          content: [
-            {
-              type: 'tool_result',
-              tool_use_id: toolUseBlock.id,
-              content: searchResults,
-            },
-          ],
-        })
+        const iterationDuration = Date.now() - iterationStart
+        console.log(`✅ [Iteration ${iterations}] Réponse en ${iterationDuration}ms`)
+        console.log(`   stop_reason: ${response.stop_reason}`)
+        console.log(`   usage: input=${response.usage?.input_tokens}, output=${response.usage?.output_tokens}`)
+        console.log(`   content blocks: ${response.content.length}`)
 
-        continue
+        // Check if model wants to use a tool
+        const toolUseBlock = response.content.find(
+          (block): block is Anthropic.Messages.ToolUseBlock => block.type === 'tool_use'
+        )
+
+        if (toolUseBlock && toolUseBlock.name === 'recherche_web') {
+          const input = toolUseBlock.input as { query: string }
+          console.log(`🔍 Recherche web: "${input.query}"`)
+          const searchStart = Date.now()
+          const searchResults = await searchWeb(input.query)
+          console.log(`   Résultats en ${Date.now() - searchStart}ms (${searchResults.length} chars)`)
+
+          // Add assistant message with tool use
+          messages.push({
+            role: 'assistant',
+            content: response.content,
+          })
+
+          // Add tool result
+          messages.push({
+            role: 'user',
+            content: [
+              {
+                type: 'tool_result',
+                tool_use_id: toolUseBlock.id,
+                content: searchResults,
+              },
+            ],
+          })
+
+          continue
+        }
+
+        // Extract final response
+        const textBlock = response.content.find(
+          (block): block is Anthropic.Messages.TextBlock => block.type === 'text'
+        )
+
+        if (textBlock) {
+          aiResponse = textBlock.text
+          console.log(`✅ Réponse finale: ${aiResponse.length} chars`)
+        } else {
+          console.warn('⚠️ Pas de bloc texte dans la réponse!')
+        }
+
+        break
+      } catch (claudeError) {
+        console.error(`❌ [Iteration ${iterations}] Erreur Claude:`, claudeError)
+        throw claudeError
       }
-
-      // Extract final response
-      const textBlock = response.content.find(
-        (block): block is Anthropic.Messages.TextBlock => block.type === 'text'
-      )
-
-      if (textBlock) {
-        aiResponse = textBlock.text
-      }
-
-      break
     }
+
+    const totalDuration = Date.now() - startTime
+    console.log(`\n📊 TOTAL: ${iterations} itérations en ${totalDuration}ms`)
 
     // 8. Save messages to database
     const userMessageContent = image ? `[IMAGE]\n${message}` : message
@@ -811,12 +843,27 @@ Réponds maintenant de manière naturelle et conversationnelle !`
     }
 
   } catch (error: unknown) {
-    console.error('Mechanic chat error:', error)
+    const totalDuration = Date.now() - startTime
+    const err = error as { message?: string; status?: number }
+
+    console.error('═══════════════════════════════════════════════════════════════')
+    console.error('💥 MECHANIC-CHAT ERROR')
+    console.error(`   Duration: ${totalDuration}ms`)
+    console.error(`   Message: ${err.message}`)
+    console.error(`   Status: ${err.status}`)
+    console.error('   Full error:', error)
+    console.error('═══════════════════════════════════════════════════════════════')
+
+    // TOUJOURS retourner une réponse valide pour éviter le freeze frontend
+    // Même en cas d'erreur, on renvoie un message d'erreur user-friendly
     return {
-      statusCode: 500,
+      statusCode: 200, // ← 200 pas 500, pour que le frontend puisse afficher le message
       headers,
       body: JSON.stringify({
-        error: error instanceof Error ? error.message : 'Internal server error'
+        response: "Désolé, j'ai un petit problème technique là 🔧 Peux-tu reformuler ta question ou réessayer dans quelques secondes ?",
+        error: true,
+        errorDetails: err.message,
+        conversationId: null
       }),
     }
   }
