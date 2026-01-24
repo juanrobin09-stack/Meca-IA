@@ -36,7 +36,41 @@ interface DevisLine {
   }
   ecart: number
   verdict: 'ok' | 'eleve' | 'arnaque'
+  verdictNuance?: 'excellent' | 'correct' | 'eleve' | 'tres_eleve' | 'excessif'
+  commentaireLigne?: string
   sourceEstimation?: string
+}
+
+// Helper pour obtenir le badge nuancé basé sur l'écart
+function getBadgeNuance(ecart: number, verdictNuance?: string) {
+  // Si on a le verdict nuancé du backend, l'utiliser
+  if (verdictNuance) {
+    switch (verdictNuance) {
+      case 'excellent':
+        return { label: 'Excellent', color: 'bg-emerald-600', textColor: 'text-emerald-600' }
+      case 'correct':
+        return { label: 'Correct', color: 'bg-emerald-500', textColor: 'text-emerald-600' }
+      case 'eleve':
+        return { label: 'Élevé', color: 'bg-amber-500', textColor: 'text-amber-600' }
+      case 'tres_eleve':
+        return { label: 'Très élevé', color: 'bg-orange-500', textColor: 'text-orange-600' }
+      case 'excessif':
+        return { label: 'Excessif', color: 'bg-red-500', textColor: 'text-red-600' }
+    }
+  }
+
+  // Fallback basé sur l'écart
+  if (ecart < -5) {
+    return { label: 'Excellent', color: 'bg-emerald-600', textColor: 'text-emerald-600' }
+  } else if (ecart <= 10) {
+    return { label: 'Correct', color: 'bg-emerald-500', textColor: 'text-emerald-600' }
+  } else if (ecart <= 20) {
+    return { label: 'Élevé', color: 'bg-amber-500', textColor: 'text-amber-600' }
+  } else if (ecart <= 35) {
+    return { label: 'Très élevé', color: 'bg-orange-500', textColor: 'text-orange-600' }
+  } else {
+    return { label: 'Excessif', color: 'bg-red-500', textColor: 'text-red-600' }
+  }
 }
 
 interface Props {
@@ -141,8 +175,8 @@ export default function ResultatAnalysePro({ data }: Props) {
       addLine()
 
       // Verdict
-      const verdictEmoji = verdict.statut === 'honnete' ? '[OK]' : verdict.statut === 'reserve' ? '[!]' : '[X]'
-      const verdictText = verdict.statut === 'honnete' ? 'HONNETE' : verdict.statut === 'reserve' ? 'AVEC RESERVES' : 'ARNAQUE DETECTEE'
+      const verdictEmoji = verdict.statut === 'honnete' ? '[OK]' : verdict.statut === 'reserve' ? '[!]' : '[!!]'
+      const verdictText = verdict.statut === 'honnete' ? 'PRIX CORRECT' : verdict.statut === 'reserve' ? 'A VERIFIER' : 'PRIX EXCESSIFS'
 
       doc.setFontSize(16)
       doc.setFont('helvetica', 'bold')
@@ -249,11 +283,13 @@ export default function ResultatAnalysePro({ data }: Props) {
 
   // Partager l'analyse
   const handleShare = async () => {
+    const statutText = verdict.statut === 'honnete' ? '✅ Prix correct' :
+                       verdict.statut === 'reserve' ? '⚠️ À vérifier' : '🔴 Prix élevés'
     const shareText = `🔍 Analyse de devis MECA-IA\n\n` +
-      `Note: ${verdict.note}/10 - ${verdict.statut === 'honnete' ? '✅ Honnête' : verdict.statut === 'reserve' ? '⚠️ Réserves' : '🚨 Arnaque'}\n` +
+      `Note: ${verdict.note}/10 - ${statutText}\n` +
       `Prix facturé: ${totaux.totalFacture.toFixed(2)}€\n` +
       `Prix marché: ~${totaux.totalMarche.toFixed(2)}€\n` +
-      (economiesPotentielles.montant > 0 ? `💸 Surfacturation: +${economiesPotentielles.montant.toFixed(2)}€\n` : '') +
+      (economiesPotentielles.montant > 0 ? `💰 Écart: +${economiesPotentielles.montant.toFixed(2)}€\n` : '') +
       `\n📱 Analyse ton devis sur mymecai.com`
 
     if (navigator.share) {
@@ -335,9 +371,9 @@ export default function ResultatAnalysePro({ data }: Props) {
             {colors.icon}
             <div>
               <h2 className={`text-2xl sm:text-3xl font-bold ${colors.text}`}>
-                {verdict.statut === 'honnete' && 'Devis Honnête'}
-                {verdict.statut === 'reserve' && 'Devis avec Réserves'}
-                {verdict.statut === 'arnaque' && 'Arnaque Détectée'}
+                {verdict.statut === 'honnete' && 'Devis Correct'}
+                {verdict.statut === 'reserve' && 'Prix à Vérifier'}
+                {verdict.statut === 'arnaque' && 'Prix Excessifs Détectés'}
               </h2>
               <p className="text-base sm:text-lg font-medium mt-1 text-foreground">
                 {verdict.recommandation}
@@ -374,7 +410,7 @@ export default function ResultatAnalysePro({ data }: Props) {
           </div>
           <div className="bg-white dark:bg-gray-900 rounded-xl p-4 text-center shadow-sm">
             <div className="text-2xl sm:text-3xl font-bold text-red-600">{verdict.lignesArnaques}</div>
-            <div className="text-xs sm:text-sm text-muted-foreground">Surfacturés</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Excessifs</div>
           </div>
         </div>
       </motion.div>
@@ -471,11 +507,13 @@ export default function ResultatAnalysePro({ data }: Props) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     className={`rounded-xl border-2 overflow-hidden ${
-                      ligne.verdict === 'arnaque'
+                      ligne.ecart > 35
                         ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
-                        : ligne.verdict === 'eleve'
-                          ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
-                          : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
+                        : ligne.ecart > 20
+                          ? 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800'
+                          : ligne.ecart > 10
+                            ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
+                            : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
                     }`}
                   >
                     {/* Header - Always visible */}
@@ -485,18 +523,18 @@ export default function ResultatAnalysePro({ data }: Props) {
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          {ligne.verdict === 'ok' && (
-                            <Badge className="bg-emerald-500 text-[10px] px-1.5 py-0">OK</Badge>
-                          )}
-                          {ligne.verdict === 'eleve' && (
-                            <Badge className="bg-amber-500 text-[10px] px-1.5 py-0">Élevé</Badge>
-                          )}
-                          {ligne.verdict === 'arnaque' && (
-                            <Badge className="bg-red-500 text-[10px] px-1.5 py-0">Arnaque</Badge>
-                          )}
+                          {(() => {
+                            const badge = getBadgeNuance(ligne.ecart, ligne.verdictNuance)
+                            return (
+                              <Badge className={`${badge.color} text-[10px] px-1.5 py-0`}>
+                                {badge.label}
+                              </Badge>
+                            )
+                          })()}
                           <span className={`text-xs font-bold ${
-                            ligne.ecart > 40 ? 'text-red-600' :
-                            ligne.ecart > 15 ? 'text-amber-600' :
+                            ligne.ecart > 35 ? 'text-red-600' :
+                            ligne.ecart > 20 ? 'text-orange-600' :
+                            ligne.ecart > 10 ? 'text-amber-600' :
                             'text-emerald-600'
                           }`}>
                             {ligne.ecart > 0 ? '+' : ''}{ligne.ecart}%
@@ -534,6 +572,11 @@ export default function ResultatAnalysePro({ data }: Props) {
                                 <p className="font-bold text-sm text-blue-600">~{ligne.prixMarche.moyenne.toFixed(2)}€</p>
                               </div>
                             </div>
+                            {ligne.commentaireLigne && (
+                              <p className="text-[10px] text-amber-700 dark:text-amber-300 mt-2 bg-amber-50 dark:bg-amber-950/30 p-2 rounded">
+                                💡 {ligne.commentaireLigne}
+                              </p>
+                            )}
                             {ligne.sourceEstimation && (
                               <p className="text-[10px] text-muted-foreground mt-2 italic">
                                 {ligne.sourceEstimation}
@@ -564,15 +607,23 @@ export default function ResultatAnalysePro({ data }: Props) {
                   {lignes.map((ligne, i) => (
                     <tr
                       key={i}
-                      className={`border-b transition-colors ${ligne.verdict === 'arnaque'
+                      className={`border-b transition-colors ${
+                        ligne.ecart > 35
                           ? 'bg-red-50 dark:bg-red-950/20'
-                          : ligne.verdict === 'eleve'
-                            ? 'bg-amber-50 dark:bg-amber-950/20'
-                            : 'bg-emerald-50/50 dark:bg-emerald-950/10'
-                        }`}
+                          : ligne.ecart > 20
+                            ? 'bg-orange-50 dark:bg-orange-950/20'
+                            : ligne.ecart > 10
+                              ? 'bg-amber-50 dark:bg-amber-950/20'
+                              : 'bg-emerald-50/50 dark:bg-emerald-950/10'
+                      }`}
                     >
                       <td className="py-4 px-2">
                         <div className="font-medium">{ligne.designation}</div>
+                        {ligne.commentaireLigne && (
+                          <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                            💡 {ligne.commentaireLigne}
+                          </div>
+                        )}
                         {ligne.sourceEstimation && (
                           <div className="text-xs text-muted-foreground mt-1">
                             {ligne.sourceEstimation}
@@ -586,32 +637,28 @@ export default function ResultatAnalysePro({ data }: Props) {
                         ~{ligne.prixMarche.moyenne.toFixed(2)}€
                       </td>
                       <td className="text-right py-4 px-2">
-                        <span className={`font-bold ${ligne.ecart > 40 ? 'text-red-600' :
-                            ligne.ecart > 15 ? 'text-amber-600' :
-                              'text-emerald-600'
-                          }`}>
+                        <span className={`font-bold ${
+                          ligne.ecart > 35 ? 'text-red-600' :
+                          ligne.ecart > 20 ? 'text-orange-600' :
+                          ligne.ecart > 10 ? 'text-amber-600' :
+                          'text-emerald-600'
+                        }`}>
                           {ligne.ecart > 0 ? '+' : ''}{ligne.ecart}%
                         </span>
                       </td>
                       <td className="text-center py-4 px-2">
-                        {ligne.verdict === 'ok' && (
-                          <Badge className="bg-emerald-500 hover:bg-emerald-600">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            OK
-                          </Badge>
-                        )}
-                        {ligne.verdict === 'eleve' && (
-                          <Badge className="bg-amber-500 hover:bg-amber-600">
-                            <TrendingUp className="h-3 w-3 mr-1" />
-                            Élevé
-                          </Badge>
-                        )}
-                        {ligne.verdict === 'arnaque' && (
-                          <Badge className="bg-red-500 hover:bg-red-600">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            Arnaque
-                          </Badge>
-                        )}
+                        {(() => {
+                          const badge = getBadgeNuance(ligne.ecart, ligne.verdictNuance)
+                          const Icon = ligne.ecart < -5 ? CheckCircle2 :
+                                       ligne.ecart <= 10 ? CheckCircle2 :
+                                       ligne.ecart <= 35 ? TrendingUp : AlertTriangle
+                          return (
+                            <Badge className={`${badge.color} hover:opacity-90`}>
+                              <Icon className="h-3 w-3 mr-1" />
+                              {badge.label}
+                            </Badge>
+                          )
+                        })()}
                       </td>
                     </tr>
                   ))}

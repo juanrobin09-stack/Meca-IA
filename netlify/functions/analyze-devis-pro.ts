@@ -6,17 +6,28 @@ const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY
 
 async function searchWeb(query: string): Promise<string> {
   if (!BRAVE_API_KEY) {
-    console.log('[analyze-devis-pro] No Brave API key - using AI memory only')
-    return `[Recherche non disponible - utilise les prix de référence du prompt.]`
+    console.log('[analyze-devis-pro] ⚠️ BRAVE_SEARCH_API_KEY manquante - utilisation des prix de référence')
+    return `[Recherche web non disponible - BRAVE_SEARCH_API_KEY non configurée. Utilise les prix de référence janvier 2026.]`
   }
 
+  console.log(`[analyze-devis-pro] 🔍 Recherche Brave: "${query}"`)
+
   try {
-    // ⚡ Timeout 5s pour éviter les blocages
+    // ⚡ Timeout 8s (on a 60s au total sur Netlify)
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 5000)
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    // Ajouter "2026" et "prix" à la requête si absent pour de meilleurs résultats
+    let enhancedQuery = query
+    if (!query.toLowerCase().includes('2026')) {
+      enhancedQuery += ' 2026'
+    }
+    if (!query.toLowerCase().includes('prix') && !query.toLowerCase().includes('tarif')) {
+      enhancedQuery += ' prix'
+    }
 
     const response = await fetch(
-      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=3&country=fr`,
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(enhancedQuery)}&count=5&country=fr&search_lang=fr&freshness=py`,
       {
         headers: {
           'Accept': 'application/json',
@@ -30,38 +41,56 @@ async function searchWeb(query: string): Promise<string> {
 
     if (!response.ok) {
       console.error('[analyze-devis-pro] Brave Search error:', response.status)
-      return `[Recherche échouée - code ${response.status}]`
+      return `[Recherche échouée - code ${response.status}. Utilise les prix de référence.]`
     }
 
     const data = await response.json()
     const results = data.web?.results || []
 
     if (results.length === 0) {
-      return `[Aucun résultat trouvé pour: ${query}]`
+      console.log('[analyze-devis-pro] Aucun résultat pour:', enhancedQuery)
+      return `[Aucun résultat trouvé. Utilise les prix de référence janvier 2026.]`
     }
 
-    // Format results - compact pour vitesse
-    return results.slice(0, 3).map((r: { title: string; description: string }) =>
-      `${r.title}: ${r.description}`
-    ).join('\n')
+    console.log(`[analyze-devis-pro] ✅ ${results.length} résultats trouvés`)
+
+    // Format results avec URL pour sourcing - plus détaillé
+    const formattedResults = results.slice(0, 5).map((r: { title: string; description: string; url: string }) => {
+      const domain = new URL(r.url).hostname.replace('www.', '')
+      return `[${domain}] ${r.title}: ${r.description}`
+    }).join('\n\n')
+
+    return `Résultats de recherche janvier 2026:\n${formattedResults}`
   } catch (error) {
-    console.error('[analyze-devis-pro] Search error:', error)
-    // En cas d'erreur/timeout, on continue sans web search
-    return `[Recherche timeout - utilise les prix de référence]`
+    const err = error as Error
+    if (err.name === 'AbortError') {
+      console.warn('[analyze-devis-pro] Recherche timeout (8s)')
+      return `[Recherche timeout - utilise les prix de référence janvier 2026]`
+    }
+    console.error('[analyze-devis-pro] Search error:', err.message)
+    return `[Erreur recherche - utilise les prix de référence janvier 2026]`
   }
 }
 
-// Tool definition for web search - LIMITÉ à 1 recherche pour vitesse
+// Tool definition for web search - 1 recherche groupée pour vitesse
 const webSearchTool: Anthropic.Messages.Tool = {
   name: 'search_prices',
-  description: `Recherche prix 2026 pièces/MO auto. LIMITE: 1 seule recherche groupée!
-Ex: "pare-choc aile phare Peugeot 308 prix 2026 oscaro tarif carrosserie"`,
+  description: `Recherche prix janvier 2026 pièces auto et tarifs main d'œuvre en France.
+UTILISE cette recherche pour obtenir les VRAIS prix du marché 2026.
+
+Exemples de requêtes efficaces:
+- "pare-choc arrière Peugeot 308 oscaro yakarouler"
+- "phare avant Renault Clio mister-auto autodoc"
+- "tarif horaire carrosserie peinture france"
+- Pour VSP: "pare-choc Aixam piecesanspermis vspieces"
+
+IMPORTANT: Regroupe toutes les pièces en UNE seule requête.`,
   input_schema: {
     type: 'object' as const,
     properties: {
       query: {
         type: 'string',
-        description: 'Requête groupée (ex: "pare-choc aile Peugeot prix 2026 oscaro tarif MO carrosserie")'
+        description: 'Requête groupée incluant marque, modèle et pièces principales du devis'
       }
     },
     required: ['query']
@@ -79,6 +108,7 @@ export const handler: Handler = async (event) => {
   console.log('═══════════════════════════════════════════════════════════════')
   console.log('🚀 DEBUT REQUETE ANALYZE-DEVIS-PRO')
   console.log(`📅 Timestamp: ${new Date().toISOString()}`)
+  console.log(`🔑 BRAVE_SEARCH_API_KEY: ${BRAVE_API_KEY ? '✅ Configurée' : '❌ MANQUANTE'}`)
   console.log('═══════════════════════════════════════════════════════════════')
 
   if (event.httpMethod === 'OPTIONS') {
@@ -173,47 +203,96 @@ export const handler: Handler = async (event) => {
     console.log(`🌐 Temperature: 0 (déterministe)`)
     console.log(`📅 Date analyse: ${new Date().toISOString()}`)
 
-    // ✅ PROMPT OPTIMISÉ: Sonnet + 1 recherche web groupée
-    const systemPrompt = `Expert tarification auto France. Date: janvier 2026.
+    // ✅ PROMPT OPTIMISÉ: Sonnet + recherche web + TON NUANCÉ
+    const systemPrompt = `Expert tarification auto France. Date: 25 janvier 2026.
 
-RÈGLE #1 - EXTRACTION EXACTE:
+═══════════════════════════════════════════════════════════════
+RÈGLE #1 - EXTRACTION EXACTE
+═══════════════════════════════════════════════════════════════
 Lis les montants EXACTEMENT comme sur le devis. Pas d'estimation pour les prix facturés.
 
-RÈGLE #2 - RECHERCHE WEB:
-${BRAVE_API_KEY ? `Fais UNE SEULE recherche groupée avec search_prices pour vérifier les prix 2026.
-Ex: "pare-choc aile [marque modèle] prix 2026 oscaro tarif carrosserie"` : 'Pas de recherche web, utilise les fourchettes ci-dessous.'}
+═══════════════════════════════════════════════════════════════
+RÈGLE #2 - RECHERCHE WEB PRIX 2026
+═══════════════════════════════════════════════════════════════
+${BRAVE_API_KEY ? `OBLIGATOIRE: Fais UNE recherche groupée avec search_prices pour vérifier les VRAIS prix janvier 2026.
+Requête recommandée: "[pièces du devis] [marque modèle] prix 2026 oscaro yakarouler tarif MO carrosserie"
+Ex: "pare-choc aile Peugeot 308 prix 2026 oscaro tarif carrosserie france"
 
-PRIX DE RÉFÉRENCE 2026 (si pas de recherche):
-- MO mécanique: 70-95€/h | MO carrosserie: 80-110€/h
-- Pare-choc: 200-500€ | Aile: 150-400€ | Phare: 150-600€
+Pour voitures sans permis (Aixam, Ligier, Microcar):
+"[pièce] Aixam prix 2026 piecesanspermis vspieces"` : 'Pas de recherche web, utilise les fourchettes ci-dessous.'}
+
+PRIX DE RÉFÉRENCE JANVIER 2026 (fallback si pas de recherche):
+- MO mécanique: 70-95€/h | MO carrosserie: 80-110€/h | MO concession: 90-140€/h
+- Pare-choc: 200-500€ (adaptable: 80-150€, origine: 250-500€)
+- Aile: 150-400€ | Phare: 150-600€ | Rétroviseur: 80-300€
 - Embrayage: 300-700€ | Turbo: 800-2500€ | FAP: 800-2000€
 
-RÈGLE #3 - VERDICTS:
-- ok: écart < 15% | eleve: 15-30% | arnaque: > 30%
-- NE PAS SOUS-ESTIMER les prix marché !
+═══════════════════════════════════════════════════════════════
+RÈGLE #3 - VERDICTS NUANCÉS (IMPORTANT!)
+═══════════════════════════════════════════════════════════════
+Utilise ces seuils PROGRESSIFS basés sur l'écart en pourcentage:
+- ecart < -5%  → verdict "excellent" (en dessous du marché, bonne affaire)
+- ecart <= 10% → verdict "correct" (dans la moyenne)
+- ecart <= 20% → verdict "eleve" (légèrement au-dessus, à vérifier)
+- ecart <= 35% → verdict "tres_eleve" (significativement élevé, comparer)
+- ecart > 35%  → verdict "excessif" (tarifs excessifs, négocier ou changer)
+
+IMPORTANT - TON PROFESSIONNEL:
+❌ N'utilise JAMAIS ces mots: "arnaque", "fuyez", "scandaleux", "malhonnête", "escroquerie"
+✅ Préfère ces formulations:
+  - "Prix élevé" au lieu de "arnaque"
+  - "Nous recommandons de comparer" au lieu de "fuyez"
+  - "Tarif au-dessus du marché" au lieu de "surfacturation"
+  - "À vérifier avec le garage" au lieu de accusations
+
+CONTEXTE À TOUJOURS CONSIDÉRER:
+1. Pièces ORIGINE vs ADAPTABLES: Un pare-choc à 350€ peut être justifié si origine constructeur (marché 250-400€), élevé si adaptable (marché 80-150€)
+2. Qualité/Garantie: Des tarifs supérieurs peuvent s'expliquer par garantie étendue ou expertise
+3. Complexité: Le temps de MO varie selon accessibilité des pièces
+
+═══════════════════════════════════════════════════════════════
+RÈGLE #4 - FORMULATION DU VERDICT GLOBAL
+═══════════════════════════════════════════════════════════════
+- Si écart global 0-15%: statut "honnete", "Devis dans la norme du marché"
+- Si écart global 15-25%: statut "reserve", "Prix légèrement élevés, vérifiez les détails"
+- Si écart global 25-40%: statut "reserve", "Prix élevés, comparez avec d'autres garages"
+- Si écart global > 40%: statut "excessif", "Tarifs très élevés, nous recommandons fortement de comparer"
+
+Note: statut "arnaque" UNIQUEMENT si écart > 50% ET plusieurs lignes excessives.
 
 CALCUL: ecartPourcent = ((facturé - marché) / marché) × 100`
 
-    const userPrompt = `Analyse ce devis automobile.
+    const userPrompt = `Analyse ce devis automobile avec un ton NUANCÉ et PROFESSIONNEL.
 
 ÉTAPES:
-1. Lis CHAQUE montant EXACTEMENT comme écrit sur le devis
-2. Estime le prix marché 2026 pour chaque ligne (utilise les fourchettes du system prompt)
-3. Compare et calcule les écarts
+1. ${BRAVE_API_KEY ? 'Fais UNE recherche web groupée pour les prix réels 2026' : 'Utilise les prix de référence'}
+2. Lis CHAQUE montant EXACTEMENT comme écrit sur le devis
+3. Estime le prix marché janvier 2026 pour chaque ligne
+4. Compare et calcule les écarts avec les SEUILS NUANCÉS
+
+RAPPEL SEUILS (écart %):
+- < -5% → "excellent" | <= 10% → "correct" | <= 20% → "eleve" | <= 35% → "tres_eleve" | > 35% → "excessif"
 
 RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
 {
   "garage": {"nom": "...", "adresse": "..."},
   "lignes": [
-    {"designation": "...", "totalTTC": <MONTANT_EXACT_DU_DEVIS>, "prixMarcheEstime": <ESTIMATION_2026>, "ecartPourcent": <CALCUL>, "verdict": "ok|eleve|arnaque"}
+    {
+      "designation": "...",
+      "totalTTC": <MONTANT_EXACT_DU_DEVIS>,
+      "prixMarcheEstime": <ESTIMATION_2026>,
+      "ecartPourcent": <CALCUL>,
+      "verdict": "excellent|correct|eleve|tres_eleve|excessif",
+      "commentaire": "Court commentaire si prix élevé (ex: 'Acceptable si pièce origine, élevé si adaptable')"
+    }
   ],
   "totalTTC": <TOTAL_EXACT_DU_DEVIS>,
   "totalMarcheEstime": <SOMME_ESTIMATIONS>,
   "verdict": {
     "note": <1-10>,
-    "statut": "honnete|reserve|arnaque",
+    "statut": "honnete|reserve|excessif",
     "recommandation": "...",
-    "commentaireExpert": "..."
+    "commentaireExpert": "Analyse nuancée mentionnant le contexte (pièces origine/adaptable, complexité...)"
   },
   "economiesPotentielles": {"montant": <DIFFERENCE>, "conseils": ["..."]}
 }`
@@ -505,17 +584,35 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'Impossible de lire le total du devis. Assure-toi que le montant TTC est visible.' }) }
     }
 
-    // Construire résultat
+    // Construire résultat avec verdicts nuancés
     interface LigneDevis {
       designation: string
       totalTTC: number
       prixMarcheEstime: number
       ecartPourcent: number
-      verdict: 'ok' | 'eleve' | 'arnaque'
+      verdict: 'excellent' | 'correct' | 'eleve' | 'tres_eleve' | 'excessif' | 'ok' | 'arnaque'
+      commentaire?: string
     }
-    const lignesOk = parsed.lignes?.filter((l: LigneDevis) => l.verdict === 'ok').length || 0
-    const lignesElevees = parsed.lignes?.filter((l: LigneDevis) => l.verdict === 'eleve').length || 0
-    const lignesArnaques = parsed.lignes?.filter((l: LigneDevis) => l.verdict === 'arnaque').length || 0
+
+    // Comptage avec mapping des anciens verdicts vers nouveaux
+    const mapVerdict = (v: string): string => {
+      // Compatibilité avec anciens verdicts
+      if (v === 'ok') return 'correct'
+      if (v === 'arnaque') return 'excessif'
+      return v
+    }
+
+    // Compter les lignes par catégorie (nuancée)
+    const lignesExcellent = parsed.lignes?.filter((l: LigneDevis) => mapVerdict(l.verdict) === 'excellent').length || 0
+    const lignesCorrect = parsed.lignes?.filter((l: LigneDevis) => mapVerdict(l.verdict) === 'correct').length || 0
+    const lignesEleve = parsed.lignes?.filter((l: LigneDevis) => mapVerdict(l.verdict) === 'eleve').length || 0
+    const lignesTresEleve = parsed.lignes?.filter((l: LigneDevis) => mapVerdict(l.verdict) === 'tres_eleve').length || 0
+    const lignesExcessif = parsed.lignes?.filter((l: LigneDevis) => mapVerdict(l.verdict) === 'excessif').length || 0
+
+    // Pour rétrocompatibilité avec le frontend existant
+    const lignesOk = lignesExcellent + lignesCorrect
+    const lignesElevees = lignesEleve + lignesTresEleve
+    const lignesArnaques = lignesExcessif
 
     // ══════════════════════════════════════════════════════════════════════════
     // CALCUL CORRECT de la différence (surfacturation)
@@ -582,6 +679,22 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
 
     console.log('═══════════════════════════════════════════════════')
 
+    // Mapper le statut pour éviter "arnaque" dans l'affichage
+    const mapStatut = (statut: string): 'honnete' | 'reserve' | 'arnaque' => {
+      if (statut === 'excessif') return 'arnaque'  // Pour rétrocompat frontend
+      if (statut === 'honnete' || statut === 'reserve' || statut === 'arnaque') {
+        return statut as 'honnete' | 'reserve' | 'arnaque'
+      }
+      return 'reserve'
+    }
+
+    // Mapper les verdicts de ligne pour l'affichage frontend
+    const mapVerdictLigne = (v: string): 'ok' | 'eleve' | 'arnaque' => {
+      if (v === 'excellent' || v === 'correct' || v === 'ok') return 'ok'
+      if (v === 'eleve' || v === 'tres_eleve') return 'eleve'
+      return 'arnaque'  // excessif -> "arnaque" pour rétrocompat (mais texte sera nuancé)
+    }
+
     const result = {
       garage: parsed.garage || { nom: 'Non identifié' },
       lignes: (parsed.lignes || []).map((l: LigneDevis) => ({
@@ -589,19 +702,27 @@ RETOURNE UNIQUEMENT CE JSON (pas de markdown, pas de texte):
         totalTTC: l.totalTTC,
         prixMarche: { moyenne: l.prixMarcheEstime },
         ecart: l.ecartPourcent,
-        verdict: l.verdict,
-        sourceEstimation: 'Prix marché 2026'
+        verdict: mapVerdictLigne(l.verdict),  // Mapping pour rétrocompat
+        verdictNuance: l.verdict,  // Nouveau verdict nuancé
+        commentaireLigne: l.commentaire || '',  // Commentaire contextuel
+        sourceEstimation: 'Prix marché janvier 2026'
       })),
       garageInfo: { nom: parsed.garage?.nom },
       alertes: { graves: [], moyennes: [], info: [] },
       verdict: {
         note: parsed.verdict?.note || 5,
-        statut: parsed.verdict?.statut || 'reserve',
+        statut: mapStatut(parsed.verdict?.statut || 'reserve'),
         recommandation: parsed.verdict?.recommandation || '',
         commentaireExpert: parsed.verdict?.commentaireExpert || '',
         lignesOk,
         lignesElevees,
-        lignesArnaques
+        lignesArnaques,
+        // Nouveaux compteurs nuancés
+        lignesExcellent,
+        lignesCorrect,
+        lignesEleve,
+        lignesTresEleve,
+        lignesExcessif
       },
       totaux: {
         totalFacture,
