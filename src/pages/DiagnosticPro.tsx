@@ -111,11 +111,21 @@ export default function DiagnosticPro() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Load sessions on mount
+  // Load sessions on mount and restore last session
   useEffect(() => {
-    if (user) loadSessions()
+    if (user) {
+      loadSessions()
+      restoreLastSession()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
+
+  // Save session ID to localStorage when it changes
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem('diagnostic_pro_session_id', sessionId)
+    }
+  }, [sessionId])
 
   async function loadSessions() {
     if (!user) return
@@ -126,6 +136,30 @@ export default function DiagnosticPro() {
       .order('created_at', { ascending: false })
       .limit(20)
     if (data) setSessions(data)
+  }
+
+  async function restoreLastSession() {
+    if (!user) return
+    const savedSessionId = localStorage.getItem('diagnostic_pro_session_id')
+    if (!savedSessionId) return
+
+    // Load session from database
+    const { data: session } = await supabase
+      .from('diagnostic_pro_sessions')
+      .select('id, title, status, created_at, messages, final_diagnosis, sources_collected')
+      .eq('id', savedSessionId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (session) {
+      setSessionId(session.id)
+      setMessages(session.messages || [])
+      setFinalDiagnosis(session.final_diagnosis || null)
+      setSources(session.sources_collected?.length || 0)
+    } else {
+      // Session not found, clear localStorage
+      localStorage.removeItem('diagnostic_pro_session_id')
+    }
   }
 
   function loadSession(session: DiagnosticSession) {
@@ -144,6 +178,7 @@ export default function DiagnosticPro() {
     setSelectedImages([])
     setInput('')
     setShowHistory(false)
+    localStorage.removeItem('diagnostic_pro_session_id')
   }
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
