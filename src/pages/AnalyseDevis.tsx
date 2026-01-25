@@ -70,9 +70,18 @@ export default function AnalyseDevis() {
   const [error, setError] = useState<string | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
   // Initialize from cache to prevent flash of 0 on page refresh
+  // Use cache first, fallback to subscription values, then default to reasonable values
   const cachedCounters = getCachedCounters()
-  const [currentRemaining, setCurrentRemaining] = useState<number>(cachedCounters?.remaining ?? (devisRemaining as number))
-  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(cachedCounters?.purchased ?? (purchasedDevisCredits as number))
+  const [currentRemaining, setCurrentRemaining] = useState<number>(() => {
+    if (cachedCounters?.remaining !== undefined) return cachedCounters.remaining
+    if (typeof devisRemaining === 'number') return devisRemaining
+    return 1 // Default to FREE_DEVIS_LIMIT
+  })
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(() => {
+    if (cachedCounters?.purchased !== undefined) return cachedCounters.purchased
+    if (typeof purchasedDevisCredits === 'number') return purchasedDevisCredits
+    return 0
+  })
   const [fromCache, setFromCache] = useState(false)
   const [analysisStep, setAnalysisStep] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
@@ -95,18 +104,18 @@ export default function AnalyseDevis() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Sync counters and update cache when server values change
+  // Sync counters and update cache when server values change - only when we have valid values
   useEffect(() => {
-    if (!isPremium && devisRemaining !== undefined) {
-      setCurrentRemaining(devisRemaining as number)
-      setCurrentPurchasedCredits(purchasedDevisCredits as number)
-      setCachedCounters(devisRemaining as number, purchasedDevisCredits as number)
+    if (!isPremium && typeof devisRemaining === 'number' && typeof purchasedDevisCredits === 'number') {
+      setCurrentRemaining(devisRemaining)
+      setCurrentPurchasedCredits(purchasedDevisCredits)
+      setCachedCounters(devisRemaining, purchasedDevisCredits)
     }
   }, [isPremium, devisRemaining, purchasedDevisCredits])
 
-  // Update cache when local counters change (after usage)
+  // Update cache when local counters change (after usage) - only if values are valid
   useEffect(() => {
-    if (!isPremium) {
+    if (!isPremium && typeof currentRemaining === 'number' && typeof currentPurchasedCredits === 'number') {
       setCachedCounters(currentRemaining, currentPurchasedCredits)
     }
   }, [isPremium, currentRemaining, currentPurchasedCredits])

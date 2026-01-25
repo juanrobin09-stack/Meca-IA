@@ -81,9 +81,18 @@ export default function DiagnosticPro() {
   const [sourcesCount, setSources] = useState(0)
 
   // Initialize from cache to prevent flash of 0 on page refresh
+  // Use cache first, fallback to subscription values, then default to reasonable values
   const cachedCounters = getCachedCounters()
-  const [currentRemaining, setCurrentRemaining] = useState<number>(cachedCounters?.remaining ?? diagnosticsRemaining)
-  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(cachedCounters?.purchased ?? purchasedDiagnosticCredits)
+  const [currentRemaining, setCurrentRemaining] = useState<number>(() => {
+    if (cachedCounters?.remaining !== undefined) return cachedCounters.remaining
+    if (typeof diagnosticsRemaining === 'number') return diagnosticsRemaining
+    return 2 // Default to FREE_DIAGNOSTICS_LIMIT
+  })
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(() => {
+    if (cachedCounters?.purchased !== undefined) return cachedCounters.purchased
+    if (typeof purchasedDiagnosticCredits === 'number') return purchasedDiagnosticCredits
+    return 0
+  })
   const [showHistory, setShowHistory] = useState(false)
   const [sessions, setSessions] = useState<DiagnosticSession[]>([])
 
@@ -91,6 +100,7 @@ export default function DiagnosticPro() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const limitCheckedRef = useRef(false)
+  const sessionRestoredRef = useRef(false)
 
   // Check limits on load
   useEffect(() => {
@@ -115,21 +125,18 @@ export default function DiagnosticPro() {
     if (user && profile) checkLimitOnLoad()
   }, [user, profile, checkDiagnosticLimit, refreshProfile])
 
-  // Sync counters and update cache
+  // Sync counters and update cache - only when we have valid values from server
   useEffect(() => {
-    if (!isPremium) {
+    if (!isPremium && typeof diagnosticsRemaining === 'number' && typeof purchasedDiagnosticCredits === 'number') {
       setCurrentRemaining(diagnosticsRemaining)
       setCurrentPurchasedCredits(purchasedDiagnosticCredits)
-      // Update cache when counters change from server
-      if (diagnosticsRemaining !== undefined || purchasedDiagnosticCredits !== undefined) {
-        setCachedCounters(diagnosticsRemaining, purchasedDiagnosticCredits)
-      }
+      setCachedCounters(diagnosticsRemaining, purchasedDiagnosticCredits)
     }
   }, [isPremium, diagnosticsRemaining, purchasedDiagnosticCredits])
 
-  // Update cache when local counters change (after usage)
+  // Update cache when local counters change (after usage) - only if values are valid
   useEffect(() => {
-    if (!isPremium) {
+    if (!isPremium && typeof currentRemaining === 'number' && typeof currentPurchasedCredits === 'number') {
       setCachedCounters(currentRemaining, currentPurchasedCredits)
     }
   }, [isPremium, currentRemaining, currentPurchasedCredits])
@@ -181,6 +188,10 @@ export default function DiagnosticPro() {
   }
 
   async function restoreLastSession() {
+    // Only restore once to prevent conversation from refreshing
+    if (sessionRestoredRef.current) return
+    sessionRestoredRef.current = true
+
     if (!user) return
     const savedSessionId = localStorage.getItem('diagnostic_pro_session_id')
     if (!savedSessionId) return

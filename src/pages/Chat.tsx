@@ -86,9 +86,18 @@ export default function Chat() {
   const [showPaywall, setShowPaywall] = useState(false)
   const [isNewConversation, setIsNewConversation] = useState(true)
   // Initialize from cache to prevent flash of 0 on page refresh
+  // Use cache first, fallback to subscription values, then default to reasonable values
   const cachedCounters = getCachedCounters()
-  const [currentRemaining, setCurrentRemaining] = useState<number>(cachedCounters?.remaining ?? diagnosticsRemaining)
-  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(cachedCounters?.purchased ?? purchasedDiagnosticCredits)
+  const [currentRemaining, setCurrentRemaining] = useState<number>(() => {
+    if (cachedCounters?.remaining !== undefined) return cachedCounters.remaining
+    if (typeof diagnosticsRemaining === 'number') return diagnosticsRemaining
+    return 2 // Default to FREE_DIAGNOSTICS_LIMIT
+  })
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(() => {
+    if (cachedCounters?.purchased !== undefined) return cachedCounters.purchased
+    if (typeof purchasedDiagnosticCredits === 'number') return purchasedDiagnosticCredits
+    return 0
+  })
   const [selectedImage, setSelectedImage] = useState<{ dataUrl: string; base64: string } | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -100,21 +109,18 @@ export default function Chat() {
   const photosUsed = messages.filter(m => m.image).length
   // No message limit per diagnostic - unlimited conversation within a session
 
-  // Sync counter with profile changes and update cache
+  // Sync counter with profile changes and update cache - only when we have valid values
   useEffect(() => {
-    if (!isPremium) {
-      setCurrentRemaining(diagnosticsRemaining) // eslint-disable-line react-hooks/set-state-in-effect
+    if (!isPremium && typeof diagnosticsRemaining === 'number' && typeof purchasedDiagnosticCredits === 'number') {
+      setCurrentRemaining(diagnosticsRemaining)
       setCurrentPurchasedCredits(purchasedDiagnosticCredits)
-      // Update cache when counters change from server
-      if (diagnosticsRemaining !== undefined || purchasedDiagnosticCredits !== undefined) {
-        setCachedCounters(diagnosticsRemaining, purchasedDiagnosticCredits)
-      }
+      setCachedCounters(diagnosticsRemaining, purchasedDiagnosticCredits)
     }
   }, [isPremium, diagnosticsRemaining, purchasedDiagnosticCredits])
 
-  // Update cache when local counters change (after usage)
+  // Update cache when local counters change (after usage) - only if values are valid
   useEffect(() => {
-    if (!isPremium) {
+    if (!isPremium && typeof currentRemaining === 'number' && typeof currentPurchasedCredits === 'number') {
       setCachedCounters(currentRemaining, currentPurchasedCredits)
     }
   }, [isPremium, currentRemaining, currentPurchasedCredits])
