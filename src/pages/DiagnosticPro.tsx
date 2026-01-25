@@ -29,6 +29,33 @@ interface DiagnosticSession {
 
 const MAX_IMAGES = 3
 
+// Cache keys for counter persistence
+const COUNTER_CACHE_KEY = 'mecaia_diagnostic_pro_counters'
+
+function getCachedCounters(): { remaining: number; purchased: number } | null {
+  try {
+    const cached = localStorage.getItem(COUNTER_CACHE_KEY)
+    if (cached) {
+      const data = JSON.parse(cached)
+      // Cache valid for 5 minutes
+      if (Date.now() - data.timestamp < 5 * 60 * 1000) {
+        return { remaining: data.remaining, purchased: data.purchased }
+      }
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function setCachedCounters(remaining: number, purchased: number) {
+  try {
+    localStorage.setItem(COUNTER_CACHE_KEY, JSON.stringify({
+      remaining,
+      purchased,
+      timestamp: Date.now()
+    }))
+  } catch { /* ignore */ }
+}
+
 const EXAMPLE_QUESTIONS = [
   { text: 'Ma voiture fait un bruit de grincement', icon: '🔊' },
   { text: 'Voyant moteur allumé, code P0420', icon: '🚨' },
@@ -53,8 +80,10 @@ export default function DiagnosticPro() {
   const [showPaywall, setShowPaywall] = useState(false)
   const [sourcesCount, setSources] = useState(0)
 
-  const [currentRemaining, setCurrentRemaining] = useState<number>(diagnosticsRemaining)
-  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(purchasedDiagnosticCredits)
+  // Initialize from cache to prevent flash of 0 on page refresh
+  const cachedCounters = getCachedCounters()
+  const [currentRemaining, setCurrentRemaining] = useState<number>(cachedCounters?.remaining ?? diagnosticsRemaining)
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(cachedCounters?.purchased ?? purchasedDiagnosticCredits)
   const [showHistory, setShowHistory] = useState(false)
   const [sessions, setSessions] = useState<DiagnosticSession[]>([])
 
@@ -76,6 +105,8 @@ export default function DiagnosticPro() {
       const limitStatus = await checkDiagnosticLimit()
       setCurrentRemaining(limitStatus.remaining)
       setCurrentPurchasedCredits(limitStatus.purchasedCredits || 0)
+      // Update cache with fresh server data
+      setCachedCounters(limitStatus.remaining, limitStatus.purchasedCredits || 0)
 
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
         setShowPaywall(true)
@@ -84,13 +115,24 @@ export default function DiagnosticPro() {
     if (user && profile) checkLimitOnLoad()
   }, [user, profile, checkDiagnosticLimit, refreshProfile])
 
-  // Sync counters
+  // Sync counters and update cache
   useEffect(() => {
     if (!isPremium) {
       setCurrentRemaining(diagnosticsRemaining)
       setCurrentPurchasedCredits(purchasedDiagnosticCredits)
+      // Update cache when counters change from server
+      if (diagnosticsRemaining !== undefined || purchasedDiagnosticCredits !== undefined) {
+        setCachedCounters(diagnosticsRemaining, purchasedDiagnosticCredits)
+      }
     }
   }, [isPremium, diagnosticsRemaining, purchasedDiagnosticCredits])
+
+  // Update cache when local counters change (after usage)
+  useEffect(() => {
+    if (!isPremium) {
+      setCachedCounters(currentRemaining, currentPurchasedCredits)
+    }
+  }, [isPremium, currentRemaining, currentPurchasedCredits])
 
   // Auto-scroll
   useEffect(() => {

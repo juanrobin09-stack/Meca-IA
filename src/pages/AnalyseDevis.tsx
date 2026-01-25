@@ -28,6 +28,33 @@ import {
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import { Link } from 'react-router-dom'
 
+// Cache keys for counter persistence
+const COUNTER_CACHE_KEY = 'mecaia_devis_counters'
+
+function getCachedCounters(): { remaining: number; purchased: number } | null {
+  try {
+    const cached = localStorage.getItem(COUNTER_CACHE_KEY)
+    if (cached) {
+      const data = JSON.parse(cached)
+      // Cache valid for 5 minutes
+      if (Date.now() - data.timestamp < 5 * 60 * 1000) {
+        return { remaining: data.remaining, purchased: data.purchased }
+      }
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function setCachedCounters(remaining: number, purchased: number) {
+  try {
+    localStorage.setItem(COUNTER_CACHE_KEY, JSON.stringify({
+      remaining,
+      purchased,
+      timestamp: Date.now()
+    }))
+  } catch { /* ignore */ }
+}
+
 export default function AnalyseDevis() {
   const { user, profile, refreshProfile } = useAuth()
   const { isPremium, devisRemaining, purchasedDevisCredits, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
@@ -42,8 +69,10 @@ export default function AnalyseDevis() {
   const [savedDevisId, setSavedDevisId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
-  const [currentRemaining, setCurrentRemaining] = useState<number>(devisRemaining as number)
-  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(purchasedDevisCredits as number)
+  // Initialize from cache to prevent flash of 0 on page refresh
+  const cachedCounters = getCachedCounters()
+  const [currentRemaining, setCurrentRemaining] = useState<number>(cachedCounters?.remaining ?? (devisRemaining as number))
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(cachedCounters?.purchased ?? (purchasedDevisCredits as number))
   const [fromCache, setFromCache] = useState(false)
   const [analysisStep, setAnalysisStep] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
@@ -65,6 +94,22 @@ export default function AnalyseDevis() {
     userLimits.refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Sync counters and update cache when server values change
+  useEffect(() => {
+    if (!isPremium && devisRemaining !== undefined) {
+      setCurrentRemaining(devisRemaining as number)
+      setCurrentPurchasedCredits(purchasedDevisCredits as number)
+      setCachedCounters(devisRemaining as number, purchasedDevisCredits as number)
+    }
+  }, [isPremium, devisRemaining, purchasedDevisCredits])
+
+  // Update cache when local counters change (after usage)
+  useEffect(() => {
+    if (!isPremium) {
+      setCachedCounters(currentRemaining, currentPurchasedCredits)
+    }
+  }, [isPremium, currentRemaining, currentPurchasedCredits])
 
   const limitCheckedRef = useRef(false)
 
@@ -92,6 +137,8 @@ export default function AnalyseDevis() {
 
       setCurrentRemaining(status.remaining as number)
       setCurrentPurchasedCredits(status.purchasedCredits || 0)
+      // Update cache with fresh server data
+      setCachedCounters(status.remaining as number, status.purchasedCredits || 0)
 
       // Only show paywall if user truly cannot analyze (no free remaining AND no purchased credits)
       if (!status.canAnalyze) {

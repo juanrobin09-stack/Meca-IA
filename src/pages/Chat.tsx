@@ -25,6 +25,33 @@ const MAX_PHOTOS_PER_CONVERSATION = 2
 // Note: No message limit per diagnostic - users get unlimited messages within a diagnostic session
 // The only limit is: 2 diagnostics/month for free users
 
+// Cache keys for counter persistence
+const COUNTER_CACHE_KEY = 'mecaia_chat_counters'
+
+function getCachedCounters(): { remaining: number; purchased: number } | null {
+  try {
+    const cached = localStorage.getItem(COUNTER_CACHE_KEY)
+    if (cached) {
+      const data = JSON.parse(cached)
+      // Cache valid for 5 minutes
+      if (Date.now() - data.timestamp < 5 * 60 * 1000) {
+        return { remaining: data.remaining, purchased: data.purchased }
+      }
+    }
+  } catch { /* ignore */ }
+  return null
+}
+
+function setCachedCounters(remaining: number, purchased: number) {
+  try {
+    localStorage.setItem(COUNTER_CACHE_KEY, JSON.stringify({
+      remaining,
+      purchased,
+      timestamp: Date.now()
+    }))
+  } catch { /* ignore */ }
+}
+
 const EXAMPLE_QUESTIONS = [
   { text: 'Ma voiture fait un bruit au freinage', icon: '🔊' },
   { text: 'Voyant moteur allumé', icon: '🚨' },
@@ -58,8 +85,10 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const [showPaywall, setShowPaywall] = useState(false)
   const [isNewConversation, setIsNewConversation] = useState(true)
-  const [currentRemaining, setCurrentRemaining] = useState<number>(diagnosticsRemaining)
-  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(purchasedDiagnosticCredits)
+  // Initialize from cache to prevent flash of 0 on page refresh
+  const cachedCounters = getCachedCounters()
+  const [currentRemaining, setCurrentRemaining] = useState<number>(cachedCounters?.remaining ?? diagnosticsRemaining)
+  const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(cachedCounters?.purchased ?? purchasedDiagnosticCredits)
   const [selectedImage, setSelectedImage] = useState<{ dataUrl: string; base64: string } | null>(null)
   const [imageError, setImageError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -71,13 +100,24 @@ export default function Chat() {
   const photosUsed = messages.filter(m => m.image).length
   // No message limit per diagnostic - unlimited conversation within a session
 
-  // Sync counter with profile changes
+  // Sync counter with profile changes and update cache
   useEffect(() => {
     if (!isPremium) {
       setCurrentRemaining(diagnosticsRemaining) // eslint-disable-line react-hooks/set-state-in-effect
-      setCurrentPurchasedCredits(purchasedDiagnosticCredits)  
+      setCurrentPurchasedCredits(purchasedDiagnosticCredits)
+      // Update cache when counters change from server
+      if (diagnosticsRemaining !== undefined || purchasedDiagnosticCredits !== undefined) {
+        setCachedCounters(diagnosticsRemaining, purchasedDiagnosticCredits)
+      }
     }
   }, [isPremium, diagnosticsRemaining, purchasedDiagnosticCredits])
+
+  // Update cache when local counters change (after usage)
+  useEffect(() => {
+    if (!isPremium) {
+      setCachedCounters(currentRemaining, currentPurchasedCredits)
+    }
+  }, [isPremium, currentRemaining, currentPurchasedCredits])
 
   useEffect(() => {
     async function checkLimitOnLoad() {
@@ -93,6 +133,8 @@ export default function Chat() {
       const limitStatus = await checkDiagnosticLimit()
       setCurrentRemaining(limitStatus.remaining)
       setCurrentPurchasedCredits(limitStatus.purchasedCredits || 0)
+      // Update cache with fresh server data
+      setCachedCounters(limitStatus.remaining, limitStatus.purchasedCredits || 0)
 
       // Only show paywall if user truly cannot diagnose (no free remaining AND no purchased credits)
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
