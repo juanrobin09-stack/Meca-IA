@@ -847,13 +847,13 @@ export const handler: Handler = async (event) => {
       break
     }
 
-    // 8. Save messages to session
+    // 8. Save messages to session (store validated/cleaned images only)
     const updatedMessages = [
       ...existingMessages,
       {
         role: 'user' as const,
         content: message,
-        images: images.length > 0 ? images : undefined
+        images: validatedImages.length > 0 ? validatedImages : undefined
       },
       {
         role: 'assistant' as const,
