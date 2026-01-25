@@ -17,6 +17,16 @@ interface Message {
   images?: string[]
 }
 
+interface DiagnosticSession {
+  id: string
+  title: string
+  status: string
+  created_at: string
+  messages: Message[]
+  final_diagnosis?: FinalDiagnosisPro
+  sources_collected?: string[]
+}
+
 const MAX_IMAGES = 3
 
 const EXAMPLE_QUESTIONS = [
@@ -45,6 +55,8 @@ export default function DiagnosticPro() {
 
   const [currentRemaining, setCurrentRemaining] = useState<number>(diagnosticsRemaining)
   const [currentPurchasedCredits, setCurrentPurchasedCredits] = useState<number>(purchasedDiagnosticCredits)
+  const [showHistory, setShowHistory] = useState(false)
+  const [sessions, setSessions] = useState<DiagnosticSession[]>([])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -98,6 +110,41 @@ export default function DiagnosticPro() {
     userLimits.refresh()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Load sessions on mount
+  useEffect(() => {
+    if (user) loadSessions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
+
+  async function loadSessions() {
+    if (!user) return
+    const { data } = await supabase
+      .from('diagnostic_pro_sessions')
+      .select('id, title, status, created_at, messages, final_diagnosis, sources_collected')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (data) setSessions(data)
+  }
+
+  function loadSession(session: DiagnosticSession) {
+    setSessionId(session.id)
+    setMessages(session.messages || [])
+    setFinalDiagnosis(session.final_diagnosis || null)
+    setSources(session.sources_collected?.length || 0)
+    setShowHistory(false)
+  }
+
+  function startNewSession() {
+    setSessionId(null)
+    setMessages([])
+    setFinalDiagnosis(null)
+    setSources(0)
+    setSelectedImages([])
+    setInput('')
+    setShowHistory(false)
+  }
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files
@@ -354,8 +401,77 @@ export default function DiagnosticPro() {
                 {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
               </div>
             )}
+
+            {/* History button */}
+            <button
+              onClick={() => { loadSessions(); setShowHistory(!showHistory) }}
+              className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-sm md:text-base bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+              title="Historique"
+            >🕒</button>
+
+            {/* New session button */}
+            <button
+              onClick={startNewSession}
+              className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-lg md:text-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:opacity-90 transition-opacity"
+              title="Nouvelle conversation"
+            >+</button>
           </div>
         </div>
+
+        {/* HISTORY PANEL */}
+        {showHistory && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: 300,
+            maxWidth: '85vw',
+            zIndex: 50,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '-4px 0 16px rgba(0,0,0,0.15)'
+          }} className="bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
+            <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-neutral-200 dark:border-neutral-800">
+              <span style={{ fontWeight: 600 }} className="text-neutral-900 dark:text-white">Historique</span>
+              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">×</button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
+              {sessions.length === 0 ? (
+                <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-8">Aucune conversation</p>
+              ) : (
+                sessions.map(session => (
+                  <button
+                    key={session.id}
+                    onClick={() => loadSession(session)}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      textAlign: 'left',
+                      border: 'none',
+                      borderRadius: 8,
+                      cursor: 'pointer',
+                      marginBottom: 4
+                    }}
+                    className={sessionId === session.id ? 'bg-violet-50 dark:bg-violet-950/30' : 'bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800'}
+                  >
+                    <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="text-neutral-900 dark:text-white">
+                      {session.title || 'Nouvelle conversation'}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${session.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`}>
+                        {session.status === 'completed' ? 'Terminé' : 'En cours'}
+                      </span>
+                      <span className="text-[10px] text-neutral-400">
+                        {new Date(session.created_at).toLocaleDateString('fr-FR')}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         {/* MESSAGES */}
         <div style={{
