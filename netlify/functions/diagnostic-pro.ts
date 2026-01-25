@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import type { Handler } from '@netlify/functions'
+import { ipTrackingMiddleware, getClientIP } from './utils/ip-tracking'
 
 // Environment variables
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
@@ -477,6 +478,7 @@ export const handler: Handler = async (event) => {
     console.log('[diagnostic-pro] forceFinalize:', forceFinalize)
     console.log('[diagnostic-pro] message length:', message?.length || 0)
     console.log('[diagnostic-pro] images count:', images.length)
+    console.log('[diagnostic-pro] client IP:', getClientIP(event))
 
     // Log image details for debugging
     if (images.length > 0) {
@@ -508,6 +510,23 @@ export const handler: Handler = async (event) => {
     }
 
     const isPremium = profile.subscription_status === 'premium'
+
+    // IP Tracking - vérifier les abus potentiels (seulement pour les utilisateurs gratuits)
+    if (!isPremium) {
+      const ipCheck = await ipTrackingMiddleware(supabase, userId, event)
+      if (!ipCheck.allowed && ipCheck.response) {
+        console.warn('[diagnostic-pro] IP blocked or suspicious:', getClientIP(event))
+        return {
+          statusCode: ipCheck.response.statusCode,
+          headers,
+          body: ipCheck.response.body
+        }
+      }
+      // Log si warning (multiple comptes sur même IP)
+      if (ipCheck.data?.warning) {
+        console.warn('[diagnostic-pro] IP warning:', ipCheck.data.warning, 'accounts:', ipCheck.data.accounts_on_ip)
+      }
+    }
     const diagnosticsUsed = profile.free_diagnostics_used || 0
     const purchasedCredits = profile.purchased_diagnostic_credits || 0
 

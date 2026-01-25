@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { createCheckoutSession, STRIPE_PRICES, type ProductType } from '@/lib/stripe'
 import {
@@ -11,6 +11,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles, CheckCircle2, CreditCard } from 'lucide-react'
+import { useUpgradePrompt } from '@/hooks/useUpgradePrompt'
+import UpgradeBanner from './UpgradeBanner'
 
 type PaywallMode = 'diagnostic' | 'devis' | 'video' | 'prevision' | 'chat' | 'vehicle'
 
@@ -20,6 +22,8 @@ interface PaywallModalProps {
   mode?: PaywallMode
   title?: string
   subtitle?: string
+  /** Force l'affichage du modal même pendant le cooldown (ex: limite vraiment atteinte) */
+  forceModal?: boolean
 }
 
 const defaultContent: Record<PaywallMode, {
@@ -144,13 +148,76 @@ export default function PaywallModal({
   mode = 'diagnostic',
   title,
   subtitle,
+  forceModal = false,
 }: PaywallModalProps) {
   const { user } = useAuth()
   const [loading, setLoading] = useState<string | null>(null)
+  const [bannerVisible, setBannerVisible] = useState(false)
+
+  // Système de cooldown pour éviter le spam
+  const {
+    promptType,
+    onDismiss,
+    onShow,
+    setForceModal
+  } = useUpgradePrompt()
+
+  // Déterminer ce qu'on doit afficher
+  const shouldShowModal = forceModal || promptType === 'modal'
+  const shouldShowBanner = !forceModal && promptType === 'banner'
+
+  // Mettre à jour forceModal dans le hook
+  useEffect(() => {
+    setForceModal(forceModal)
+  }, [forceModal, setForceModal])
+
+  // Tracker quand le modal est ouvert
+  useEffect(() => {
+    if (open && shouldShowModal) {
+      onShow()
+    }
+  }, [open, shouldShowModal, onShow])
+
+  // Gérer la fermeture
+  const handleClose = useCallback(() => {
+    onDismiss()
+    onOpenChange(false)
+    // Si on était en mode modal mais qu'on a un cooldown, montrer le banner
+    if (shouldShowBanner) {
+      setBannerVisible(true)
+    }
+  }, [onDismiss, onOpenChange, shouldShowBanner])
+
+  // Fermer le banner
+  const handleBannerClose = useCallback(() => {
+    setBannerVisible(false)
+    onDismiss()
+  }, [onDismiss])
 
   const content = defaultContent[mode]
   const displayTitle = title || content.title
   const displaySubtitle = subtitle || content.subtitle
+
+  // Si on doit montrer un banner (soit par cooldown, soit après fermeture du modal)
+  if ((open && shouldShowBanner && !shouldShowModal) || bannerVisible) {
+    return (
+      <UpgradeBanner
+        show={true}
+        message={displayTitle}
+        onClose={handleBannerClose}
+        feature={mode === 'diagnostic' || mode === 'video' || mode === 'prevision' ? 'diagnostic' : mode === 'chat' ? 'chat' : mode === 'devis' ? 'devis' : 'general'}
+      />
+    )
+  }
+
+  // Si le modal ne doit pas s'afficher (cooldown actif)
+  if (open && !shouldShowModal && !shouldShowBanner) {
+    // Fermer silencieusement
+    if (open) {
+      onOpenChange(false)
+    }
+    return null
+  }
 
   async function handlePurchase(priceId: string, isSubscription: boolean, productType?: ProductType) {
     if (!user) return
@@ -169,7 +236,10 @@ export default function PaywallModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && shouldShowModal} onOpenChange={(isOpen) => {
+      if (!isOpen) handleClose()
+      else onOpenChange(isOpen)
+    }}>
       <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-center text-lg sm:text-xl">
@@ -268,7 +338,7 @@ export default function PaywallModal({
 
           <button
             className="text-xs sm:text-sm text-muted-foreground hover:text-foreground w-full text-center py-2"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
           >
             Plus tard
           </button>

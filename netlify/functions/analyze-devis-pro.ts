@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import type { Handler } from '@netlify/functions'
+import { trackIPAccess, isIPBlocked, getClientIP } from './utils/ip-tracking'
 import {
   getPrixReferenceDatabase,
   logPrixReferenceInfo,
@@ -60,6 +62,13 @@ function logPrixReference(): void {
 
 const WEB_SEARCH_ENABLED = false  // 🚨 DÉSACTIVÉ - Cause d'instabilité
 
+// Initialize Supabase for IP tracking
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  : null
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function searchWeb(_query: string): Promise<string> {
   // Recherche désactivée pour stabilité - retourne toujours les prix de référence
@@ -93,6 +102,26 @@ export const handler: Handler = async (event) => {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error('❌ ANTHROPIC_API_KEY manquante')
     return { statusCode: 500, headers, body: JSON.stringify({ error: 'Config manquante' }) }
+  }
+
+  // IP Tracking - vérifier si l'IP est bloquée
+  const clientIP = getClientIP(event)
+  console.log(`[analyze-devis-pro] Client IP: ${clientIP}`)
+
+  if (supabase) {
+    const blocked = await isIPBlocked(supabase, event)
+    if (blocked) {
+      console.warn(`[analyze-devis-pro] IP blocked: ${clientIP}`)
+      return {
+        statusCode: 403,
+        headers,
+        body: JSON.stringify({
+          error: 'Accès temporairement bloqué',
+          message: 'Votre adresse IP a été bloquée pour activité suspecte. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.',
+          code: 'IP_BLOCKED'
+        })
+      }
+    }
   }
 
   try {

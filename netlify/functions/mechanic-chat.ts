@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@supabase/supabase-js'
 import type { Handler } from '@netlify/functions'
+import { ipTrackingMiddleware, getClientIP } from './utils/ip-tracking'
 
 // Validate environment variables
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL
@@ -572,6 +573,23 @@ export const handler: Handler = async (event) => {
     }
 
     const isPremium = profile?.subscription_status === 'premium'
+
+    // IP Tracking - vérifier les abus potentiels (seulement pour les utilisateurs gratuits)
+    if (!isPremium) {
+      const ipCheck = await ipTrackingMiddleware(supabase, userId, event)
+      if (!ipCheck.allowed && ipCheck.response) {
+        console.warn('[mechanic-chat] IP blocked or suspicious:', getClientIP(event))
+        return {
+          statusCode: ipCheck.response.statusCode,
+          headers,
+          body: ipCheck.response.body
+        }
+      }
+      // Log si warning (multiple comptes sur même IP)
+      if (ipCheck.data?.warning) {
+        console.warn('[mechanic-chat] IP warning:', ipCheck.data.warning, 'accounts:', ipCheck.data.accounts_on_ip)
+      }
+    }
 
     // 2. Check daily message limit for free users
     let messagesUsedToday = 0
