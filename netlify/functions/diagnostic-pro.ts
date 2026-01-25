@@ -629,17 +629,28 @@ export const handler: Handler = async (event) => {
       text: message
     })
 
-    // 5. Format messages for Anthropic
+    // 5. Format messages for Anthropic (with image validation for existing messages)
     const formattedMessages: Anthropic.Messages.MessageParam[] = existingMessages.map((m: DiagnosticMessage) => {
       if (m.images && m.images.length > 0) {
-        const content: Anthropic.Messages.ContentBlockParam[] = m.images.map(img => ({
-          type: 'image' as const,
-          source: {
-            type: 'base64' as const,
-            media_type: 'image/jpeg' as const,
-            data: img
+        const content: Anthropic.Messages.ContentBlockParam[] = []
+
+        // Validate and clean each image from history
+        for (const img of m.images) {
+          const cleaned = cleanBase64Image(img)
+          if (cleaned.valid) {
+            content.push({
+              type: 'image' as const,
+              source: {
+                type: 'base64' as const,
+                media_type: 'image/jpeg' as const,
+                data: cleaned.data
+              }
+            })
+          } else {
+            console.log(`[diagnostic-pro] Skipping invalid image from history: ${cleaned.error}`)
           }
-        }))
+        }
+
         content.push({ type: 'text', text: typeof m.content === 'string' ? m.content : '' })
         return { role: m.role as 'user' | 'assistant', content }
       }
