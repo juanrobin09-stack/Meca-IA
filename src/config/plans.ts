@@ -8,7 +8,7 @@ export const PLANS = {
     maxDevis: 1,  // par mois
     maxVehicles: 1,
     maxChatMessagesPerDay: 10,  // par jour
-    historyDays: 7,
+    historyDays: Infinity,  // historique illimité
     features: [
       '2 Diagnostics Pro par mois',
       '1 véhicule enregistré',
@@ -17,6 +17,7 @@ export const PLANS = {
       'Recherche de garage à proximité',
       'Recherche de pièces détachées',
       'Export PDF des diagnostics',
+      'Historique illimité',
     ],
     notIncluded: [
       'Diagnostics illimités',
@@ -25,7 +26,6 @@ export const PLANS = {
       'Chat mécanicien 24/7 illimité',
       'Analyses de devis illimitées',
       'Véhicules illimités',
-      'Historique complet illimité',
       'Support prioritaire',
     ],
   },

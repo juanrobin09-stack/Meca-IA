@@ -529,14 +529,19 @@ export default function Chat() {
                     <button
                       onClick={async () => {
                         const result = await requestDiagnosis()
+                        // Save to database in background (don't await - let UI update immediately)
                         if (result && currentDiagnostic?.id) {
+                          const diagId = currentDiagnostic.id
                           const userMsg: Message = {
                             role: 'user',
                             content: '🔍 Obtenir mon diagnostic',
                             timestamp: new Date().toISOString()
                           }
-                          await addMessage(currentDiagnostic.id, userMsg)
-                          await addMessage(currentDiagnostic.id, result)
+                          // Fire and forget - don't block UI update
+                          Promise.all([
+                            addMessage(diagId, userMsg),
+                            addMessage(diagId, result)
+                          ]).catch(err => console.error('Failed to save diagnostic messages:', err))
                         }
                       }}
                       style={{

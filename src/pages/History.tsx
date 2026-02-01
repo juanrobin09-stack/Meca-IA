@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
-import { useSubscription } from '@/hooks/useSubscription'
 import { useDevis } from '@/hooks/useDevis'
 import { useVideoDiagnostics } from '@/hooks/useVideoDiagnostics'
 import { useDiagnosticProSessions } from '@/hooks/useDiagnosticProSessions'
@@ -13,8 +12,6 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Search,
-  AlertCircle,
-  Sparkles,
   FileText,
   CheckCircle2,
   AlertTriangle,
@@ -124,8 +121,7 @@ function formatAnalysisObject(obj: AnalysisObject): string {
 }
 
 export default function History() {
-  const { user, profile } = useAuth()
-  const { isPremium } = useSubscription(profile)
+  const { user } = useAuth()
   const { devisList, loading: loadingDevis, deleteDevis } = useDevis(user?.id)
   const { videoDiagnostics, loading: loadingVideo, deleteVideoDiagnostic } = useVideoDiagnostics(user?.id)
   const { sessions: diagnosticProSessions, loading: loadingDiagnosticPro, deleteSession: deleteDiagnosticProSession } = useDiagnosticProSessions(user?.id)
@@ -143,13 +139,6 @@ export default function History() {
   const filteredDevis = useMemo(() => {
     let filtered = devisList
 
-    // Filter by time for free users (7 days as per plans.ts)
-    if (!isPremium) {
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      filtered = filtered.filter((d) => new Date(d.created_at) > sevenDaysAgo)
-    }
-
     // Filter by search
     if (search) {
       const searchLower = search.toLowerCase()
@@ -161,18 +150,11 @@ export default function History() {
     }
 
     return filtered
-  }, [devisList, search, isPremium])
+  }, [devisList, search])
 
   // Filter video diagnostics
   const filteredVideoDiagnostics = useMemo(() => {
     let filtered = videoDiagnostics
-
-    // Filter by time for free users (7 days as per plans.ts)
-    if (!isPremium) {
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      filtered = filtered.filter((d) => new Date(d.created_at) > sevenDaysAgo)
-    }
 
     // Filter by search
     if (search) {
@@ -185,18 +167,11 @@ export default function History() {
     }
 
     return filtered
-  }, [videoDiagnostics, search, isPremium])
+  }, [videoDiagnostics, search])
 
   // Filter Diagnostic Pro sessions
   const filteredDiagnosticProSessions = useMemo(() => {
     let filtered = diagnosticProSessions
-
-    // Filter by time for free users (7 days as per plans.ts)
-    if (!isPremium) {
-      const sevenDaysAgo = new Date()
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-      filtered = filtered.filter((s) => new Date(s.created_at) > sevenDaysAgo)
-    }
 
     // Filter by search
     if (search) {
@@ -210,11 +185,8 @@ export default function History() {
     }
 
     return filtered
-  }, [diagnosticProSessions, search, isPremium])
+  }, [diagnosticProSessions, search])
 
-  const hasOlderDevis = !isPremium && devisList.length > filteredDevis.length
-  const hasOlderVideo = !isPremium && videoDiagnostics.length > filteredVideoDiagnostics.length
-  const hasOlderDiagnosticPro = !isPremium && diagnosticProSessions.length > filteredDiagnosticProSessions.length
 
   return (
     <div className="min-h-screen bg-muted/40">
@@ -271,29 +243,6 @@ export default function History() {
                   />
                 </div>
               </div>
-
-              {/* Warning for free users */}
-              {hasOlderDiagnosticPro && (
-                <Card className="mb-6 border-amber-200 bg-amber-50">
-                  <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-amber-800">Historique limité à 7 jours</p>
-                        <p className="text-sm text-amber-700">
-                          Passe Premium pour accéder à tout ton historique.
-                        </p>
-                      </div>
-                    </div>
-                    <Link to="/app/account">
-                      <Button size="sm">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Passer Premium
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Diagnostic Pro list */}
               {loadingDiagnosticPro ? (
@@ -354,29 +303,6 @@ export default function History() {
                 </div>
               </div>
 
-              {/* Warning for free users */}
-              {hasOlderDevis && (
-                <Card className="mb-6 border-amber-200 bg-amber-50">
-                  <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-amber-800">Historique limité à 7 jours</p>
-                        <p className="text-sm text-amber-700">
-                          Passe Premium pour accéder à tout ton historique.
-                        </p>
-                      </div>
-                    </div>
-                    <Link to="/app/account">
-                      <Button size="sm">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Passer Premium
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              )}
-
               {/* Devis list */}
               {loadingDevis ? (
                 <div className="space-y-4">
@@ -435,29 +361,6 @@ export default function History() {
                   />
                 </div>
               </div>
-
-              {/* Warning for free users */}
-              {hasOlderVideo && (
-                <Card className="mb-6 border-amber-200 bg-amber-50">
-                  <CardContent className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-amber-800">Historique limité à 7 jours</p>
-                        <p className="text-sm text-amber-700">
-                          Passe Premium pour accéder à tout ton historique.
-                        </p>
-                      </div>
-                    </div>
-                    <Link to="/app/account">
-                      <Button size="sm">
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Passer Premium
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Video list */}
               {loadingVideo ? (
