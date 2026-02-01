@@ -11,8 +11,8 @@ interface OnboardingProps {
 const steps = [
   {
     icon: MessageSquare,
-    title: 'Bienvenue sur MECAI !',
-    description: 'Ton assistant mécanique personnel. Décris ton problème de voiture et obtiens un diagnostic instantané.',
+    title: 'Tu as 2 diagnostics GRATUITS !',
+    description: 'Décris ton problème de voiture et obtiens un diagnostic pro instantané. Sans carte bancaire.',
     color: 'bg-blue-500'
   },
   {
@@ -23,7 +23,7 @@ const steps = [
   },
   {
     icon: FileText,
-    title: 'Analyse tes devis',
+    title: '1 analyse de devis offerte',
     description: 'Upload un devis de garage, on te dit si le prix est correct ou s\'il faut négocier.',
     color: 'bg-green-500'
   },

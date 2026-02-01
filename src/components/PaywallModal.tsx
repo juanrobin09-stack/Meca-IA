@@ -10,9 +10,23 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Sparkles, CheckCircle2, CreditCard } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, CreditCard, Shield, Star, Users } from 'lucide-react'
 import { useUpgradePrompt } from '@/hooks/useUpgradePrompt'
 import UpgradeBanner from './UpgradeBanner'
+
+// Témoignages pour la réassurance
+const TESTIMONIALS = [
+  {
+    name: 'Thomas L.',
+    text: 'Economisé 400€ sur un devis moteur, le garagiste gonflait les prix !',
+    rating: 5,
+  },
+  {
+    name: 'Sophie M.',
+    text: 'Le diagnostic m\'a évité une panne sur l\'autoroute. Merci MECA IA !',
+    rating: 5,
+  },
+]
 
 type PaywallMode = 'diagnostic' | 'devis' | 'video' | 'prevision' | 'chat' | 'vehicle'
 
@@ -251,19 +265,36 @@ export default function PaywallModal({
         </DialogHeader>
 
         <div className="space-y-3 sm:space-y-4 mt-3 sm:mt-4">
+          {/* Trust badges */}
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Shield className="h-3.5 w-3.5 text-green-600" />
+              <span>Paiement sécurisé</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Users className="h-3.5 w-3.5 text-blue-600" />
+              <span>500+ utilisateurs</span>
+            </div>
+          </div>
+
           {/* Premium Option */}
-          <Card className="border-primary ring-2 ring-primary">
+          <Card className="border-primary ring-2 ring-primary relative overflow-hidden">
+            {/* Badge promo */}
+            <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">
+              OFFRE LIMITEE
+            </div>
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
                 <CardTitle className="text-base sm:text-lg">Premium</CardTitle>
-                <span className="text-[10px] sm:text-xs bg-primary text-primary-foreground px-1.5 sm:px-2 py-0.5 rounded-full ml-auto">
-                  Recommandé
-                </span>
               </div>
               <div className="text-xl sm:text-2xl font-bold">
                 9,99€<span className="text-xs sm:text-sm font-normal text-muted-foreground">/mois</span>
               </div>
+              <p className="text-[10px] text-green-600 font-medium flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" />
+                Annule à tout moment, sans frais
+              </p>
             </CardHeader>
             <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-6 pt-0 sm:pt-0">
               <p className="text-xs text-muted-foreground font-medium">Inclus dans Premium :</p>
@@ -276,19 +307,19 @@ export default function PaywallModal({
                 ))}
               </ul>
               <Button
-                className="w-full text-sm sm:text-base"
+                className="w-full text-sm sm:text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
                 onClick={() => handlePurchase(STRIPE_PRICES.PREMIUM_MONTHLY, true)}
                 disabled={loading !== null}
               >
                 {loading === STRIPE_PRICES.PREMIUM_MONTHLY ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
-                Passer Premium
+                Passer Premium maintenant
               </Button>
               <p className="text-[10px] sm:text-xs text-center text-muted-foreground">
                 Ou{' '}
                 <button
-                  className="text-primary hover:underline"
+                  className="text-primary hover:underline font-medium"
                   onClick={() => handlePurchase(STRIPE_PRICES.PREMIUM_YEARLY, true)}
                   disabled={loading !== null}
                 >
@@ -297,6 +328,23 @@ export default function PaywallModal({
               </p>
             </CardContent>
           </Card>
+
+          {/* Testimonial */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <div className="flex text-yellow-500">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-3 w-3 fill-current" />
+                ))}
+              </div>
+            </div>
+            <p className="text-xs text-blue-800 dark:text-blue-200 mt-1 italic">
+              "{TESTIMONIALS[0].text}"
+            </p>
+            <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 font-medium">
+              — {TESTIMONIALS[0].name}
+            </p>
+          </div>
 
           {/* Pay per use Option - Only show if not hidden */}
           {!content.hideUnitPurchase && (

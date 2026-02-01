@@ -4,12 +4,14 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
 import { useChat } from '@/hooks/useChat'
+import { useEventTracking } from '@/hooks/useEventTracking'
 import { AIMemoryService } from '@/services/aiMemoryService'
 import Sidebar from '@/components/Sidebar'
 import ChatMessage from '@/components/ChatMessage'
 import PaywallModal from '@/components/PaywallModal'
 import PlateScanner from '@/components/PlateScanner'
 import DiagnosticResult from '@/components/DiagnosticResult'
+import UpgradeCTA from '@/components/UpgradeCTA'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
 import type { Message } from '@/types'
 
@@ -64,6 +66,7 @@ export default function Chat() {
   const { user, profile, refreshProfile } = useAuth()
   const { isPremium, diagnosticsRemaining, purchasedDiagnosticCredits, checkDiagnosticLimit, incrementDiagnosticCount } = useSubscription(profile)
   const { currentDiagnostic, createDiagnostic, addMessage, loadDiagnostic, setCurrentDiagnostic } = useDiagnostics(user?.id)
+  const { trackEvent, EVENTS } = useEventTracking()
   const {
     messages,
     isLoading,
@@ -144,6 +147,8 @@ export default function Chat() {
 
       // Only show paywall if user truly cannot diagnose (no free remaining AND no purchased credits)
       if (!limitStatus.canDiagnose && !limitStatus.isPremium) {
+        trackEvent(EVENTS.FREEMIUM_LIMIT_REACHED, { trigger: 'page_load' })
+        trackEvent(EVENTS.PAYWALL_VIEWED, { trigger: 'page_load' })
         setShowPaywall(true)
       }
     }
@@ -203,6 +208,17 @@ export default function Chat() {
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px'
     }
   }, [input])
+
+  // Track diagnostic completion
+  useEffect(() => {
+    if (finalDiagnosis && phase === 'completed') {
+      trackEvent(EVENTS.DIAGNOSTIC_COMPLETED, {
+        urgency: finalDiagnosis.urgency_level,
+        cost_estimate: `${finalDiagnosis.estimated_cost_min}-${finalDiagnosis.estimated_cost_max}`,
+        is_premium: isPremium,
+      })
+    }
+  }, [finalDiagnosis, phase, isPremium, trackEvent, EVENTS])
 
   async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -495,6 +511,16 @@ export default function Chat() {
                   <div style={{ marginBottom: 16 }}>
                     <DiagnosticResult diagnosis={finalDiagnosis} />
                   </div>
+                )}
+
+                {/* Upgrade CTA after completed diagnostic (for free users) */}
+                {finalDiagnosis && phase === 'completed' && !isPremium && (
+                  <UpgradeCTA
+                    diagnosticsRemaining={currentRemaining}
+                    purchasedCredits={currentPurchasedCredits}
+                    onUpgradeClick={() => setShowPaywall(true)}
+                    className="mb-4"
+                  />
                 )}
 
                 {/* Request Diagnosis Button */}
