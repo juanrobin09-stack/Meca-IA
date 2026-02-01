@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -168,6 +170,13 @@ function AnimatedBackground() {
 }
 
 export default function Landing() {
+  const { trackViewContent } = useTikTokTracking()
+
+  // Track landing page view for TikTok Pixel
+  useEffect(() => {
+    trackViewContent('MECAI Landing Page', 'landing_page')
+  }, [trackViewContent])
+
   return (
     <PageTransition>
     <div className="min-h-screen bg-white dark:bg-gray-950">

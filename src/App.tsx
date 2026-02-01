@@ -38,6 +38,7 @@ const EmailConfirmation = lazy(() => import('@/pages/EmailConfirmation'))
 // Lazy load heavy components
 const Onboarding = lazy(() => import('@/components/Onboarding'))
 const CookieBanner = lazy(() => import('@/components/CookieBanner'))
+const TikTokPixel = lazy(() => import('@/components/analytics/TikTokPixel'))
 
 // Memoized AuthRedirect pour éviter re-renders inutiles
 const AuthRedirect = memo(function AuthRedirect({ children }: { children: React.ReactNode }) {
@@ -279,6 +280,11 @@ export default function App() {
 
         <Suspense fallback={null}>
           <CookieBanner />
+        </Suspense>
+
+        {/* TikTok Pixel - loads asynchronously with consent check */}
+        <Suspense fallback={null}>
+          <TikTokPixel />
         </Suspense>
       </OnboardingWrapper>
       </UserLimitsProvider>

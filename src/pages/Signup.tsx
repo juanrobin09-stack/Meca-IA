@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +20,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const { trackCompleteRegistration } = useTikTokTracking()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -41,6 +43,8 @@ export default function Signup() {
 
     try {
       await signUp(email, password, trimmedName, true)
+      // Track successful registration for TikTok Pixel
+      trackCompleteRegistration('MECAI Free Account')
       // Marquer que c'est une nouvelle inscription pour afficher l'onboarding
       localStorage.setItem('mecaia_show_onboarding', 'true')
       navigate('/app')

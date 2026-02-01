@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { createCheckoutSession, STRIPE_PRICES } from '@/lib/stripe'
 import PageTransition from '@/components/PageTransition'
+import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 
 export default function Pricing() {
   const [yearly, setYearly] = useState(false)
@@ -17,6 +18,7 @@ export default function Pricing() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
+  const { trackInitiateCheckout } = useTikTokTracking()
 
   const handleSubscribe = async () => {
     // Check if user is logged in
@@ -33,6 +35,12 @@ export default function Pricing() {
 
     setLoading(true)
     try {
+      // Track checkout initiation for TikTok Pixel
+      trackInitiateCheckout(yearly)
+
+      // Store plan type for tracking on success page
+      localStorage.setItem('mecai_checkout_plan', yearly ? 'yearly' : 'monthly')
+
       const priceId = yearly ? STRIPE_PRICES.PREMIUM_YEARLY : STRIPE_PRICES.PREMIUM_MONTHLY
       await createCheckoutSession(priceId, true, user.id)
     } catch (error) {

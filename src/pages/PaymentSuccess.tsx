@@ -1,18 +1,25 @@
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useUserLimits } from '@/hooks/useUserLimits'
+import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Loader2, Sparkles, MessageCircle, FileText, Microscope } from 'lucide-react'
 import confetti from 'canvas-confetti'
 
 export default function PaymentSuccess() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const limits = useUserLimits()
+  const { trackSubscribe } = useTikTokTracking()
   const [checking, setChecking] = useState(true)
   const [isPremiumConfirmed, setIsPremiumConfirmed] = useState(false)
   const attemptsRef = useRef(0)
   const maxAttempts = 15
   const confettiFiredRef = useRef(false)
+  const subscribeTrackedRef = useRef(false)
+
+  // Check if it was a yearly subscription (from URL params or localStorage)
+  const isYearly = searchParams.get('plan') === 'yearly' || localStorage.getItem('mecai_checkout_plan') === 'yearly'
 
   useEffect(() => {
     // Refresh toutes les 2 secondes pendant 30 secondes max
@@ -29,7 +36,7 @@ export default function PaymentSuccess() {
           clearInterval(interval)
           setChecking(false)
 
-          // Fire confetti
+          // Fire confetti and track subscription
           if (!confettiFiredRef.current) {
             confettiFiredRef.current = true
             confetti({
@@ -37,6 +44,14 @@ export default function PaymentSuccess() {
               spread: 70,
               origin: { y: 0.6 }
             })
+          }
+
+          // Track successful subscription for TikTok Pixel
+          if (!subscribeTrackedRef.current) {
+            subscribeTrackedRef.current = true
+            trackSubscribe(isYearly)
+            // Clean up stored plan type
+            localStorage.removeItem('mecai_checkout_plan')
           }
 
           // Rediriger vers dashboard apres 3 secondes
@@ -76,11 +91,19 @@ export default function PaymentSuccess() {
         })
       }
 
+      // Track successful subscription for TikTok Pixel
+      if (!subscribeTrackedRef.current) {
+        subscribeTrackedRef.current = true
+        trackSubscribe(isYearly)
+        // Clean up stored plan type
+        localStorage.removeItem('mecai_checkout_plan')
+      }
+
       setTimeout(() => {
         navigate('/app')
       }, 3000)
     }
-  }, [limits.isPremium, limits.loading, isPremiumConfirmed, navigate])
+  }, [limits.isPremium, limits.loading, isPremiumConfirmed, navigate, trackSubscribe, isYearly])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-white dark:from-green-950/20 dark:to-neutral-950 flex items-center justify-center p-4">
