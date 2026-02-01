@@ -22,7 +22,7 @@ const anthropic = ANTHROPIC_KEY
 const FREE_DIAGNOSTICS_LIMIT = 2
 
 // Timeout helper for fetch requests
-async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 4000): Promise<Response> {
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 6000): Promise<Response> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
@@ -45,14 +45,14 @@ async function searchWeb(query: string): Promise<{ results: string; sources: str
 
   try {
     const response = await fetchWithTimeout(
-      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=4&country=fr&search_lang=fr`,
+      `https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5&country=fr&search_lang=fr`,
       {
         headers: {
           'Accept': 'application/json',
           'X-Subscription-Token': BRAVE_API_KEY
         }
       },
-      4000 // 4 secondes max pour la recherche
+      6000 // 6 secondes max pour la recherche
     )
 
     if (!response.ok) {
@@ -695,12 +695,12 @@ export const handler: Handler = async (event) => {
     let finalDiagnosis: FinalDiagnosisPro | null = null
     let allSources: string[] = [...(session.sources_collected || [])]
     let iterations = 0
-    const maxIterations = 3 // Réduit pour éviter timeout Netlify (10s plan gratuit)
+    const maxIterations = 5 // Plan Pro Netlify = 26s timeout
     const currentMessages = [...formattedMessages]
     let searchCount = 0
-    const maxSearches = 1 // Une seule recherche pour respecter le timeout
+    const maxSearches = 2 // 2 recherches max
     const startTime = Date.now()
-    const maxTotalTime = 8000 // 8 secondes max (marge avant timeout Netlify de 10s)
+    const maxTotalTime = 24000 // 24 secondes max (marge avant timeout Netlify Pro de 26s)
 
     const systemPrompt = generateSystemPrompt(userMessageCount, forceFinalize)
 
@@ -720,8 +720,8 @@ export const handler: Handler = async (event) => {
       let response
       try {
         response = await anthropic.messages.create({
-          model: 'claude-3-5-haiku-20241022', // Modèle rapide pour respecter timeout Netlify
-          max_tokens: 2000,
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4000,
           system: systemPrompt,
           tools,
           messages: currentMessages,
