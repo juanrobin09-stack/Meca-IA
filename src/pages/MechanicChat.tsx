@@ -194,14 +194,41 @@ export default function MechanicChat() {
     setIsTyping(true)
     playSend()
 
-    const tempMsg: Message = {
-      id: 'temp-' + Date.now(),
-      conversation_id: convId,
-      sender: 'user',
-      content: messageContent,
-      created_at: new Date().toISOString()
+    // Persist the user message to the database BEFORE the API call
+    // so it survives timeouts and failures
+    let userMsg: Message
+    let persistedToDb = false
+
+    try {
+      const { data: insertedMsg, error: insertError } = await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: convId,
+          user_id: user?.id,
+          sender: 'user',
+          content: messageContent
+        })
+        .select()
+        .single()
+
+      if (insertError || !insertedMsg) {
+        throw new Error(insertError?.message || 'Insert returned no data')
+      }
+
+      userMsg = insertedMsg as Message
+      persistedToDb = true
+    } catch {
+      // Fallback: use a temporary local message if DB insert fails
+      userMsg = {
+        id: 'temp-' + Date.now(),
+        conversation_id: convId,
+        sender: 'user',
+        content: messageContent,
+        created_at: new Date().toISOString()
+      }
     }
-    setMessages(prev => [...prev, tempMsg])
+
+    setMessages(prev => [...prev, userMsg])
 
     try {
       // Timeout de 90 secondes pour laisser le temps aux recherches web
@@ -228,7 +255,10 @@ export default function MechanicChat() {
       // Vérifier LIMIT_REACHED en premier (avant le check error générique)
       if (result.error === 'LIMIT_REACHED' || result.errorType === 'LIMIT_REACHED') {
         setShowPaywall(true)
-        setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
+        // Remove user message only if it wasn't persisted to DB
+        if (!persistedToDb) {
+          setMessages(prev => prev.filter(m => m.id !== userMsg.id))
+        }
         return
       }
 
@@ -241,7 +271,7 @@ export default function MechanicChat() {
           content: result.response || "Désolé, un problème technique est survenu. Réessaie !",
           created_at: new Date().toISOString()
         }
-        setMessages(prev => [...prev.filter(m => m.id !== tempMsg.id), tempMsg, errorMsg])
+        setMessages(prev => [...prev, errorMsg])
         return
       }
 
@@ -268,7 +298,7 @@ export default function MechanicChat() {
         content: `Désolé, ${errorMessage} 🔧`,
         created_at: new Date().toISOString()
       }
-      setMessages(prev => [...prev.filter(m => m.id !== tempMsg.id), tempMsg, errorMsg])
+      setMessages(prev => [...prev, errorMsg])
     } finally {
       setIsTyping(false)
     }

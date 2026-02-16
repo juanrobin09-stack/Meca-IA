@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Sparkles, CheckCircle2, CreditCard, Shield, Star, Users } from 'lucide-react'
 import { useUpgradePrompt } from '@/hooks/useUpgradePrompt'
+import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 import UpgradeBanner from './UpgradeBanner'
 
 // Témoignages pour la réassurance
@@ -166,6 +167,7 @@ export default function PaywallModal({
   forceModal = false,
 }: PaywallModalProps) {
   const { user } = useAuth()
+  const { trackInitiateCheckout } = useTikTokTracking()
   const [loading, setLoading] = useState<string | null>(null)
   const [bannerVisible, setBannerVisible] = useState(false)
 
@@ -239,7 +241,9 @@ export default function PaywallModal({
 
     setLoading(priceId)
     try {
-      console.log('Creating checkout session with:', { priceId, isSubscription, userId: user.id, productType })
+      const isYearly = priceId === STRIPE_PRICES.PREMIUM_YEARLY
+      trackInitiateCheckout(isYearly)
+      localStorage.setItem('mecai_checkout_plan', isYearly ? 'yearly' : 'monthly')
       await createCheckoutSession(priceId, isSubscription, user.id, undefined, productType)
     } catch (error: unknown) {
       console.error('Checkout error details:', error)

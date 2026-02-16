@@ -85,6 +85,7 @@ export default function AnalyseDevis() {
   const [fromCache, setFromCache] = useState(false)
   const [analysisStep, setAnalysisStep] = useState<string>('')
   const [isMobile, setIsMobile] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const galleryInputRef = useRef<HTMLInputElement>(null)
 
@@ -157,10 +158,7 @@ export default function AnalyseDevis() {
     checkLimit()
   }, [profile, checkDevisLimit, refreshProfile])
 
-  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  async function processFile(file: File) {
     console.log('📁 Fichier sélectionné:', file.name, file.type, file.size)
 
     // Reset both refs
@@ -207,6 +205,41 @@ export default function AnalyseDevis() {
       }
       setAnalysisStep('')
     }
+  }
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await processFile(file)
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  async function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+
+    // Only accept image files
+    if (!file.type.startsWith('image/')) {
+      setError('Seules les images sont acceptées (JPG, PNG).')
+      return
+    }
+
+    await processFile(file)
   }
 
   async function handleAnalyzeQuote() {
@@ -584,15 +617,26 @@ export default function AnalyseDevis() {
                     </p>
                   </div>
                 ) : (
-                  /* Desktop: Click zone with glass styling */
+                  /* Desktop: Click zone with glass styling + drag-and-drop */
                   <div
-                    className="border-2 border-dashed border-violet-800 rounded-xl p-8 text-center cursor-pointer hover:border-violet-600 hover:bg-violet-950/20 transition-all group"
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all group ${
+                      isDragging
+                        ? 'border-cyan-400 bg-cyan-950/30 scale-[1.02] shadow-lg shadow-cyan-500/20'
+                        : 'border-violet-800 hover:border-violet-600 hover:bg-violet-950/20'
+                    }`}
                     onClick={() => galleryInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/25 group-hover:shadow-violet-500/40 transition-shadow">
+                    <div className={`w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg transition-shadow ${
+                      isDragging ? 'shadow-cyan-500/40' : 'shadow-violet-500/25 group-hover:shadow-violet-500/40'
+                    }`}>
                       <Upload className="h-8 w-8 text-white" />
                     </div>
-                    <p className="font-medium text-lg">Clique ou glisse ton devis ici</p>
+                    <p className="font-medium text-lg">
+                      {isDragging ? 'Relache pour importer' : 'Clique ou glisse ton devis ici'}
+                    </p>
                     <p className="text-sm text-muted-foreground mt-1">JPG, PNG (max 15MB)</p>
                   </div>
                 )}

@@ -776,6 +776,30 @@ export default function SoundScan() {
                   className="space-y-4 sm:space-y-6"
                 >
                   {/* -------------------------------------------------------- */}
+                  {/* BETA NOTICE                                              */}
+                  {/* -------------------------------------------------------- */}
+                  <Card className="border-violet-500/30 bg-gradient-to-r from-violet-950/40 via-indigo-950/30 to-cyan-950/40 backdrop-blur-sm overflow-hidden">
+                    <CardContent className="flex items-start gap-3 sm:gap-4 pt-5 pb-5 sm:pt-6 sm:pb-6">
+                      <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-violet-500/15 border border-violet-500/30 flex items-center justify-center">
+                        <Radio className="h-5 w-5 sm:h-6 sm:w-6 text-violet-400" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="border-violet-500/40 text-violet-300 bg-violet-500/10 text-[10px] sm:text-xs">
+                            Beta
+                          </Badge>
+                          <span className="text-xs sm:text-sm font-medium text-violet-200">
+                            Fonctionnalité en cours de développement
+                          </span>
+                        </div>
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                          L'analyse audio sera bientôt disponible. Tu peux tester l'enregistrement mais les résultats sont simulés.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* -------------------------------------------------------- */}
                   {/* RECORD CARD                                              */}
                   {/* -------------------------------------------------------- */}
                   <Card className="border-violet-500/20 bg-gradient-to-br from-violet-950/20 via-background to-cyan-950/20 backdrop-blur-sm overflow-hidden">
