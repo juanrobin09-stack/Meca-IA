@@ -460,11 +460,11 @@ export default function Garages() {
                 exit={{ opacity: 0, height: 0 }}
                 className="mx-4 mt-4"
               >
-                <div className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 p-4 rounded-r-lg">
+                <div className="bg-amber-950/30 border-l-4 border-amber-400 p-4 rounded-r-lg">
                   <div className="flex items-start gap-3">
                     <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm text-amber-800 dark:text-amber-200">
+                      <p className="text-sm text-amber-200">
                         {locationError}
                       </p>
                     </div>
@@ -499,7 +499,7 @@ export default function Garages() {
           <div className="px-4 mt-4">
             {/* Erreur */}
             {error && (
-              <div className="text-center text-red-500 mb-4 p-4 bg-red-50 dark:bg-red-950/30 rounded-xl">
+              <div className="text-center text-red-500 mb-4 p-4 bg-red-950/30 rounded-xl">
                 {error}
               </div>
             )}

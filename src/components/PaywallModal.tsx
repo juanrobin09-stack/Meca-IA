@@ -330,7 +330,7 @@ export default function PaywallModal({
           </Card>
 
           {/* Testimonial */}
-          <div className="bg-gradient-to-r from-violet-50 to-cyan-50 dark:from-violet-950/30 dark:to-cyan-950/30 rounded-lg p-3 border border-violet-200 dark:border-violet-800">
+          <div className="bg-gradient-to-r from-violet-50 from-violet-950/30 dark:to-cyan-950/30 rounded-lg p-3 border border-violet-800">
             <div className="flex items-start gap-2">
               <div className="flex text-yellow-500">
                 {[...Array(5)].map((_, i) => (
@@ -338,10 +338,10 @@ export default function PaywallModal({
                 ))}
               </div>
             </div>
-            <p className="text-xs text-violet-800 dark:text-violet-200 mt-1 italic">
+            <p className="text-xs text-violet-200 mt-1 italic">
               "{TESTIMONIALS[0].text}"
             </p>
-            <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-1 font-medium">
+            <p className="text-[10px] text-violet-400 mt-1 font-medium">
               — {TESTIMONIALS[0].name}
             </p>
           </div>

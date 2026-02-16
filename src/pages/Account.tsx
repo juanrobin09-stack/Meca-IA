@@ -328,8 +328,8 @@ export default function Account() {
                   {syncMessage && (
                     <div className={`p-3 rounded-lg text-sm ${
                       syncMessage.type === 'success'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300'
-                        : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                        ? 'bg-green-100 bg-green-950 dark:text-green-300'
+                        : 'bg-red-100 bg-red-950 dark:text-red-300'
                     }`}>
                       {syncMessage.text}
                     </div>
@@ -431,8 +431,8 @@ export default function Account() {
               {passwordMessage && (
                 <div className={`p-3 rounded-lg text-sm ${
                   passwordMessage.type === 'success'
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                    : 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300'
+                    ? 'bg-emerald-100 bg-emerald-950 dark:text-emerald-300'
+                    : 'bg-red-100 bg-red-950 dark:text-red-300'
                 }`}>
                   {passwordMessage.type === 'success' && <CheckCircle2 className="h-4 w-4 inline mr-2" />}
                   {passwordMessage.text}

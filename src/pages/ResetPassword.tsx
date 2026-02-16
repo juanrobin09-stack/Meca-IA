@@ -75,7 +75,7 @@ export default function ResetPassword() {
 
           {success ? (
             <CardContent className="space-y-4">
-              <div className="p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 text-center">
+              <div className="p-4 rounded-lg bg-emerald-950/30 text-emerald-300 text-center">
                 <CheckCircle2 className="h-12 w-12 mx-auto mb-3 text-emerald-500" />
                 <p className="font-semibold">Mot de passe mis à jour !</p>
                 <p className="text-sm mt-1">Redirection en cours...</p>

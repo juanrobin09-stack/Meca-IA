@@ -36,36 +36,36 @@ export default function ResultatAnalyseVideo({ data }: Props) {
     switch (verdict.urgence) {
       case 'critique':
         return {
-          bg: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950/50 dark:to-rose-900/30',
+          bg: 'bg-gradient-to-br from-red-50 from-red-950/50 dark:to-rose-900/30',
           border: 'border-red-500',
-          text: 'text-red-700 dark:text-red-400',
+          text: 'text-red-400',
           icon: <XCircle className="h-10 w-10 text-red-500" />,
           label: 'Problème Critique',
           emoji: '🚨'
         }
       case 'important':
         return {
-          bg: 'bg-gradient-to-br from-orange-50 to-amber-100 dark:from-orange-950/50 dark:to-amber-900/30',
+          bg: 'bg-gradient-to-br from-orange-50 from-orange-950/50 dark:to-amber-900/30',
           border: 'border-orange-500',
-          text: 'text-orange-700 dark:text-orange-400',
+          text: 'text-orange-400',
           icon: <AlertTriangle className="h-10 w-10 text-orange-500" />,
           label: 'Problème Important',
           emoji: '⚠️'
         }
       case 'moyen':
         return {
-          bg: 'bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-950/50 dark:to-amber-900/30',
+          bg: 'bg-gradient-to-br from-yellow-50 from-yellow-950/50 dark:to-amber-900/30',
           border: 'border-yellow-500',
-          text: 'text-yellow-700 dark:text-yellow-400',
+          text: 'text-yellow-400',
           icon: <Wrench className="h-10 w-10 text-yellow-500" />,
           label: 'Problème Moyen',
           emoji: '🔧'
         }
       default:
         return {
-          bg: 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950/50 dark:to-green-900/30',
+          bg: 'bg-gradient-to-br from-emerald-50 from-emerald-950/50 dark:to-green-900/30',
           border: 'border-emerald-500',
-          text: 'text-emerald-700 dark:text-emerald-400',
+          text: 'text-emerald-400',
           icon: <CheckCircle2 className="h-10 w-10 text-emerald-500" />,
           label: 'Problème Mineur',
           emoji: '✅'
@@ -175,10 +175,10 @@ export default function ResultatAnalyseVideo({ data }: Props) {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800"
+          className="flex items-center gap-2 p-3 rounded-xl bg-emerald-950/50 border border-emerald-800"
         >
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span className="text-sm text-emerald-800 dark:text-emerald-200">
+          <span className="text-sm text-emerald-200">
             <strong>Vidéo déjà analysée</strong> — Résultat identique garanti
           </span>
         </motion.div>
@@ -188,7 +188,7 @@ export default function ResultatAnalyseVideo({ data }: Props) {
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-6"
+        className="bg-gray-900 rounded-2xl shadow-lg p-6"
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
@@ -201,7 +201,7 @@ export default function ResultatAnalyseVideo({ data }: Props) {
           </div>
         </div>
 
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 mb-3">
+        <div className="w-full bg-gray-700 rounded-full h-4 mb-3">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${confiance}%` }}
@@ -247,8 +247,8 @@ export default function ResultatAnalyseVideo({ data }: Props) {
         {/* Peut-on rouler ? */}
         <div className={`p-4 rounded-xl ${
           verdict.peut_rouler
-            ? 'bg-emerald-100 dark:bg-emerald-900/30'
-            : 'bg-red-100 dark:bg-red-900/30'
+            ? 'bg-emerald-900/30'
+            : 'bg-red-900/30'
         }`}>
           <div className="flex items-center gap-3 mb-2">
             <span className="text-2xl">{verdict.peut_rouler ? '✅' : '🛑'}</span>
@@ -273,12 +273,12 @@ export default function ResultatAnalyseVideo({ data }: Props) {
 
           {verdict.risques.length > 0 && (
             <div className="mt-3">
-              <p className="font-semibold mb-2 text-sm text-red-700 dark:text-red-400">
+              <p className="font-semibold mb-2 text-sm text-red-400">
                 ⚠️ Risques si tu continues :
               </p>
               <ul className="space-y-1">
                 {verdict.risques.map((risque, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-red-700 dark:text-red-400">
+                  <li key={i} className="flex items-start gap-2 text-sm text-red-400">
                     <span>•</span>
                     <span>{risque}</span>
                   </li>
@@ -347,12 +347,12 @@ export default function ResultatAnalyseVideo({ data }: Props) {
 
                     {frame.anomalies.length > 0 && (
                       <div>
-                        <span className="text-sm text-red-600 dark:text-red-400 font-semibold">
+                        <span className="text-sm text-red-400 font-semibold">
                           ⚠️ Anomalies :
                         </span>
                         <ul className="mt-1 space-y-1">
                           {frame.anomalies.map((anom, j) => (
-                            <li key={j} className="text-sm text-red-700 dark:text-red-400 ml-4">
+                            <li key={j} className="text-sm text-red-400 ml-4">
                               • {anom}
                             </li>
                           ))}
@@ -394,7 +394,7 @@ export default function ResultatAnalyseVideo({ data }: Props) {
                 </div>
               </div>
 
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-3">
+              <div className="w-full bg-gray-700 rounded-full h-2 mb-3">
                 <div
                   className="h-2 rounded-full bg-blue-500"
                   style={{ width: `${cause.probabilite}%` }}
@@ -453,7 +453,7 @@ export default function ResultatAnalyseVideo({ data }: Props) {
             ))}
 
             {/* Coût total estimé */}
-            <div className="mt-4 p-6 bg-blue-50 dark:bg-blue-950/30 rounded-xl">
+            <div className="mt-4 p-6 bg-blue-950/30 rounded-xl">
               <h4 className="font-semibold mb-4 flex items-center gap-2">
                 <Euro className="h-5 w-5" />
                 Coût Total Estimé
@@ -484,7 +484,7 @@ export default function ResultatAnalyseVideo({ data }: Props) {
 
       {/* LIMITATIONS */}
       {synthesis.limitations_analyse && synthesis.limitations_analyse.length > 0 && (
-        <div className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 rounded-r-xl p-5">
+        <div className="bg-amber-950/30 border-l-4 border-amber-500 rounded-r-xl p-5">
           <h4 className="font-semibold mb-2 flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-600" />
             Limitations de cette analyse vidéo
@@ -502,16 +502,16 @@ export default function ResultatAnalyseVideo({ data }: Props) {
       )}
 
       {/* RECOMMANDATIONS */}
-      <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+      <Card className="bg-blue-950/30 border-blue-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-900 dark:text-blue-100">
+          <CardTitle className="flex items-center gap-2 text-blue-100">
             💡 Recommandations
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {verdict.recommandations.map((reco, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 bg-white/60 dark:bg-black/20 rounded-lg">
+              <div key={i} className="flex items-start gap-3 p-3 bg-black/20 rounded-lg">
                 <span className="text-blue-600 font-bold">{i + 1}.</span>
                 <span>{reco}</span>
               </div>

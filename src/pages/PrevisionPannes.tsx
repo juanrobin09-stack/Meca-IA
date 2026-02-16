@@ -301,7 +301,7 @@ export default function PrevisionPannes() {
             </motion.div>
 
             {/* Disclaimer */}
-            <div className="mb-6 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-sm text-amber-800 dark:text-amber-200 flex items-start gap-3">
+            <div className="mb-6 p-4 rounded-lg bg-amber-950/30 border border-amber-800 text-sm text-amber-200 flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
               <p>
                 Les prévisions sont basées sur des statistiques et l'historique de ton véhicule.
@@ -400,17 +400,17 @@ export default function PrevisionPannes() {
 
                       {/* How it works */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-                        <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg text-center">
+                        <div className="p-4 bg-blue-950 rounded-lg text-center">
                           <Gauge className="h-8 w-8 mx-auto mb-2 text-blue-600" />
                           <div className="font-medium">Analyse kilométrage</div>
                           <div className="text-sm text-muted-foreground">Usure des pièces</div>
                         </div>
-                        <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg text-center">
+                        <div className="p-4 bg-green-950 rounded-lg text-center">
                           <Calendar className="h-8 w-8 mx-auto mb-2 text-green-600" />
                           <div className="font-medium">Prédiction dates</div>
                           <div className="text-sm text-muted-foreground">Planning réparations</div>
                         </div>
-                        <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-lg text-center">
+                        <div className="p-4 bg-amber-950 rounded-lg text-center">
                           <Euro className="h-8 w-8 mx-auto mb-2 text-amber-600" />
                           <div className="font-medium">Budget prévisionnel</div>
                           <div className="text-sm text-muted-foreground">Coûts anticipés</div>
@@ -478,9 +478,9 @@ export default function PrevisionPannes() {
 
                 {/* Urgent interventions */}
                 {result.entretiensUrgents.length > 0 && (
-                  <Card className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950">
+                  <Card className="border-red-800 bg-red-950">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-red-700 dark:text-red-300">
+                      <CardTitle className="flex items-center gap-2 text-red-300">
                         <AlertTriangle className="h-5 w-5" />
                         Interventions urgentes
                       </CardTitle>
@@ -505,16 +505,16 @@ export default function PrevisionPannes() {
                     className="space-y-4"
                   >
                     {/* AI Conseil + Fiabilité */}
-                    <Card className="border-blue-200 dark:border-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950">
+                    <Card className="border-blue-800 bg-gradient-to-r from-blue-50 from-blue-950 dark:to-indigo-950">
                       <CardContent className="pt-6">
                         <div className="flex items-start gap-4">
-                          <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                          <div className="p-3 rounded-full bg-blue-900">
                             <Info className="h-6 w-6 text-blue-600" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <Search className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Analyse temps réel</span>
+                              <span className="text-sm font-medium text-blue-300">Analyse temps réel</span>
                             </div>
                             <p className="text-sm mb-3">{realTimeData.conseil_prioritaire}</p>
                             <div className="flex items-center gap-2">
@@ -536,7 +536,7 @@ export default function PrevisionPannes() {
 
                     {/* Rappels Constructeur */}
                     {realTimeData.rappels.length > 0 && (
-                      <Card className="border-orange-200 dark:border-orange-800">
+                      <Card className="border-orange-800">
                         <CardHeader className="pb-3">
                           <CardTitle className="flex items-center gap-2 text-base">
                             <AlertTriangle className="h-5 w-5 text-orange-500" />
@@ -547,7 +547,7 @@ export default function PrevisionPannes() {
                         <CardContent>
                           <div className="space-y-3">
                             {realTimeData.rappels.map((rappel, i) => (
-                              <div key={i} className="p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+                              <div key={i} className="p-3 bg-orange-950/30 rounded-lg">
                                 <div className="flex items-center justify-between gap-2 mb-1">
                                   <span className="font-medium">{rappel.titre}</span>
                                   <Badge className={
@@ -652,7 +652,7 @@ export default function PrevisionPannes() {
                                 </div>
                                 <div>
                                   <div className="font-medium text-muted-foreground mb-1">Conseil:</div>
-                                  <p className="text-blue-700 dark:text-blue-300">{pred.conseil}</p>
+                                  <p className="text-blue-300">{pred.conseil}</p>
                                 </div>
                               </div>
                             </div>

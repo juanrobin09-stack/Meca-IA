@@ -732,7 +732,7 @@ export default function SoundScan() {
             {/* ---------------------------------------------------------------- */}
             {/* DISCLAIMER                                                      */}
             {/* ---------------------------------------------------------------- */}
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2 sm:gap-3">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl bg-amber-950/30 border border-amber-800 text-xs sm:text-sm text-amber-200 flex items-start gap-2 sm:gap-3">
               <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5" />
               <p className="break-words">
                 Analyse IA à titre indicatif. Consultez un mécanicien professionnel pour confirmation du diagnostic.
@@ -939,10 +939,10 @@ export default function SoundScan() {
                         <motion.div
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-3 sm:p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-2 sm:gap-3"
+                          className="p-3 sm:p-4 bg-red-950/40 border border-red-800 rounded-xl flex items-start gap-2 sm:gap-3"
                         >
                           <MicOff className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                          <p className="text-sm text-red-700 dark:text-red-300 break-words">
+                          <p className="text-sm text-red-300 break-words">
                             {error}
                           </p>
                         </motion.div>
@@ -1010,9 +1010,9 @@ export default function SoundScan() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <Card className="bg-violet-50 dark:bg-violet-950/20 border-violet-200 dark:border-violet-800/40">
+                    <Card className="bg-violet-950/20 border-violet-800/40">
                       <CardHeader className="pb-2 sm:pb-4">
-                        <CardTitle className="text-violet-900 dark:text-violet-100 flex items-center gap-2 text-sm sm:text-base">
+                        <CardTitle className="text-violet-100 flex items-center gap-2 text-sm sm:text-base">
                           <Lightbulb className="h-4 w-4 text-violet-500" />
                           Conseils pour un bon enregistrement
                         </CardTitle>
@@ -1025,7 +1025,7 @@ export default function SoundScan() {
                               initial={{ opacity: 0, x: -10 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: 0.3 + i * 0.08 }}
-                              className="flex items-start gap-3 text-xs sm:text-sm text-violet-800 dark:text-violet-200"
+                              className="flex items-start gap-3 text-xs sm:text-sm text-violet-200"
                             >
                               <span className="text-base leading-none mt-0.5">{tip.icon}</span>
                               <span>{tip.text}</span>

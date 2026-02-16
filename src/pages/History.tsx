@@ -429,8 +429,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
           icon: CheckCircle2,
           gradient: 'from-emerald-500 to-green-600',
           color: 'text-emerald-600',
-          bg: 'bg-emerald-100 dark:bg-emerald-950/50',
-          borderColor: 'border-emerald-200 dark:border-emerald-800',
+          bg: 'bg-emerald-950/50',
+          borderColor: 'border-emerald-800',
           label: 'Bon prix',
           emoji: '✅'
         }
@@ -439,8 +439,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
           icon: AlertTriangle,
           gradient: 'from-amber-500 to-orange-500',
           color: 'text-amber-600',
-          bg: 'bg-amber-100 dark:bg-amber-950/50',
-          borderColor: 'border-amber-200 dark:border-amber-800',
+          bg: 'bg-amber-950/50',
+          borderColor: 'border-amber-800',
           label: 'Négociable',
           emoji: '⚠️'
         }
@@ -449,8 +449,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
           icon: XCircle,
           gradient: 'from-red-500 to-rose-600',
           color: 'text-red-600',
-          bg: 'bg-red-100 dark:bg-red-950/50',
-          borderColor: 'border-red-200 dark:border-red-800',
+          bg: 'bg-red-950/50',
+          borderColor: 'border-red-800',
           label: 'Trop cher',
           emoji: '🚨'
         }
@@ -459,8 +459,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
           icon: Target,
           gradient: 'from-blue-500 to-indigo-600',
           color: 'text-blue-600',
-          bg: 'bg-blue-100 dark:bg-blue-950/50',
-          borderColor: 'border-blue-200 dark:border-blue-800',
+          bg: 'bg-blue-950/50',
+          borderColor: 'border-blue-800',
           label: 'Analysé',
           emoji: '📊'
         }
@@ -724,7 +724,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
                   return (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span className="text-emerald-700 dark:text-emerald-300">{trimmedLine.replace(/✅/gu, '').trim()}</span>
+                      <span className="text-emerald-300">{trimmedLine.replace(/✅/gu, '').trim()}</span>
                     </div>
                   )
                 }
@@ -732,7 +732,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
                   return (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                      <span className="text-amber-700 dark:text-amber-300">{trimmedLine.replace(/⚠️|🔶/gu, '').trim()}</span>
+                      <span className="text-amber-300">{trimmedLine.replace(/⚠️|🔶/gu, '').trim()}</span>
                     </div>
                   )
                 }
@@ -740,7 +740,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
                   return (
                     <div key={i} className="flex items-start gap-2 py-1">
                       <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-                      <span className="text-red-700 dark:text-red-300">{trimmedLine.replace(/❌|🚫/gu, '').trim()}</span>
+                      <span className="text-red-300">{trimmedLine.replace(/❌|🚫/gu, '').trim()}</span>
                     </div>
                   )
                 }
@@ -785,7 +785,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
               size="sm"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 ml-auto"
+              className="text-red-500 hover:text-red-600 hover:bg-red-950/30 ml-auto"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -811,28 +811,28 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
       case 'critique':
         return {
           color: 'text-red-600',
-          bg: 'bg-red-100 dark:bg-red-950',
+          bg: 'bg-red-950',
           label: 'Critique',
           icon: '🚨'
         }
       case 'élevée':
         return {
           color: 'text-orange-600',
-          bg: 'bg-orange-100 dark:bg-orange-950',
+          bg: 'bg-orange-950',
           label: 'Élevée',
           icon: '⚠️'
         }
       case 'moyenne':
         return {
           color: 'text-amber-600',
-          bg: 'bg-amber-100 dark:bg-amber-950',
+          bg: 'bg-amber-950',
           label: 'Moyenne',
           icon: '⚡'
         }
       default:
         return {
           color: 'text-green-600',
-          bg: 'bg-green-100 dark:bg-green-950',
+          bg: 'bg-green-950',
           label: 'Faible',
           icon: '✅'
         }
@@ -1035,7 +1035,7 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
             <Badge variant="outline" className={urgencyStyle.color}>
               {urgencyStyle.label}
             </Badge>
-            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
+            <Badge className="bg-blue-100 bg-blue-950 dark:text-blue-400">
               {video.estimation_cout_min}€ - {video.estimation_cout_max}€
             </Badge>
           </div>
@@ -1143,8 +1143,8 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
       case 'urgent':
         return {
           color: 'text-red-600',
-          bg: 'bg-red-100 dark:bg-red-950',
-          borderColor: 'border-red-200 dark:border-red-800',
+          bg: 'bg-red-950',
+          borderColor: 'border-red-800',
           gradient: 'from-red-500 to-rose-600',
           label: 'Urgent',
           icon: '🚨'
@@ -1152,8 +1152,8 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
       case 'moyen':
         return {
           color: 'text-amber-600',
-          bg: 'bg-amber-100 dark:bg-amber-950',
-          borderColor: 'border-amber-200 dark:border-amber-800',
+          bg: 'bg-amber-950',
+          borderColor: 'border-amber-800',
           gradient: 'from-amber-500 to-orange-500',
           label: 'Moyen',
           icon: '⚠️'
@@ -1161,8 +1161,8 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
       default:
         return {
           color: 'text-green-600',
-          bg: 'bg-green-100 dark:bg-green-950',
-          borderColor: 'border-green-200 dark:border-green-800',
+          bg: 'bg-green-950',
+          borderColor: 'border-green-800',
           gradient: 'from-emerald-500 to-green-600',
           label: 'Faible',
           icon: '✅'
@@ -1542,7 +1542,7 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
                   </p>
                   <div className="space-y-1">
                     {finalDiag.tsb_found.map((tsb, i) => (
-                      <div key={i} className="text-xs bg-blue-50 dark:bg-blue-950/30 rounded p-2">
+                      <div key={i} className="text-xs bg-blue-950/30 rounded p-2">
                         <span className="font-medium">{tsb.reference}:</span> {tsb.description}
                       </div>
                     ))}
@@ -1615,7 +1615,7 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
               size="sm"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 ml-auto"
+              className="text-red-500 hover:text-red-600 hover:bg-red-950/30 ml-auto"
             >
               <Trash2 className="h-4 w-4" />
             </Button>

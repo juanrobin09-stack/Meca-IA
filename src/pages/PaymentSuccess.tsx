@@ -106,25 +106,25 @@ export default function PaymentSuccess() {
   }, [limits.isPremium, limits.loading, isPremiumConfirmed, navigate, trackSubscribe, isYearly])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white dark:from-green-950/20 dark:to-neutral-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-b from-green-50 from-green-950/20 dark:to-neutral-950 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl p-8 text-center"
+        className="max-w-md w-full bg-neutral-900 rounded-3xl shadow-2xl p-8 text-center"
       >
         {checking ? (
           <>
             <motion.div
               animate={{ scale: [1, 1.05, 1] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
-              className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6"
+              className="w-20 h-20 bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6"
             >
-              <Loader2 className="w-10 h-10 text-green-600 dark:text-green-400 animate-spin" />
+              <Loader2 className="w-10 h-10 text-green-400 animate-spin" />
             </motion.div>
-            <h1 className="text-2xl md:text-3xl font-black mb-4 text-neutral-900 dark:text-white">
+            <h1 className="text-2xl md:text-3xl font-black mb-4 text-white">
               Activation en cours...
             </h1>
-            <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+            <p className="text-neutral-400 mb-6">
               Ton compte Premium est en cours d'activation. Ca prend quelques secondes !
             </p>
             <div className="flex justify-center gap-1">
@@ -144,16 +144,16 @@ export default function PaymentSuccess() {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', bounce: 0.5 }}
-              className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6"
+              className="w-20 h-20 bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6"
             >
-              <CheckCircle2 className="w-12 h-12 text-green-600 dark:text-green-400" />
+              <CheckCircle2 className="w-12 h-12 text-green-400" />
             </motion.div>
 
             <motion.h1
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="text-2xl md:text-3xl font-black mb-4 text-neutral-900 dark:text-white"
+              className="text-2xl md:text-3xl font-black mb-4 text-white"
             >
               Paiement reussi !
             </motion.h1>
@@ -162,7 +162,7 @@ export default function PaymentSuccess() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-neutral-600 dark:text-neutral-400 mb-6"
+              className="text-neutral-400 mb-6"
             >
               Bienvenue dans MECA IA Premium ! Tous les acces illimites sont maintenant disponibles.
             </motion.p>
@@ -171,28 +171,28 @@ export default function PaymentSuccess() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 mb-6 border border-green-200 dark:border-green-800"
+              className="bg-gradient-to-r from-green-50 from-green-950/30 dark:to-emerald-950/30 rounded-xl p-4 mb-6 border border-green-800"
             >
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-green-900/50 flex items-center justify-center">
                     <Microscope className="w-4 h-4 text-green-600" />
                   </div>
-                  <span className="font-medium text-green-800 dark:text-green-200">Diagnostics illimites</span>
+                  <span className="font-medium text-green-200">Diagnostics illimites</span>
                   <CheckCircle2 className="w-4 h-4 text-green-600 ml-auto" />
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-green-900/50 flex items-center justify-center">
                     <MessageCircle className="w-4 h-4 text-green-600" />
                   </div>
-                  <span className="font-medium text-green-800 dark:text-green-200">Chat mecanicien 24/7</span>
+                  <span className="font-medium text-green-200">Chat mecanicien 24/7</span>
                   <CheckCircle2 className="w-4 h-4 text-green-600 ml-auto" />
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-green-900/50 flex items-center justify-center">
                     <FileText className="w-4 h-4 text-green-600" />
                   </div>
-                  <span className="font-medium text-green-800 dark:text-green-200">Analyses de devis illimitees</span>
+                  <span className="font-medium text-green-200">Analyses de devis illimitees</span>
                   <CheckCircle2 className="w-4 h-4 text-green-600 ml-auto" />
                 </div>
               </div>
@@ -213,7 +213,7 @@ export default function PaymentSuccess() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6 }}
-              className="text-xs text-neutral-500 dark:text-neutral-400 mt-4"
+              className="text-xs text-neutral-400 mt-4"
             >
               Redirection automatique dans quelques secondes...
             </motion.p>

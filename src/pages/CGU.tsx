@@ -28,8 +28,8 @@ export default function CGU() {
             MECAI est un service en ligne proposant des diagnostics automobiles
             assistés par intelligence artificielle.
           </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-            <p className="text-blue-800 dark:text-blue-200 text-sm">
+          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
+            <p className="text-blue-200 text-sm">
               Le service permet aux utilisateurs de décrire un problème automobile
               et d'obtenir une analyse probable des causes et solutions.
             </p>
@@ -75,8 +75,8 @@ export default function CGU() {
       title: "Limitation de responsabilité",
       badge: "Important",
       content: (
-        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-          <p className="text-amber-800 dark:text-amber-200">
+        <div className="bg-amber-900/20 border border-amber-800 rounded-lg p-4">
+          <p className="text-amber-200">
             MECAI fournit des diagnostics à titre informatif uniquement. Ces diagnostics
             ne remplacent en aucun cas l'expertise d'un mécanicien professionnel.
             MECAI décline toute responsabilité pour les dommages résultant de

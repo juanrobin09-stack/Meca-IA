@@ -20,9 +20,9 @@ export function PremiumBadge({ className = '', showLoading = false }: PremiumBad
   if (!limits.isPremium) return null
 
   return (
-    <div className={`group relative flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-500/15 to-cyan-500/15 dark:from-violet-500/20 dark:to-cyan-500/20 border border-violet-500/30 dark:border-violet-400/30 ${className}`}>
-      <Sparkles className="w-3 h-3 text-violet-500 dark:text-violet-400" />
-      <span className="text-violet-600 dark:text-violet-400 text-[11px] font-semibold tracking-wide">PREMIUM</span>
+    <div className={`group relative flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-violet-500/15 from-violet-500/20 dark:to-cyan-500/20 border border-violet-400/30 ${className}`}>
+      <Sparkles className="w-3 h-3 text-violet-400" />
+      <span className="text-violet-400 text-[11px] font-semibold tracking-wide">PREMIUM</span>
     </div>
   )
 }

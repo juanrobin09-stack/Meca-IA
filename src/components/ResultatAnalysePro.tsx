@@ -317,25 +317,25 @@ export default function ResultatAnalysePro({ data }: Props) {
     switch (verdict.statut) {
       case 'honnete':
         return {
-          bg: 'bg-gradient-to-br from-emerald-50 to-green-100 dark:from-emerald-950/50 dark:to-green-900/30',
+          bg: 'bg-gradient-to-br from-emerald-50 from-emerald-950/50 dark:to-green-900/30',
           border: 'border-emerald-500',
-          text: 'text-emerald-700 dark:text-emerald-400',
+          text: 'text-emerald-400',
           icon: <CheckCircle2 className="h-8 w-8 text-emerald-500" />,
           badge: 'bg-emerald-500'
         }
       case 'reserve':
         return {
-          bg: 'bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950/50 dark:to-orange-900/30',
+          bg: 'bg-gradient-to-br from-amber-50 from-amber-950/50 dark:to-orange-900/30',
           border: 'border-amber-500',
-          text: 'text-amber-700 dark:text-amber-400',
+          text: 'text-amber-400',
           icon: <AlertTriangle className="h-8 w-8 text-amber-500" />,
           badge: 'bg-amber-500'
         }
       case 'arnaque':
         return {
-          bg: 'bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950/50 dark:to-rose-900/30',
+          bg: 'bg-gradient-to-br from-red-50 from-red-950/50 dark:to-rose-900/30',
           border: 'border-red-500',
-          text: 'text-red-700 dark:text-red-400',
+          text: 'text-red-400',
           icon: <XCircle className="h-8 w-8 text-red-500" />,
           badge: 'bg-red-500'
         }
@@ -351,10 +351,10 @@ export default function ResultatAnalysePro({ data }: Props) {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800"
+          className="flex items-center gap-2 p-3 rounded-xl bg-emerald-950/50 border border-emerald-800"
         >
           <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-          <span className="text-sm text-emerald-800 dark:text-emerald-200">
+          <span className="text-sm text-emerald-200">
             <strong>Devis déjà analysé</strong> — Résultat identique garanti
           </span>
         </motion.div>
@@ -391,7 +391,7 @@ export default function ResultatAnalysePro({ data }: Props) {
 
         {/* Expert comment */}
         {verdict.commentaireExpert && (
-          <div className="p-4 rounded-xl bg-white/60 dark:bg-black/20 mb-6">
+          <div className="p-4 rounded-xl bg-black/20 mb-6">
             <p className="text-sm italic text-muted-foreground">
               💬 "{verdict.commentaireExpert}"
             </p>
@@ -400,15 +400,15 @@ export default function ResultatAnalysePro({ data }: Props) {
 
         {/* Stats rapides */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 text-center shadow-sm">
+          <div className="bg-gray-900 rounded-xl p-4 text-center shadow-sm">
             <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{verdict.lignesOk}</div>
             <div className="text-xs sm:text-sm text-muted-foreground">Prix corrects</div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 text-center shadow-sm">
+          <div className="bg-gray-900 rounded-xl p-4 text-center shadow-sm">
             <div className="text-2xl sm:text-3xl font-bold text-amber-600">{verdict.lignesElevees}</div>
             <div className="text-xs sm:text-sm text-muted-foreground">Prix élevés</div>
           </div>
-          <div className="bg-white dark:bg-gray-900 rounded-xl p-4 text-center shadow-sm">
+          <div className="bg-gray-900 rounded-xl p-4 text-center shadow-sm">
             <div className="text-2xl sm:text-3xl font-bold text-red-600">{verdict.lignesArnaques}</div>
             <div className="text-xs sm:text-sm text-muted-foreground">Excessifs</div>
           </div>
@@ -420,15 +420,15 @@ export default function ResultatAnalysePro({ data }: Props) {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-red-50 dark:bg-red-950/30 border-l-4 border-red-500 rounded-r-xl p-3 sm:p-5"
+          className="bg-red-950/30 border-l-4 border-red-500 rounded-r-xl p-3 sm:p-5"
         >
-          <h3 className="text-sm sm:text-lg font-bold text-red-900 dark:text-red-200 mb-2 sm:mb-3 flex items-center gap-2">
+          <h3 className="text-sm sm:text-lg font-bold text-red-200 mb-2 sm:mb-3 flex items-center gap-2">
             <XCircle className="h-4 w-4 sm:h-5 sm:w-5" />
             Alertes Graves ({alertes.graves.length})
           </h3>
           <ul className="space-y-1.5 sm:space-y-2">
             {alertes.graves.map((alerte, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-red-800 dark:text-red-300">
+              <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-red-300">
                 <span className="font-bold mt-0.5">•</span>
                 <span>{alerte}</span>
               </li>
@@ -443,15 +443,15 @@ export default function ResultatAnalysePro({ data }: Props) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500 rounded-r-xl p-3 sm:p-5"
+          className="bg-amber-950/30 border-l-4 border-amber-500 rounded-r-xl p-3 sm:p-5"
         >
-          <h3 className="text-sm sm:text-lg font-bold text-amber-900 dark:text-amber-200 mb-2 sm:mb-3 flex items-center gap-2">
+          <h3 className="text-sm sm:text-lg font-bold text-amber-200 mb-2 sm:mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
             Points d'Attention ({alertes.moyennes.length})
           </h3>
           <ul className="space-y-1.5 sm:space-y-2">
             {alertes.moyennes.map((alerte, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-amber-800 dark:text-amber-300">
+              <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-amber-300">
                 <span className="font-bold mt-0.5">•</span>
                 <span>{alerte}</span>
               </li>
@@ -508,12 +508,12 @@ export default function ResultatAnalysePro({ data }: Props) {
                     transition={{ delay: i * 0.05 }}
                     className={`rounded-xl border-2 overflow-hidden ${
                       ligne.ecart > 35
-                        ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
+                        ? 'bg-red-950/30 border-red-800'
                         : ligne.ecart > 20
-                          ? 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800'
+                          ? 'bg-orange-950/30 border-orange-800'
                           : ligne.ecart > 10
-                            ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
-                            : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800'
+                            ? 'bg-amber-950/30 border-amber-800'
+                            : 'bg-emerald-950/30 border-emerald-800'
                     }`}
                   >
                     {/* Header - Always visible */}
@@ -563,17 +563,17 @@ export default function ResultatAnalysePro({ data }: Props) {
                         >
                           <div className="px-3 pb-3 pt-0 border-t border-current/10">
                             <div className="grid grid-cols-2 gap-2 text-xs mt-2">
-                              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2">
+                              <div className="bg-black/20 rounded-lg p-2">
                                 <p className="text-muted-foreground">Prix facturé</p>
                                 <p className="font-bold text-sm">{ligne.totalTTC.toFixed(2)}€</p>
                               </div>
-                              <div className="bg-white/50 dark:bg-black/20 rounded-lg p-2">
+                              <div className="bg-black/20 rounded-lg p-2">
                                 <p className="text-muted-foreground">Prix marché</p>
                                 <p className="font-bold text-sm text-blue-600">~{ligne.prixMarche.moyenne.toFixed(2)}€</p>
                               </div>
                             </div>
                             {ligne.commentaireLigne && (
-                              <p className="text-[10px] text-amber-700 dark:text-amber-300 mt-2 bg-amber-50 dark:bg-amber-950/30 p-2 rounded">
+                              <p className="text-[10px] text-amber-300 mt-2 bg-amber-950/30 p-2 rounded">
                                 💡 {ligne.commentaireLigne}
                               </p>
                             )}
@@ -609,18 +609,18 @@ export default function ResultatAnalysePro({ data }: Props) {
                       key={i}
                       className={`border-b transition-colors ${
                         ligne.ecart > 35
-                          ? 'bg-red-50 dark:bg-red-950/20'
+                          ? 'bg-red-950/20'
                           : ligne.ecart > 20
-                            ? 'bg-orange-50 dark:bg-orange-950/20'
+                            ? 'bg-orange-950/20'
                             : ligne.ecart > 10
-                              ? 'bg-amber-50 dark:bg-amber-950/20'
-                              : 'bg-emerald-50/50 dark:bg-emerald-950/10'
+                              ? 'bg-amber-950/20'
+                              : 'bg-emerald-950/10'
                       }`}
                     >
                       <td className="py-4 px-2">
                         <div className="font-medium">{ligne.designation}</div>
                         {ligne.commentaireLigne && (
-                          <div className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                          <div className="text-xs text-amber-400 mt-1">
                             💡 {ligne.commentaireLigne}
                           </div>
                         )}
@@ -633,7 +633,7 @@ export default function ResultatAnalysePro({ data }: Props) {
                       <td className="text-right py-4 px-2 font-semibold">
                         {ligne.totalTTC.toFixed(2)}€
                       </td>
-                      <td className="text-right py-4 px-2 text-blue-600 dark:text-blue-400">
+                      <td className="text-right py-4 px-2 text-blue-400">
                         ~{ligne.prixMarche.moyenne.toFixed(2)}€
                       </td>
                       <td className="text-right py-4 px-2">
@@ -691,8 +691,8 @@ export default function ResultatAnalysePro({ data }: Props) {
           <div className="h-px bg-border" />
 
           <div className={`flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 sm:p-4 rounded-xl gap-2 ${economiesPotentielles.montant > 0
-              ? 'bg-red-50 dark:bg-red-950/30'
-              : 'bg-emerald-50 dark:bg-emerald-950/30'
+              ? 'bg-red-950/30'
+              : 'bg-emerald-950/30'
             }`}>
             <span className="font-semibold text-sm sm:text-lg flex items-center gap-2">
               {economiesPotentielles.montant > 0 ? (
@@ -722,9 +722,9 @@ export default function ResultatAnalysePro({ data }: Props) {
 
       {/* CONSEILS */}
       {economiesPotentielles.conseils && economiesPotentielles.conseils.length > 0 && (
-        <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+        <Card className="bg-blue-950/30 border-blue-800">
           <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-blue-900 dark:text-blue-100">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-base text-blue-100">
               <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5" />
               Conseils pour Économiser
             </CardTitle>
@@ -732,7 +732,7 @@ export default function ResultatAnalysePro({ data }: Props) {
           <CardContent className="px-3 sm:px-6 pt-0">
             <ul className="space-y-1.5 sm:space-y-2">
               {economiesPotentielles.conseils.map((conseil, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-blue-800 dark:text-blue-200">
+                <li key={i} className="flex items-start gap-2 text-xs sm:text-sm text-blue-200">
                   <span className="text-blue-500 mt-0.5 flex-shrink-0">💡</span>
                   <span>{conseil}</span>
                 </li>

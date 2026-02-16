@@ -317,14 +317,14 @@ export default function Chat() {
         bottom: 0,
         display: 'flex',
         flexDirection: 'column'
-      }} className="md:ml-64 bg-white dark:bg-neutral-950">
+      }} className="md:ml-64 bg-neutral-950">
 
         {/* HEADER */}
         <div style={{
           flexShrink: 0,
           padding: '12px 16px',
           paddingTop: 'max(env(safe-area-inset-top), 12px)'
-        }} className="bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+        }} className="bg-neutral-950 border-b border-neutral-800">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '768px', margin: '0 auto' }}>
             {/* Back button (mobile) */}
             <button
@@ -340,7 +340,7 @@ export default function Chat() {
                 justifyContent: 'center',
                 fontSize: 16
               }}
-              className="md:hidden bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+              className="md:hidden bg-neutral-800 text-neutral-300"
             >←</button>
 
             {/* Avatar */}
@@ -368,8 +368,8 @@ export default function Chat() {
 
             {/* Name */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600 }} className="text-neutral-900 dark:text-white">Diagnostic Pro</div>
-              <div style={{ fontSize: 12 }} className="text-neutral-500 dark:text-neutral-400">Expert auto • En ligne</div>
+              <div style={{ fontSize: 16, fontWeight: 600 }} className="text-white">Diagnostic Pro</div>
+              <div style={{ fontSize: 12 }} className="text-neutral-400">Expert auto • En ligne</div>
             </div>
 
             {/* Counter */}
@@ -379,7 +379,7 @@ export default function Chat() {
               fontSize: 12,
               fontWeight: 500,
               whiteSpace: 'nowrap'
-            }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+            }} className="bg-neutral-800 text-neutral-300">
               {isPremium ? '∞' : `${currentRemaining}/2 diag`}
               {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
             </div>
@@ -395,9 +395,9 @@ export default function Chat() {
                 padding: '6px 12px',
                 borderRadius: 999,
                 fontSize: 12
-              }} className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400">
+              }} className="bg-emerald-950/50 border border-emerald-800 text-emerald-400">
                 ✓ {scannedVehicle.brand} {scannedVehicle.model} • {scannedVehicle.year}
-                <button onClick={() => setScannedVehicle(null)} className="text-emerald-600 dark:text-emerald-400" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
+                <button onClick={() => setScannedVehicle(null)} className="text-emerald-400" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>×</button>
               </div>
             </div>
           )}
@@ -424,8 +424,8 @@ export default function Chat() {
                 }}>
                   <img src="/logo-icon.svg" alt="Meca IA" style={{ width: '100%', height: '100%' }} />
                 </div>
-                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }} className="text-neutral-900 dark:text-white">Comment puis-je t'aider ?</h2>
-                <p style={{ marginBottom: 24 }} className="text-neutral-500 dark:text-neutral-400">Décris ton problème auto</p>
+                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }} className="text-white">Comment puis-je t'aider ?</h2>
+                <p style={{ marginBottom: 24 }} className="text-neutral-400">Décris ton problème auto</p>
 
                 {/* Scan plate button */}
                 {!scannedVehicle && (
@@ -442,7 +442,7 @@ export default function Chat() {
                       alignItems: 'center',
                       gap: 6
                     }}
-                    className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                    className="bg-neutral-800 text-neutral-300"
                   >
                     📷 Scanner ma plaque
                   </button>
@@ -466,10 +466,10 @@ export default function Chat() {
                         alignItems: 'center',
                         gap: 12
                       }}
-                      className="bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                      className="bg-neutral-800 hover:bg-neutral-700"
                     >
                       <span style={{ fontSize: 18 }}>{q.icon}</span>
-                      <span style={{ fontSize: 14 }} className="text-neutral-700 dark:text-neutral-300">{q.text}</span>
+                      <span style={{ fontSize: 14 }} className="text-neutral-300">{q.text}</span>
                     </button>
                   ))}
                 </div>
@@ -498,10 +498,10 @@ export default function Chat() {
                     }}>
                       <img src="/logo-icon.svg" alt="Meca IA" style={{ width: '100%', height: '100%' }} />
                     </div>
-                    <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', gap: 4 }} className="bg-neutral-100 dark:bg-neutral-800">
-                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
-                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
-                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
+                    <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', gap: 4 }} className="bg-neutral-800">
+                      <div className="bounce-dot bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
+                      <div className="bounce-dot bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
+                      <div className="bounce-dot bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 )}
@@ -584,7 +584,7 @@ export default function Chat() {
           flexShrink: 0,
           padding: '12px 16px',
           paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
-        }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:pb-4">
+        }} className="bg-neutral-950 border-t border-neutral-800 md:pb-4">
           <div style={{ maxWidth: '768px', margin: '0 auto' }}>
             {/* Image preview */}
             {selectedImage && (
@@ -633,7 +633,7 @@ export default function Chat() {
                     flexShrink: 0,
                     opacity: (isLoading || photosUsed >= MAX_PHOTOS_PER_CONVERSATION) ? 0.4 : 1
                   }}
-                  className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                  className="bg-neutral-800 text-neutral-300"
                 >+</button>
 
                 {/* Textarea */}
@@ -662,7 +662,7 @@ export default function Chat() {
                     fontFamily: 'inherit',
                     opacity: isLoading ? 0.5 : 1
                   }}
-                  className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
+                  className="bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-500"
                 />
 
                 {/* Send button */}
@@ -691,7 +691,7 @@ export default function Chat() {
               </div>
             </form>
 
-            <p style={{ fontSize: 10, textAlign: 'center', marginTop: 8 }} className="text-neutral-400 dark:text-neutral-500">
+            <p style={{ fontSize: 10, textAlign: 'center', marginTop: 8 }} className="text-neutral-500">
               Diagnostics à titre indicatif uniquement
             </p>
           </div>

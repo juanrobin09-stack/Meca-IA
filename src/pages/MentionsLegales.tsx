@@ -56,8 +56,8 @@ export default function MentionsLegales() {
             MECAI est un service d'aide au diagnostic automobile utilisant
             l'intelligence artificielle.
           </p>
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-            <p className="text-amber-800 dark:text-amber-200 text-sm">
+          <div className="bg-amber-900/20 border border-amber-800 rounded-lg p-3">
+            <p className="text-amber-200 text-sm">
               Les informations fournies sont données à titre indicatif et ne remplacent pas
               l'avis d'un professionnel qualifié. MECAI ne peut être tenu responsable des
               décisions prises sur la base des diagnostics fournis.

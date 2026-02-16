@@ -440,18 +440,18 @@ export default function DiagnosticPro() {
         bottom: 0,
         display: 'flex',
         flexDirection: 'column'
-      }} className="md:ml-64 bg-white dark:bg-neutral-950">
+      }} className="md:ml-64 bg-neutral-950">
 
         {/* HEADER */}
         <div style={{
           flexShrink: 0,
           paddingTop: 'max(env(safe-area-inset-top), 8px)'
-        }} className="px-3 py-2 md:px-4 md:py-3 bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+        }} className="px-3 py-2 md:px-4 md:py-3 bg-neutral-950 border-b border-neutral-800">
           <div className="flex items-center gap-2 md:gap-3 max-w-[900px] mx-auto">
             {/* Back button (mobile) */}
             <button
               onClick={() => navigate('/app')}
-              className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-sm bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+              className="md:hidden w-8 h-8 rounded-full flex items-center justify-center text-sm bg-neutral-800 text-neutral-300"
             >←</button>
 
             {/* Avatar */}
@@ -462,15 +462,15 @@ export default function DiagnosticPro() {
                 }}>
                 <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-neutral-950"></div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-neutral-950"></div>
             </div>
 
             {/* Title */}
             <div className="flex-1 min-w-0">
-              <div className="text-sm md:text-base font-bold flex items-center gap-1.5 text-neutral-900 dark:text-white">
+              <div className="text-sm md:text-base font-bold flex items-center gap-1.5 text-white">
                 <span className="truncate">Diagnostic PRO</span>
               </div>
-              <div className="text-[10px] md:text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+              <div className="text-[10px] md:text-xs text-neutral-400 flex items-center gap-1">
                 <span>Expert auto</span>
                 {sourcesCount > 0 && (
                   <span className="text-emerald-500">• {sourcesCount} sources</span>
@@ -480,11 +480,11 @@ export default function DiagnosticPro() {
 
             {/* Counter */}
             {isPremium ? (
-              <div className="px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40">
+              <div className="px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap text-violet-400 bg-violet-950/40">
                 Illimité
               </div>
             ) : (
-              <div className="px-2 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              <div className="px-2 py-1 rounded-full text-[10px] md:text-xs font-medium whitespace-nowrap bg-neutral-800 text-neutral-300">
                 {currentRemaining}/2
                 {currentPurchasedCredits > 0 && <span className="text-emerald-500"> +{currentPurchasedCredits}</span>}
               </div>
@@ -493,14 +493,14 @@ export default function DiagnosticPro() {
             {/* History button */}
             <button
               onClick={() => { loadSessions(); setShowHistory(!showHistory) }}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-sm md:text-base bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+              className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-sm md:text-base bg-neutral-800 hover:bg-neutral-700 transition-colors"
               title="Historique"
             >🕒</button>
 
             {/* New session button */}
             <button
               onClick={startNewSession}
-              className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-lg md:text-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:opacity-90 transition-opacity"
+              className="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-lg md:text-xl bg-white text-neutral-900 hover:opacity-90 transition-opacity"
               title="Nouvelle conversation"
             >+</button>
           </div>
@@ -519,14 +519,14 @@ export default function DiagnosticPro() {
             display: 'flex',
             flexDirection: 'column',
             boxShadow: '-4px 0 16px rgba(0,0,0,0.15)'
-          }} className="bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
-            <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-neutral-200 dark:border-neutral-800">
-              <span style={{ fontWeight: 600 }} className="text-neutral-900 dark:text-white">Historique</span>
-              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">×</button>
+          }} className="bg-neutral-900 border-l border-neutral-800">
+            <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-neutral-800">
+              <span style={{ fontWeight: 600 }} className="text-white">Historique</span>
+              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-400 hover:text-white">×</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
               {sessions.length === 0 ? (
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-8">Aucune conversation</p>
+                <p className="text-sm text-neutral-400 text-center py-8">Aucune conversation</p>
               ) : (
                 sessions.map(session => (
                   <button
@@ -541,13 +541,13 @@ export default function DiagnosticPro() {
                       cursor: 'pointer',
                       marginBottom: 4
                     }}
-                    className={sessionId === session.id ? 'bg-violet-50 dark:bg-violet-950/30' : 'bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800'}
+                    className={sessionId === session.id ? 'bg-violet-950/30' : 'bg-transparent hover:bg-neutral-800'}
                   >
-                    <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="text-neutral-900 dark:text-white">
+                    <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="text-white">
                       {session.title || 'Nouvelle conversation'}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${session.status === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${session.status === 'completed' ? 'bg-emerald-900/30 text-emerald-400' : 'bg-amber-900/30 text-amber-400'}`}>
                         {session.status === 'completed' ? 'Terminé' : 'En cours'}
                       </span>
                       <span className="text-[10px] text-neutral-400">
@@ -582,10 +582,10 @@ export default function DiagnosticPro() {
                   }}>
                   <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
                 </div>
-                <h2 className="text-lg md:text-[22px] font-bold mb-1 md:mb-2 text-neutral-900 dark:text-white">
+                <h2 className="text-lg md:text-[22px] font-bold mb-1 md:mb-2 text-white">
                   Diagnostic
                 </h2>
-                <p className="text-xs md:text-sm max-w-[300px] md:max-w-[400px] mx-auto mb-4 md:mb-6 text-neutral-500 dark:text-neutral-400">
+                <p className="text-xs md:text-sm max-w-[300px] md:max-w-[400px] mx-auto mb-4 md:mb-6 text-neutral-400">
                   Analyse approfondie avec TSB, prix vérifiés et rapport complet
                 </p>
 
@@ -599,7 +599,7 @@ export default function DiagnosticPro() {
                   ].map((feature, i) => (
                     <div
                       key={i}
-                      className="py-2 px-2.5 md:py-2.5 md:px-3 rounded-lg flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] bg-violet-50 dark:bg-violet-950/30 text-violet-700 dark:text-violet-400"
+                      className="py-2 px-2.5 md:py-2.5 md:px-3 rounded-lg flex items-center gap-1.5 md:gap-2 text-[11px] md:text-[13px] bg-violet-950/30 text-violet-400"
                     >
                       <span>{feature.icon}</span>
                       <span>{feature.text}</span>
@@ -616,10 +616,10 @@ export default function DiagnosticPro() {
                     <button
                       key={i}
                       onClick={() => setInput(q.text)}
-                      className="w-full py-2.5 px-3 md:py-3.5 md:px-4 mb-1.5 md:mb-2 rounded-xl text-left flex items-center gap-2 md:gap-3 transition-transform bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 active:scale-[0.98]"
+                      className="w-full py-2.5 px-3 md:py-3.5 md:px-4 mb-1.5 md:mb-2 rounded-xl text-left flex items-center gap-2 md:gap-3 transition-transform bg-neutral-800 hover:bg-neutral-700 active:scale-[0.98]"
                     >
                       <span className="text-base md:text-xl">{q.icon}</span>
-                      <span className="text-xs md:text-sm text-neutral-700 dark:text-neutral-300">{q.text}</span>
+                      <span className="text-xs md:text-sm text-neutral-300">{q.text}</span>
                     </button>
                   ))}
                 </div>
@@ -642,7 +642,7 @@ export default function DiagnosticPro() {
                         message.role === 'assistant' ? 'rounded-bl-sm' : 'rounded-br-sm'
                       } ${message.role === 'user'
                         ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white'
-                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200'
+                        : 'bg-neutral-800 text-neutral-200'
                       }`}
                     >
                       {/* Images */}
@@ -671,17 +671,17 @@ export default function DiagnosticPro() {
                     <div className="w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden flex-shrink-0">
                       <img src="/logo-icon.svg" alt="Meca IA" className="w-full h-full" />
                     </div>
-                    <div className="px-3 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800">
+                    <div className="px-3 py-2 md:px-4 md:py-3 rounded-2xl flex items-center gap-2 bg-neutral-800">
                       {searching ? (
                         <>
                           <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
-                          <span className="text-violet-600 dark:text-violet-400 text-xs md:text-sm">Recherche...</span>
+                          <span className="text-violet-400 text-xs md:text-sm">Recherche...</span>
                         </>
                       ) : (
                         <>
-                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-400 dark:bg-neutral-500"></div>
-                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-400 dark:bg-neutral-500" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-400 dark:bg-neutral-500" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-500"></div>
+                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-500" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="bounce-dot w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-neutral-500" style={{ animationDelay: '0.2s' }}></div>
                         </>
                       )}
                     </div>
@@ -725,7 +725,7 @@ export default function DiagnosticPro() {
           flexShrink: 0,
           padding: '12px 16px',
           paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
-        }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:p-4 md:pb-4">
+        }} className="bg-neutral-950 border-t border-neutral-800 md:p-4 md:pb-4">
           <div style={{ maxWidth: '900px', margin: '0 auto' }}>
             {/* Images preview */}
             {selectedImages.length > 0 && (
@@ -790,7 +790,7 @@ export default function DiagnosticPro() {
                     justifyContent: 'center',
                     opacity: (loading || selectedImages.length >= MAX_IMAGES) ? 0.4 : 1
                   }}
-                  className="w-10 h-10 md:w-12 md:h-12 text-lg md:text-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                  className="w-10 h-10 md:w-12 md:h-12 text-lg md:text-xl bg-neutral-800 text-neutral-300"
                 >📷</button>
 
                 {/* Textarea */}
@@ -817,7 +817,7 @@ export default function DiagnosticPro() {
                     fontFamily: 'inherit',
                     opacity: loading ? 0.5 : 1
                   }}
-                  className="p-2.5 md:p-3 min-h-[40px] md:min-h-[48px] bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
+                  className="p-2.5 md:p-3 min-h-[40px] md:min-h-[48px] bg-neutral-900 border border-neutral-700 text-white placeholder-neutral-500"
                 />
 
                 {/* Send button */}
@@ -844,7 +844,7 @@ export default function DiagnosticPro() {
               </div>
             </form>
 
-            <p className="text-[9px] md:text-[10px] text-center mt-1.5 md:mt-2 text-neutral-400 dark:text-neutral-500">
+            <p className="text-[9px] md:text-[10px] text-center mt-1.5 md:mt-2 text-neutral-500">
               Diagnostic PRO • À titre indicatif
             </p>
           </div>

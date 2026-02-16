@@ -388,8 +388,8 @@ export default function AnalyseDevis() {
               <div className="flex items-center gap-1.5 sm:gap-2">
                 {devisList.length > 0 && (
                   <Link to="/app/history?tab=devis">
-                    <Button variant="outline" size="sm" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30">
-                      <History className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-violet-600 dark:text-violet-400" />
+                    <Button variant="outline" size="sm" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm border-violet-800 hover:bg-violet-950/30">
+                      <History className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-violet-400" />
                       <span className="hidden sm:inline">Historique ({devisList.length})</span>
                       <span className="sm:hidden">{devisList.length}</span>
                     </Button>
@@ -421,13 +421,13 @@ export default function AnalyseDevis() {
           </motion.div>
 
           {/* Disclaimer - Violet tinted glass */}
-          <div className="mb-6 p-4 rounded-xl glass-card bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border border-violet-200 dark:border-violet-800 text-sm text-violet-800 dark:text-violet-200 flex items-start gap-3">
+          <div className="mb-6 p-4 rounded-xl glass-card bg-gradient-to-r from-violet-50 from-violet-950/30 dark:to-purple-950/30 border border-violet-800 text-sm text-violet-200 flex items-start gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shrink-0 mt-0.5">
               <Shield className="h-4 w-4 text-white" />
             </div>
             <div>
               <p className="font-medium mb-1">Analyse professionnelle garantie</p>
-              <p className="text-violet-700 dark:text-violet-300">
+              <p className="text-violet-300">
                 Prix comparés aux tarifs marché 2026.
               </p>
             </div>
@@ -450,7 +450,7 @@ export default function AnalyseDevis() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="flex items-center gap-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-sm"
+                  className="flex items-center gap-2 p-3 rounded-lg bg-emerald-950/30 border border-emerald-800 text-emerald-300 text-sm"
                 >
                   <CheckCircle2 className="h-4 w-4" />
                   <span>Analyse sauvegardée dans ton historique</span>
@@ -464,15 +464,15 @@ export default function AnalyseDevis() {
 
               {/* Original Quote Preview */}
               {selectedFile?.dataUrl && (
-                <Card className="glass-card border-violet-200/50 dark:border-violet-800/50">
+                <Card className="glass-card border-violet-800/50">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <FileText className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+                      <FileText className="h-5 w-5 text-violet-400" />
                       Devis original
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="rounded-xl overflow-hidden border-2 border-dashed border-violet-200 dark:border-violet-800 bg-violet-50/30 dark:bg-violet-950/20">
+                    <div className="rounded-xl overflow-hidden border-2 border-dashed border-violet-800 bg-violet-950/20">
                       <img
                         src={selectedFile.dataUrl}
                         alt="Devis original"
@@ -486,7 +486,7 @@ export default function AnalyseDevis() {
               {/* New Analysis Button */}
               <Button
                 variant="outline"
-                className="w-full border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:border-violet-400 dark:hover:border-violet-600 transition-all"
+                className="w-full border-violet-800 hover:bg-violet-950/30 hover:border-violet-600 transition-all"
                 onClick={reset}
               >
                 Analyser un autre devis
@@ -495,7 +495,7 @@ export default function AnalyseDevis() {
           )}
 
           {!analysisResult && (
-            <Card className="glass-card border-violet-200/50 dark:border-violet-800/50 shadow-lg shadow-violet-500/5">
+            <Card className="glass-card border-violet-800/50 shadow-lg shadow-violet-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center">
@@ -527,7 +527,7 @@ export default function AnalyseDevis() {
 
                 {/* Preview if file selected */}
                 {selectedFile ? (
-                  <div className="border-2 border-dashed border-violet-300 dark:border-violet-700 rounded-xl p-6 text-center bg-violet-50/30 dark:bg-violet-950/20">
+                  <div className="border-2 border-dashed border-violet-700 rounded-xl p-6 text-center bg-violet-950/20">
                     <img
                       src={selectedFile.dataUrl}
                       alt="Devis"
@@ -537,19 +537,19 @@ export default function AnalyseDevis() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+                        className="border-violet-800 hover:bg-violet-950/30"
                         onClick={() => cameraInputRef.current?.click()}
                       >
-                        <Camera className="h-4 w-4 mr-2 text-violet-600 dark:text-violet-400" />
+                        <Camera className="h-4 w-4 mr-2 text-violet-400" />
                         Reprendre
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30"
+                        className="border-violet-800 hover:bg-violet-950/30"
                         onClick={() => galleryInputRef.current?.click()}
                       >
-                        <ImageIcon className="h-4 w-4 mr-2 text-violet-600 dark:text-violet-400" />
+                        <ImageIcon className="h-4 w-4 mr-2 text-violet-400" />
                         Changer
                       </Button>
                     </div>
@@ -560,7 +560,7 @@ export default function AnalyseDevis() {
                     <div className="grid grid-cols-2 gap-3">
                       <Button
                         variant="outline"
-                        className="h-32 flex-col gap-3 border-2 border-dashed border-violet-200 dark:border-violet-800 hover:border-violet-400 dark:hover:border-violet-600 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-all"
+                        className="h-32 flex-col gap-3 border-2 border-dashed border-violet-800 hover:border-violet-600 hover:bg-violet-950/30 transition-all"
                         onClick={() => cameraInputRef.current?.click()}
                       >
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
@@ -570,7 +570,7 @@ export default function AnalyseDevis() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-32 flex-col gap-3 border-2 border-dashed border-violet-200 dark:border-violet-800 hover:border-cyan-400 dark:hover:border-cyan-600 hover:bg-cyan-50/50 dark:hover:bg-cyan-950/30 transition-all"
+                        className="h-32 flex-col gap-3 border-2 border-dashed border-violet-800 hover:border-cyan-600 hover:bg-cyan-950/30 transition-all"
                         onClick={() => galleryInputRef.current?.click()}
                       >
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/25">
@@ -586,7 +586,7 @@ export default function AnalyseDevis() {
                 ) : (
                   /* Desktop: Click zone with glass styling */
                   <div
-                    className="border-2 border-dashed border-violet-200 dark:border-violet-800 rounded-xl p-8 text-center cursor-pointer hover:border-violet-400 dark:hover:border-violet-600 hover:bg-violet-50/50 dark:hover:bg-violet-950/20 transition-all group"
+                    className="border-2 border-dashed border-violet-800 rounded-xl p-8 text-center cursor-pointer hover:border-violet-600 hover:bg-violet-950/20 transition-all group"
                     onClick={() => galleryInputRef.current?.click()}
                   >
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/25 group-hover:shadow-violet-500/40 transition-shadow">
@@ -599,7 +599,7 @@ export default function AnalyseDevis() {
 
                 {/* Error state - red tinted glass */}
                 {error && (
-                  <div className="p-3 rounded-lg glass-card bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
+                  <div className="p-3 rounded-lg glass-card bg-red-950/30 border border-red-800 text-sm text-red-300">
                     {error}
                   </div>
                 )}
@@ -634,7 +634,7 @@ export default function AnalyseDevis() {
 
           {/* Tips - Glass card style */}
           {!analysisResult && (
-            <Card className="mt-8 glass-card border-violet-200/50 dark:border-violet-800/50">
+            <Card className="mt-8 glass-card border-violet-800/50">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center">

@@ -123,27 +123,27 @@ export default function Pieces() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-white dark:bg-neutral-950">
+      <div className="min-h-screen bg-neutral-950">
         <Sidebar />
 
         <main className="md:pl-64">
           <div className="min-h-screen pb-20 md:pb-0">
             {/* Header */}
-            <header className="border-b border-neutral-100 dark:border-neutral-900 bg-white dark:bg-neutral-950 sticky top-0 z-10">
+            <header className="border-b border-neutral-900 bg-neutral-950 sticky top-0 z-10">
               <div className="px-4 py-3">
                 <div className="max-w-3xl mx-auto flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => navigate('/app')}
-                      className="md:hidden p-2 -ml-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+                      className="md:hidden p-2 -ml-2 rounded-full hover:bg-neutral-900 transition-colors"
                     >
-                      <ArrowLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
+                      <ArrowLeft className="h-5 w-5 text-neutral-400" />
                     </button>
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
                         <ShoppingCart className="h-4 w-4 text-white" />
                       </div>
-                      <span className="font-medium text-neutral-900 dark:text-white">Pièces Auto</span>
+                      <span className="font-medium text-white">Pièces Auto</span>
                     </div>
                   </div>
                 </div>
@@ -161,7 +161,7 @@ export default function Pieces() {
                     value={piece}
                     onChange={(e) => setPiece(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="w-full h-12 pl-4 pr-12 text-base bg-neutral-100 dark:bg-neutral-900 border-0 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full h-12 pl-4 pr-12 text-base bg-neutral-900 border-0 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                   <Button
                     onClick={handleSearch}
@@ -176,7 +176,7 @@ export default function Pieces() {
                 {/* Filters */}
                 <div className="flex gap-2">
                   <Select value={marque || '_all'} onValueChange={(val) => setMarque(val === '_all' ? '' : val)}>
-                    <SelectTrigger className="flex-1 h-10 text-sm border-0 bg-neutral-100 dark:bg-neutral-900 rounded-xl">
+                    <SelectTrigger className="flex-1 h-10 text-sm border-0 bg-neutral-900 rounded-xl">
                       <SelectValue placeholder="Marque" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -195,7 +195,7 @@ export default function Pieces() {
                     value={modele}
                     onChange={(e) => setModele(e.target.value)}
                     onKeyDown={handleKeyPress}
-                    className="flex-1 h-10 px-3 text-sm bg-neutral-100 dark:bg-neutral-900 border-0 rounded-xl text-neutral-900 dark:text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="flex-1 h-10 px-3 text-sm bg-neutral-900 border-0 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
               </div>
@@ -213,12 +213,12 @@ export default function Pieces() {
                       <button
                         key={p.nom}
                         onClick={() => handleQuickSearch(p.nom)}
-                        className={`p-3 text-left text-sm bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 ${
+                        className={`p-3 text-left text-sm bg-neutral-900 hover:bg-neutral-800 rounded-xl transition-colors flex items-center gap-2 ${
                           piece === p.nom ? 'ring-2 ring-emerald-500' : ''
                         }`}
                       >
                         <span>{p.icon}</span>
-                        <span className="truncate text-neutral-700 dark:text-neutral-300">{p.nom}</span>
+                        <span className="truncate text-neutral-300">{p.nom}</span>
                       </button>
                     ))}
                   </div>
@@ -230,7 +230,7 @@ export default function Pieces() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mb-6 p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl flex items-center gap-2 text-sm text-red-600 dark:text-red-400"
+                  className="mb-6 p-3 bg-red-950/30 border border-red-900 rounded-xl flex items-center gap-2 text-sm text-red-400"
                 >
                   <AlertCircle className="h-4 w-4 flex-shrink-0" />
                   {error}
@@ -255,7 +255,7 @@ export default function Pieces() {
                   >
                     {results.length === 0 ? (
                       <div className="text-center py-12">
-                        <Package className="h-12 w-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-3" />
+                        <Package className="h-12 w-12 text-neutral-700 mx-auto mb-3" />
                         <p className="text-neutral-500">Aucun résultat trouvé</p>
                         <p className="text-sm text-neutral-400 mt-1">Essaie avec d'autres mots-clés</p>
                       </div>
@@ -286,7 +286,7 @@ export default function Pieces() {
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: index * 0.05 }}
-                              className="block p-4 bg-neutral-50 dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-xl transition-all group"
+                              className="block p-4 bg-neutral-900 hover:bg-neutral-800 rounded-xl transition-all group"
                             >
                               <div className="flex items-start gap-3">
                                 {/* Site Badge */}
@@ -300,7 +300,7 @@ export default function Pieces() {
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm font-medium text-neutral-900 dark:text-white line-clamp-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                      <p className="text-sm font-medium text-white line-clamp-2 group-hover:text-emerald-400 transition-colors">
                                         {result.title}
                                       </p>
                                       <p className="text-xs text-neutral-500 mt-1 line-clamp-2">
@@ -311,11 +311,11 @@ export default function Pieces() {
                                   </div>
 
                                   <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-[10px] font-medium px-2 py-0.5 bg-neutral-200 dark:bg-neutral-800 rounded-full text-neutral-600 dark:text-neutral-400">
+                                    <span className="text-[10px] font-medium px-2 py-0.5 bg-neutral-800 rounded-full text-neutral-400">
                                       {result.site}
                                     </span>
                                     {result.price && (
-                                      <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                      <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1">
                                         <Tag className="h-3 w-3" />
                                         {result.price}
                                       </span>
@@ -339,12 +339,12 @@ export default function Pieces() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-8 p-4 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl"
+                  className="mt-8 p-4 bg-emerald-950/20 border border-emerald-800/40 rounded-xl"
                 >
-                  <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300 mb-2">
+                  <p className="text-sm font-medium text-emerald-300 mb-2">
                     💡 Conseils
                   </p>
-                  <ul className="text-xs text-emerald-700 dark:text-emerald-400 space-y-1">
+                  <ul className="text-xs text-emerald-400 space-y-1">
                     <li>• Vérifie la compatibilité avec ton véhicule (année, motorisation)</li>
                     <li>• Compare les prix entre plusieurs sites</li>
                     <li>• Privilégie les marques équipementiers (Bosch, Valeo, SKF...)</li>

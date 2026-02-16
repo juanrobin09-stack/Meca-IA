@@ -18,8 +18,8 @@ export default function DisclaimerBox({
       className={`
         flex items-start gap-3 p-4 rounded-lg text-sm
         ${isWarning
-          ? 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'
-          : 'bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200'
+          ? 'bg-amber-950/30 border border-amber-800 text-amber-200'
+          : 'bg-blue-950/30 border border-blue-800 text-blue-200'
         }
         ${className}
       `}

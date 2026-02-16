@@ -53,15 +53,15 @@ export function UpgradeCTA({
 
   // Style selon urgence
   const getGradient = () => {
-    if (isUrgent) return 'from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30'
-    if (isLow) return 'from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30'
-    return 'from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30'
+    if (isUrgent) return 'from-orange-50 from-orange-950/30 dark:to-red-950/30'
+    if (isLow) return 'from-amber-50 from-amber-950/30 dark:to-orange-950/30'
+    return 'from-blue-50 from-blue-950/30 dark:to-indigo-950/30'
   }
 
   const getBorderColor = () => {
-    if (isUrgent) return 'border-orange-200 dark:border-orange-800'
-    if (isLow) return 'border-amber-200 dark:border-amber-800'
-    return 'border-blue-200 dark:border-blue-800'
+    if (isUrgent) return 'border-orange-800'
+    if (isLow) return 'border-amber-800'
+    return 'border-blue-800'
   }
 
   const getIconColor = () => {
@@ -71,15 +71,15 @@ export function UpgradeCTA({
   }
 
   const getTextColor = () => {
-    if (isUrgent) return 'text-orange-900 dark:text-orange-100'
-    if (isLow) return 'text-amber-900 dark:text-amber-100'
-    return 'text-blue-900 dark:text-blue-100'
+    if (isUrgent) return 'text-orange-100'
+    if (isLow) return 'text-amber-100'
+    return 'text-blue-100'
   }
 
   const getSubtitleColor = () => {
-    if (isUrgent) return 'text-orange-700 dark:text-orange-300'
-    if (isLow) return 'text-amber-700 dark:text-amber-300'
-    return 'text-blue-700 dark:text-blue-300'
+    if (isUrgent) return 'text-orange-300'
+    if (isLow) return 'text-amber-300'
+    return 'text-blue-300'
   }
 
   return (
@@ -96,7 +96,7 @@ export function UpgradeCTA({
         {/* Icon */}
         <div className={`
           w-10 h-10 rounded-full flex items-center justify-center shrink-0
-          ${isUrgent ? 'bg-orange-100 dark:bg-orange-900/50' : isLow ? 'bg-amber-100 dark:bg-amber-900/50' : 'bg-blue-100 dark:bg-blue-900/50'}
+          ${isUrgent ? 'bg-orange-900/50' : isLow ? 'bg-amber-900/50' : 'bg-blue-900/50'}
         `}>
           {isUrgent ? (
             <Zap className={`h-5 w-5 ${getIconColor()}`} />
@@ -136,9 +136,9 @@ export function UpgradeCTA({
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="mt-3 pt-3 border-t border-orange-200 dark:border-orange-800"
+          className="mt-3 pt-3 border-t border-orange-800"
         >
-          <div className="flex flex-wrap gap-3 text-xs text-orange-700 dark:text-orange-300">
+          <div className="flex flex-wrap gap-3 text-xs text-orange-300">
             <div className="flex items-center gap-1">
               <Shield className="h-3.5 w-3.5" />
               <span>Diagnostics illimités</span>

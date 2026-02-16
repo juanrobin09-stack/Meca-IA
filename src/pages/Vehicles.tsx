@@ -235,12 +235,12 @@ export default function Vehicles() {
             </div>
 
             {!canAddVehicle && (
-              <Card className="p-4 mb-6 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+              <Card className="p-4 mb-6 bg-amber-50 bg-amber-900/20 dark:border-amber-800">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
                   <div className="flex-1">
-                    <p className="font-medium text-amber-800 dark:text-amber-200">Limite atteinte</p>
-                    <p className="text-sm text-amber-600 dark:text-amber-300">
+                    <p className="font-medium text-amber-200">Limite atteinte</p>
+                    <p className="text-sm text-amber-300">
                       {isPremium ? 'Tu as atteint la limite de 5 véhicules.' : 'Passe en Premium pour ajouter plus de véhicules.'}
                     </p>
                   </div>
@@ -259,8 +259,8 @@ export default function Vehicles() {
                 <Card key={vehicle.id} className="p-4 md:p-6">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3 md:gap-4 min-w-0">
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center shrink-0">
-                        <Car className="h-5 w-5 md:h-6 md:w-6 text-blue-600 dark:text-blue-400" />
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-900 rounded-full flex items-center justify-center shrink-0">
+                        <Car className="h-5 w-5 md:h-6 md:w-6 text-blue-400" />
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-semibold text-base md:text-lg truncate">{vehicle.name}</h3>

@@ -113,9 +113,9 @@ export default function Confidentialite() {
             { right: "Opposition", desc: "Refuser certains traitements" },
             { right: "Limitation", desc: "Limiter l'utilisation" },
           ].map((item, i) => (
-            <div key={i} className="flex items-start gap-2 bg-green-50 dark:bg-green-900/20 rounded-lg px-3 py-2">
+            <div key={i} className="flex items-start gap-2 bg-green-900/20 rounded-lg px-3 py-2">
               <Badge className="bg-green-600 shrink-0 mt-0.5">{item.right}</Badge>
-              <span className="text-sm text-green-800 dark:text-green-200">{item.desc}</span>
+              <span className="text-sm text-green-200">{item.desc}</span>
             </div>
           ))}
         </div>
@@ -131,13 +131,13 @@ export default function Confidentialite() {
             Gérez vos préférences via le bandeau cookies.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
-              <p className="font-medium text-green-800 dark:text-green-200 text-sm">Essentiels</p>
-              <p className="text-xs text-green-700 dark:text-green-300">Authentification, préférences</p>
+            <div className="bg-green-900/20 border border-green-800 rounded-lg p-3">
+              <p className="font-medium text-green-200 text-sm">Essentiels</p>
+              <p className="text-xs text-green-300">Authentification, préférences</p>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-              <p className="font-medium text-blue-800 dark:text-blue-200 text-sm">Analytiques</p>
-              <p className="text-xs text-blue-700 dark:text-blue-300">Avec consentement uniquement</p>
+            <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
+              <p className="font-medium text-blue-200 text-sm">Analytiques</p>
+              <p className="text-xs text-blue-300">Avec consentement uniquement</p>
             </div>
           </div>
         </div>
@@ -225,11 +225,11 @@ export default function Confidentialite() {
 
         {/* RGPD Badge */}
         <div className="container max-w-4xl mx-auto px-4 pt-6">
-          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-green-900/20 border border-green-800 rounded-lg p-4 flex items-center gap-3">
             <Shield className="h-8 w-8 text-green-600" />
             <div>
-              <p className="font-semibold text-green-800 dark:text-green-200">Conforme RGPD</p>
-              <p className="text-sm text-green-700 dark:text-green-300">
+              <p className="font-semibold text-green-200">Conforme RGPD</p>
+              <p className="text-sm text-green-300">
                 Règlement Général sur la Protection des Données (UE) 2016/679
               </p>
             </div>

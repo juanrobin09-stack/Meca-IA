@@ -62,11 +62,11 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
       >
-        <Card className="w-full max-w-md p-8 relative bg-white dark:bg-gray-800">
+        <Card className="w-full max-w-md p-8 relative bg-gray-800">
           {/* Skip button */}
           <button
             onClick={handleSkip}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-300 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -88,8 +88,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               >
                 <Icon className="h-8 w-8 text-white" />
               </motion.div>
-              <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">{step.title}</h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-8">{step.description}</p>
+              <h2 className="text-2xl font-bold mb-3 text-white">{step.title}</h2>
+              <p className="text-gray-300 mb-8">{step.description}</p>
             </motion.div>
           </AnimatePresence>
 
@@ -99,7 +99,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
               <motion.div
                 key={index}
                 className={`h-2 rounded-full transition-all ${
-                  index === currentStep ? 'bg-blue-600 w-6' : 'bg-gray-300 dark:bg-gray-600 w-2'
+                  index === currentStep ? 'bg-blue-600 w-6' : 'bg-gray-600 w-2'
                 }`}
                 layoutId="progress"
               />

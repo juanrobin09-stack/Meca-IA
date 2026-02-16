@@ -423,7 +423,7 @@ export default function DiagnosticVideo() {
             </motion.div>
 
             {/* Disclaimer - Glass card amber tinted */}
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl glass-card border-amber-300/30 dark:border-amber-700/30 text-xs sm:text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2 sm:gap-3" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(245,158,11,0.04) 100%)' }}>
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl glass-card border-amber-700/30 text-xs sm:text-sm text-amber-200 flex items-start gap-2 sm:gap-3" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(245,158,11,0.04) 100%)' }}>
               <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-amber-500" />
               <p className="break-words">
                 Analyse IA à titre indicatif. Consultez un mécanicien pour confirmation.
@@ -433,7 +433,7 @@ export default function DiagnosticVideo() {
             {!result ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Upload/Record Card */}
-                <Card className="glass-card border-white/10 dark:border-white/5">
+                <Card className="glass-card border-white/5">
                   <CardHeader className="pb-2 sm:pb-4">
                     <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                       <FileVideo className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
@@ -503,9 +503,9 @@ export default function DiagnosticVideo() {
 
                     {/* Error */}
                     {error && (
-                      <div className="p-3 sm:p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-xl flex items-start gap-2 sm:gap-3">
+                      <div className="p-3 sm:p-4 bg-red-950 border border-red-800 rounded-xl flex items-start gap-2 sm:gap-3">
                         <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm text-red-700 dark:text-red-300 break-words">{error}</p>
+                        <p className="text-sm text-red-300 break-words">{error}</p>
                       </div>
                     )}
 
@@ -536,7 +536,7 @@ export default function DiagnosticVideo() {
                                 size="lg"
                                 variant="outline"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-full sm:w-auto text-sm sm:text-base py-3 glass border-violet-200/30 dark:border-violet-700/30 hover:border-violet-400/50 dark:hover:border-violet-500/50"
+                                className="w-full sm:w-auto text-sm sm:text-base py-3 glass border-violet-700/30 hover:border-violet-500/50"
                               >
                                 <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                                 Importer
@@ -553,7 +553,7 @@ export default function DiagnosticVideo() {
                         <Button
                           variant="outline"
                           onClick={resetRecording}
-                          className="w-full sm:w-auto glass border-violet-200/30 dark:border-violet-700/30 hover:border-violet-400/50 dark:hover:border-violet-500/50"
+                          className="w-full sm:w-auto glass border-violet-700/30 hover:border-violet-500/50"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           Changer de vidéo
@@ -569,7 +569,7 @@ export default function DiagnosticVideo() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <Card className="glass-card border-white/10 dark:border-white/5">
+                    <Card className="glass-card border-white/5">
                       <CardHeader className="pb-2 sm:pb-4">
                         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                           <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
@@ -621,15 +621,15 @@ export default function DiagnosticVideo() {
                 )}
 
                 {/* Tips - Violet tinted glass card */}
-                <Card className="glass-card border-violet-200/30 dark:border-violet-700/20" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(124,58,237,0.03) 100%)' }}>
+                <Card className="glass-card border-violet-700/20" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(124,58,237,0.03) 100%)' }}>
                   <CardHeader className="pb-2 sm:pb-4">
-                    <CardTitle className="text-violet-900 dark:text-violet-100 flex items-center gap-2 text-sm sm:text-base">
+                    <CardTitle className="text-violet-100 flex items-center gap-2 text-sm sm:text-base">
                       <Lightbulb className="h-4 w-4 text-violet-500" />
                       Conseils
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-violet-800 dark:text-violet-200">
+                    <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-violet-200">
                       <li className="flex items-start gap-2">
                         <span className="text-violet-500">-</span>
                         <span>Filme de près (20-50cm)</span>
@@ -667,7 +667,7 @@ export default function DiagnosticVideo() {
                   <Button
                     variant="outline"
                     onClick={resetRecording}
-                    className="glass border-violet-200/30 dark:border-violet-700/30 hover:border-violet-400/50 dark:hover:border-violet-500/50 transition-all duration-300"
+                    className="glass border-violet-700/30 hover:border-violet-500/50 transition-all duration-300"
                   >
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Nouveau diagnostic vidéo
