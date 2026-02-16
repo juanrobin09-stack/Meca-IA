@@ -5,7 +5,7 @@ export function useDarkMode() {
     if (typeof window === 'undefined') return false;
     const saved = localStorage.getItem('mecaia_dark_mode');
     if (saved !== null) return saved === 'true';
-    return false; // Mode clair par défaut
+    return true; // Mode sombre par défaut
   });
 
   useEffect(() => {
