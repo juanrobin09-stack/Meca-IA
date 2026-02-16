@@ -11,7 +11,6 @@ const Landing = lazy(() => import('@/pages/Landing'))
 const Login = lazy(() => import('@/pages/Login'))
 const Signup = lazy(() => import('@/pages/Signup'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
-const Chat = lazy(() => import('@/pages/Chat'))
 const History = lazy(() => import('@/pages/History'))
 const Account = lazy(() => import('@/pages/Account'))
 const Success = lazy(() => import('@/pages/Success'))
@@ -25,8 +24,7 @@ const NotFound = lazy(() => import('@/pages/NotFound'))
 const Pricing = lazy(() => import('@/pages/Pricing'))
 const Vehicles = lazy(() => import('@/pages/Vehicles'))
 const DiagnosticVideo = lazy(() => import('@/pages/DiagnosticVideo'))
-const DiagnosticPro = lazy(() => import('@/pages/DiagnosticPro'))
-const PrevisionPannes = lazy(() => import('@/pages/PrevisionPannes'))
+const SoundScan = lazy(() => import('@/pages/SoundScan'))
 const MechanicChat = lazy(() => import('@/pages/MechanicChat'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'))
@@ -40,7 +38,7 @@ const Onboarding = lazy(() => import('@/components/Onboarding'))
 const CookieBanner = lazy(() => import('@/components/CookieBanner'))
 const TikTokPixel = lazy(() => import('@/components/analytics/TikTokPixel'))
 
-// Memoized AuthRedirect pour éviter re-renders inutiles
+// Memoized AuthRedirect
 const AuthRedirect = memo(function AuthRedirect({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
 
@@ -59,16 +57,14 @@ const AuthRedirect = memo(function AuthRedirect({ children }: { children: React.
 const OnboardingWrapper = memo(function OnboardingWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
 
-  // Compute initial state synchronously to avoid setState in effect
   const shouldShowInitially = user && localStorage.getItem('mecaia_show_onboarding') === 'true'
   const [showOnboarding, setShowOnboarding] = useState(shouldShowInitially)
 
   useEffect(() => {
-    // Only update if user changes and we need to show onboarding
     if (user && localStorage.getItem('mecaia_show_onboarding') === 'true' && !showOnboarding) {
       setShowOnboarding(true) // eslint-disable-line react-hooks/set-state-in-effect
     } else if (!user && showOnboarding) {
-      setShowOnboarding(false)  
+      setShowOnboarding(false)
     }
   }, [user, showOnboarding])
 
@@ -133,22 +129,6 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/chat"
-              element={
-                <ProtectedRoute>
-                  <Chat />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/chat/:id"
-              element={
-                <ProtectedRoute>
-                  <Chat />
                 </ProtectedRoute>
               }
             />
@@ -225,18 +205,10 @@ export default function App() {
               }
             />
             <Route
-              path="/app/diagnostic-pro"
+              path="/app/sound-scan"
               element={
                 <ProtectedRoute>
-                  <DiagnosticPro />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/app/prevision-pannes"
-              element={
-                <ProtectedRoute>
-                  <PrevisionPannes />
+                  <SoundScan />
                 </ProtectedRoute>
               }
             />
@@ -272,6 +244,12 @@ export default function App() {
             <Route path="/mentions-legales" element={<MentionsLegales />} />
             <Route path="/cgu" element={<CGU />} />
             <Route path="/confidentialite" element={<Confidentialite />} />
+
+            {/* Redirects for removed routes */}
+            <Route path="/app/chat" element={<Navigate to="/app/mechanic-chat" replace />} />
+            <Route path="/app/chat/:id" element={<Navigate to="/app/mechanic-chat" replace />} />
+            <Route path="/app/diagnostic-pro" element={<Navigate to="/app" replace />} />
+            <Route path="/app/prevision-pannes" element={<Navigate to="/app" replace />} />
 
             {/* 404 */}
             <Route path="*" element={<NotFound />} />

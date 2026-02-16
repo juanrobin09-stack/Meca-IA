@@ -272,7 +272,7 @@ export default function PaywallModal({
               <span>Paiement sécurisé</span>
             </div>
             <div className="flex items-center gap-1">
-              <Users className="h-3.5 w-3.5 text-blue-600" />
+              <Users className="h-3.5 w-3.5 text-violet-600" />
               <span>500+ utilisateurs</span>
             </div>
           </div>
@@ -280,12 +280,12 @@ export default function PaywallModal({
           {/* Premium Option */}
           <Card className="border-primary ring-2 ring-primary relative overflow-hidden">
             {/* Badge promo */}
-            <div className="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">
+            <div className="absolute top-0 right-0 bg-gradient-to-r from-violet-600 to-cyan-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">
               OFFRE LIMITEE
             </div>
             <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-6">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
                 <CardTitle className="text-base sm:text-lg">Premium</CardTitle>
               </div>
               <div className="text-xl sm:text-2xl font-bold">
@@ -307,7 +307,7 @@ export default function PaywallModal({
                 ))}
               </ul>
               <Button
-                className="w-full text-sm sm:text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                className="w-full text-sm sm:text-base bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600"
                 onClick={() => handlePurchase(STRIPE_PRICES.PREMIUM_MONTHLY, true)}
                 disabled={loading !== null}
               >
@@ -330,7 +330,7 @@ export default function PaywallModal({
           </Card>
 
           {/* Testimonial */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
+          <div className="bg-gradient-to-r from-violet-50 to-cyan-50 dark:from-violet-950/30 dark:to-cyan-950/30 rounded-lg p-3 border border-violet-200 dark:border-violet-800">
             <div className="flex items-start gap-2">
               <div className="flex text-yellow-500">
                 {[...Array(5)].map((_, i) => (
@@ -338,10 +338,10 @@ export default function PaywallModal({
                 ))}
               </div>
             </div>
-            <p className="text-xs text-blue-800 dark:text-blue-200 mt-1 italic">
+            <p className="text-xs text-violet-800 dark:text-violet-200 mt-1 italic">
               "{TESTIMONIALS[0].text}"
             </p>
-            <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 font-medium">
+            <p className="text-[10px] text-violet-600 dark:text-violet-400 mt-1 font-medium">
               — {TESTIMONIALS[0].name}
             </p>
           </div>

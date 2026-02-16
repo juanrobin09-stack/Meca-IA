@@ -24,19 +24,13 @@ export default function Logo({
 
   const s = sizes[size]
 
-  // Gradient IDs uniques pour éviter les conflits (useId génère un ID stable)
   const uniqueId = useId()
   const gradientId = `mecai-grad-${uniqueId}`
 
-  // Couleurs selon variant
-  const textColor = variant === 'dark' ? 'white' : '#0f172a'
-  const badgeColors = variant === 'dark'
-    ? { start: '#fb923c', mid: '#fb7185', end: '#60a5fa' }
-    : { start: '#f97316', mid: '#f43f5e', end: '#3b82f6' }
+  const textColor = variant === 'dark' ? 'white' : undefined
 
   const logoContent = (
     <div className={`flex items-center gap-2 ${className}`}>
-      {/* Badge M avec gradient */}
       <svg
         width={s.iconSize}
         height={s.iconSize}
@@ -47,9 +41,9 @@ export default function Logo({
       >
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={badgeColors.start} />
-            <stop offset="50%" stopColor={badgeColors.mid} />
-            <stop offset="100%" stopColor={badgeColors.end} />
+            <stop offset="0%" stopColor="#7C3AED" />
+            <stop offset="50%" stopColor="#A855F7" />
+            <stop offset="100%" stopColor="#06B6D4" />
           </linearGradient>
         </defs>
         <rect width="24" height="24" rx="6" fill={`url(#${gradientId})`} />
@@ -66,10 +60,9 @@ export default function Logo({
         </text>
       </svg>
 
-      {/* Texte MECAI */}
       {showText && (
         <span
-          className={`font-extrabold tracking-tight ${
+          className={`font-extrabold tracking-tight text-foreground ${
             size === 'sm' ? 'text-lg' : size === 'md' ? 'text-xl' : 'text-2xl'
           }`}
           style={{ color: textColor, letterSpacing: '-0.02em' }}

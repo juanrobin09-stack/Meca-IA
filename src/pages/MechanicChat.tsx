@@ -292,30 +292,27 @@ export default function MechanicChat() {
         bottom: 0,
         display: 'flex',
         flexDirection: 'column'
-      }} className="md:ml-64 bg-white dark:bg-neutral-950">
+      }} className="md:ml-64 bg-neutral-950">
 
         {/* HEADER */}
         <div style={{
           flexShrink: 0,
           padding: '12px 16px',
           paddingTop: 'max(env(safe-area-inset-top), 12px)'
-        }} className="bg-white dark:bg-neutral-950 border-b border-neutral-200 dark:border-neutral-800">
+        }} className="bg-neutral-950/80 backdrop-blur-xl border-b border-white/[0.06]">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '768px', margin: '0 auto' }}>
             {/* Avatar */}
-            <div style={{
-              position: 'relative',
-              flexShrink: 0
-            }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
               <div style={{
                 width: 40,
                 height: 40,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 100%)',
+                background: 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 20,
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: '0 0 20px rgba(124,58,237,0.3)'
               }}>🔧</div>
               <div style={{
                 position: 'absolute',
@@ -323,16 +320,15 @@ export default function MechanicChat() {
                 right: -2,
                 width: 12,
                 height: 12,
-                backgroundColor: '#22c55e',
                 borderRadius: '50%',
-                border: '2px solid #fff'
-              }}></div>
+                border: '2px solid #0a0a0a'
+              }} className="bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.6)]"></div>
             </div>
 
             {/* Name */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 16, fontWeight: 600 }} className="text-neutral-900 dark:text-white">Alex</div>
-              <div style={{ fontSize: 12 }} className="text-neutral-500 dark:text-neutral-400">Ton mécanicien • En ligne</div>
+              <div className="text-white text-base font-semibold tracking-tight">Alex</div>
+              <div className="text-violet-400/80 text-xs">Mécanicien IA Expert</div>
             </div>
 
             {/* Counter */}
@@ -343,7 +339,7 @@ export default function MechanicChat() {
                 fontSize: 11,
                 fontWeight: 500,
                 whiteSpace: 'nowrap'
-              }} className="bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400">
+              }} className="bg-violet-500/10 text-violet-400 border border-violet-500/20">
                 Illimité
               </div>
             ) : (
@@ -353,7 +349,7 @@ export default function MechanicChat() {
                 fontSize: 12,
                 fontWeight: 500,
                 whiteSpace: 'nowrap'
-              }} className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              }} className="bg-white/[0.06] text-neutral-400 border border-white/[0.06]">
                 {messagesRemaining !== null ? `${messagesRemaining}/10` : '...'}
                 {purchasedCredits > 0 && <span className="text-emerald-500"> +{purchasedCredits}</span>}
               </div>
@@ -373,7 +369,7 @@ export default function MechanicChat() {
                 justifyContent: 'center',
                 fontSize: 16
               }}
-              className="bg-neutral-100 dark:bg-neutral-800"
+              className="bg-white/[0.06] backdrop-blur-sm border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
             >🕒</button>
 
             {/* New chat button */}
@@ -388,9 +384,12 @@ export default function MechanicChat() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 20
+                fontSize: 20,
+                background: 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)',
+                color: '#fff',
+                boxShadow: '0 0 16px rgba(124,58,237,0.3)'
               }}
-              className="bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
+              className="hover:opacity-90 transition-opacity"
             >+</button>
           </div>
 
@@ -404,11 +403,10 @@ export default function MechanicChat() {
                   height: 32,
                   padding: '0 12px',
                   borderRadius: 999,
-                  border: 'none',
                   fontSize: 12,
                   cursor: 'pointer'
                 }}
-                className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                className="bg-white/[0.06] backdrop-blur-sm border border-white/[0.08] text-neutral-300 appearance-auto"
               >
                 <option value="">Aucun véhicule</option>
                 {vehicles.map(v => <option key={v.id} value={v.id}>{v.brand} {v.model} ({v.year})</option>)}
@@ -429,11 +427,12 @@ export default function MechanicChat() {
             zIndex: 50,
             display: 'flex',
             flexDirection: 'column',
-            boxShadow: '-4px 0 12px rgba(0,0,0,0.1)'
-          }} className="bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800">
-            <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-neutral-200 dark:border-neutral-800">
-              <span style={{ fontWeight: 600 }} className="text-neutral-900 dark:text-white">Historique</span>
-              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-600 dark:text-neutral-400">×</button>
+            boxShadow: '-8px 0 32px rgba(0,0,0,0.4)',
+            animation: 'slideInRight 0.2s ease-out'
+          }} className="bg-neutral-900/95 backdrop-blur-xl border-l border-white/[0.06]">
+            <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-white/[0.06]">
+              <span className="text-white font-semibold">Historique</span>
+              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-500 hover:text-white transition-colors">×</button>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
               {conversations.map(conv => (
@@ -449,9 +448,11 @@ export default function MechanicChat() {
                     cursor: 'pointer',
                     marginBottom: 4
                   }}
-                  className={currentConversation?.id === conv.id ? 'bg-neutral-100 dark:bg-neutral-800' : 'bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800'}
+                  className={currentConversation?.id === conv.id
+                    ? 'bg-violet-500/15 border border-violet-500/20 text-white'
+                    : 'bg-transparent hover:bg-white/[0.06] text-neutral-300 transition-colors'}
                 >
-                  <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="text-neutral-900 dark:text-white">
+                  <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {conv.title || 'Nouvelle conversation'}
                   </div>
                 </button>
@@ -477,39 +478,38 @@ export default function MechanicChat() {
               /* Empty State */
               <div style={{ textAlign: 'center', paddingTop: '10vh' }}>
                 <div style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 16,
-                  background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 100%)',
+                  width: 80,
+                  height: 80,
+                  borderRadius: 24,
+                  background: 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 32,
-                  margin: '0 auto 16px',
-                  boxShadow: '0 8px 24px rgba(249,115,22,0.3)'
+                  fontSize: 40,
+                  margin: '0 auto 20px',
+                  boxShadow: '0 12px 40px rgba(124,58,237,0.35), 0 0 60px rgba(124,58,237,0.15)'
                 }}>🔧</div>
-                <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }} className="text-neutral-900 dark:text-white">Salut, c'est Alex !</h2>
-                <p style={{ marginBottom: 24 }} className="text-neutral-500 dark:text-neutral-400">Ton pote mécanicien, dispo 24h/24</p>
+                <h2 className="text-white text-2xl font-bold tracking-tight mb-1">Salut, c'est Alex !</h2>
+                <p className="text-neutral-500 text-base mb-8">Ton pote mécanicien, dispo 24h/24</p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, maxWidth: 320, margin: '0 auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, maxWidth: 340, margin: '0 auto' }}>
                   {QUICK_ACTIONS.map((action, i) => (
                     <button
                       key={i}
                       onClick={() => sendMessage(action.message)}
                       style={{
-                        padding: 12,
-                        border: 'none',
-                        borderRadius: 12,
+                        padding: '14px 12px',
+                        borderRadius: 14,
                         cursor: 'pointer',
                         textAlign: 'left',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 8
+                        gap: 10
                       }}
-                      className="bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                      className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm hover:bg-white/[0.08] hover:border-violet-500/30 transition-all duration-200 group"
                     >
-                      <span>{action.icon}</span>
-                      <span style={{ fontSize: 13 }} className="text-neutral-700 dark:text-neutral-300">{action.label}</span>
+                      <span style={{ fontSize: 18, width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-violet-500/10">{action.icon}</span>
+                      <span className="text-neutral-300 text-sm group-hover:text-white transition-colors">{action.label}</span>
                     </button>
                   ))}
                 </div>
@@ -534,14 +534,16 @@ export default function MechanicChat() {
                         width: 32,
                         height: 32,
                         borderRadius: '50%',
-                        background: msg.sender === 'ai' ? 'linear-gradient(135deg, #f97316 0%, #f43f5e 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)',
+                        background: msg.sender === 'ai'
+                          ? 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)'
+                          : 'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: 14,
                         flexShrink: 0
                       }}>
-                        {msg.sender === 'ai' ? '🔧' : <span style={{ color: '#fff', fontWeight: 500 }}>{user?.email?.[0]?.toUpperCase() || 'U'}</span>}
+                        {msg.sender === 'ai' ? '🔧' : <span style={{ color: '#fff', fontWeight: 600, fontSize: 13 }}>{user?.email?.[0]?.toUpperCase() || 'U'}</span>}
                       </div>
 
                       {/* Bubble */}
@@ -551,7 +553,9 @@ export default function MechanicChat() {
                         fontSize: 15,
                         lineHeight: 1.5,
                         wordBreak: 'break-word'
-                      }} className={msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white'}>
+                      }} className={msg.sender === 'user'
+                        ? 'bg-gradient-to-br from-violet-600 to-violet-500 text-white'
+                        : 'bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm text-neutral-100'}>
                         {msg.sender === 'ai' ? (
                           <ReactMarkdown
                             components={{
@@ -575,16 +579,16 @@ export default function MechanicChat() {
                       width: 32,
                       height: 32,
                       borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 100%)',
+                      background: 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 14
                     }}>🔧</div>
-                    <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', gap: 4 }} className="bg-neutral-100 dark:bg-neutral-800">
-                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
-                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
-                      <div className="bounce-dot bg-neutral-400 dark:bg-neutral-500" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
+                    <div style={{ padding: '12px 16px', borderRadius: 16, display: 'flex', gap: 4 }} className="bg-white/[0.06] border border-white/[0.08] backdrop-blur-sm">
+                      <div className="bounce-dot bg-violet-400" style={{ width: 8, height: 8, borderRadius: '50%' }}></div>
+                      <div className="bounce-dot bg-violet-400" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.1s' }}></div>
+                      <div className="bounce-dot bg-violet-400" style={{ width: 8, height: 8, borderRadius: '50%', animationDelay: '0.2s' }}></div>
                     </div>
                   </div>
                 )}
@@ -600,12 +604,12 @@ export default function MechanicChat() {
           flexShrink: 0,
           padding: '12px 16px',
           paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
-        }} className="bg-white dark:bg-neutral-950 border-t border-neutral-200 dark:border-neutral-800 md:pb-4">
+        }} className="bg-neutral-950/80 backdrop-blur-xl border-t border-white/[0.06] md:pb-4">
           <div style={{ maxWidth: '768px', margin: '0 auto' }}>
             {/* Image preview */}
             {selectedImage && (
               <div style={{ marginBottom: 8, position: 'relative', display: 'inline-block' }}>
-                <img src={selectedImage.dataUrl} alt="Preview" style={{ height: 80, borderRadius: 8 }} />
+                <img src={selectedImage.dataUrl} alt="Preview" style={{ height: 80, borderRadius: 12 }} className="border-2 border-violet-500/40" />
                 <button
                   onClick={() => setSelectedImage(null)}
                   style={{
@@ -649,7 +653,7 @@ export default function MechanicChat() {
                   flexShrink: 0,
                   opacity: (isTyping || photosUsed >= MAX_PHOTOS_PER_CONVERSATION) ? 0.4 : 1
                 }}
-                className="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+                className="bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors"
               >📷</button>
 
               <textarea
@@ -676,7 +680,7 @@ export default function MechanicChat() {
                   outline: 'none',
                   fontFamily: 'inherit'
                 }}
-                className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 dark:placeholder-neutral-500"
+                className="bg-white/[0.04] border border-white/[0.08] text-white placeholder-neutral-500 focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/30 transition-all"
               />
 
               <button
@@ -686,7 +690,7 @@ export default function MechanicChat() {
                   width: 48,
                   height: 48,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #f97316 0%, #f43f5e 100%)',
+                  background: 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)',
                   border: 'none',
                   color: '#fff',
                   fontSize: 18,
@@ -696,7 +700,7 @@ export default function MechanicChat() {
                   cursor: 'pointer',
                   opacity: ((!inputMessage.trim() && !selectedImage) || isTyping) ? 0.5 : 1,
                   flexShrink: 0,
-                  boxShadow: '0 4px 12px rgba(249,115,22,0.3)'
+                  boxShadow: '0 4px 16px rgba(124,58,237,0.35)'
                 }}
               >
                 {isTyping ? '⏳' : '➤'}
@@ -707,16 +711,6 @@ export default function MechanicChat() {
       </div>
 
       <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} mode="chat" />
-
-      <style>{`
-        .bounce-dot {
-          animation: bounce 0.6s ease-in-out infinite;
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-6px); }
-        }
-      `}</style>
     </>
   )
 }

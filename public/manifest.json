@@ -1,11 +1,11 @@
 {
-  "name": "MECAI - Ton Expert Auto par IA",
+  "name": "MECAI - L'IA qui comprend ta voiture",
   "short_name": "MECAI",
-  "description": "Ton mécanicien de poche. Diagnostic auto par IA en 2 minutes.",
+  "description": "Diagnostic auto intelligent par IA. Scanne ton devis, filme ton problème, parle à un mécanicien IA expert.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#f43f5e",
+  "background_color": "#09090b",
+  "theme_color": "#7C3AED",
   "orientation": "portrait-primary",
   "icons": [
     {

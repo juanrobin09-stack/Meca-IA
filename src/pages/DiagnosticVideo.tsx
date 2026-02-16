@@ -327,46 +327,48 @@ export default function DiagnosticVideo() {
   if (!isPremium) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-muted/40">
+        <div className="min-h-screen gradient-mesh">
           <Sidebar />
           <main className="md:pl-64">
             <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 md:pb-8 max-w-4xl">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 text-white rounded-3xl p-8 md:p-12 text-center"
+                className="glass-card rounded-3xl p-8 md:p-12 text-center"
               >
-                <div className="text-7xl mb-6">🎥</div>
-                <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-600 mb-6">
+                  <Video className="h-10 w-10 text-white" />
+                </div>
+                <h1 className="text-3xl md:text-4xl font-bold mb-4 gradient-primary-text">
                   Diagnostic Vidéo IA Pro
                 </h1>
-                <p className="text-xl mb-8 opacity-90">
+                <p className="text-xl mb-8 text-muted-foreground">
                   Fonctionnalité Premium Exclusive
                 </p>
 
-                <div className="bg-white/20 backdrop-blur rounded-2xl p-6 mb-8 max-w-lg mx-auto">
-                  <p className="text-lg mb-4">
+                <div className="glass-card rounded-2xl p-6 mb-8 max-w-lg mx-auto">
+                  <p className="text-lg mb-4 font-medium">
                     Filme ton problème, notre IA analyse la vidéo image par image
                   </p>
                   <ul className="text-left space-y-3 max-w-md mx-auto">
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-300 flex-shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-violet-500 flex-shrink-0" />
                       <span>Analyse frame par frame avec Vision IA</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-300 flex-shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-violet-500 flex-shrink-0" />
                       <span>Détection anomalies visuelles précises</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-300 flex-shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-violet-500 flex-shrink-0" />
                       <span>Diagnostic expert avec prix réels 2026</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-300 flex-shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-violet-500 flex-shrink-0" />
                       <span>Niveau de confiance du diagnostic</span>
                     </li>
                     <li className="flex items-center gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-300 flex-shrink-0" />
+                      <CheckCircle2 className="h-5 w-5 text-violet-500 flex-shrink-0" />
                       <span>Même vidéo = Même résultat garanti</span>
                     </li>
                   </ul>
@@ -374,7 +376,7 @@ export default function DiagnosticVideo() {
 
                 <Button
                   size="lg"
-                  className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-6 text-lg font-bold"
+                  className="bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700 text-white px-8 py-6 text-lg font-bold shadow-glow-sm transition-all duration-300 hover:shadow-glow"
                   onClick={() => setShowPaywall(true)}
                 >
                   <Sparkles className="h-5 w-5 mr-2" />
@@ -398,7 +400,7 @@ export default function DiagnosticVideo() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-muted/40">
+      <div className="min-h-screen bg-background">
         <Sidebar />
 
         <main className="md:pl-64">
@@ -409,18 +411,20 @@ export default function DiagnosticVideo() {
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
-                <Video className="h-6 w-6 sm:h-8 sm:w-8 text-primary flex-shrink-0" />
+                <div className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-600">
+                  <Video className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                </div>
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Diagnostic Vidéo IA</h1>
-                <Badge variant="premium" className="text-[10px] sm:text-xs">✨ Premium</Badge>
+                <Badge className="text-[10px] sm:text-xs border-transparent bg-gradient-to-r from-violet-500 via-purple-500 to-cyan-500 text-white shadow-sm">Premium</Badge>
               </div>
               <p className="text-sm sm:text-base text-muted-foreground">
                 Vision IA • Détection anomalies • Résultat garanti
               </p>
             </motion.div>
 
-            {/* Disclaimer - Compact on mobile */}
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs sm:text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2 sm:gap-3">
-              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5" />
+            {/* Disclaimer - Glass card amber tinted */}
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl glass-card border-amber-300/30 dark:border-amber-700/30 text-xs sm:text-sm text-amber-800 dark:text-amber-200 flex items-start gap-2 sm:gap-3" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(245,158,11,0.04) 100%)' }}>
+              <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 shrink-0 mt-0.5 text-amber-500" />
               <p className="break-words">
                 Analyse IA à titre indicatif. Consultez un mécanicien pour confirmation.
               </p>
@@ -429,10 +433,10 @@ export default function DiagnosticVideo() {
             {!result ? (
               <div className="space-y-4 sm:space-y-6">
                 {/* Upload/Record Card */}
-                <Card>
+                <Card className="glass-card border-white/10 dark:border-white/5">
                   <CardHeader className="pb-2 sm:pb-4">
                     <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                      <FileVideo className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <FileVideo className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
                       Vidéo du problème
                     </CardTitle>
                     <CardDescription className="text-xs sm:text-sm">
@@ -440,28 +444,28 @@ export default function DiagnosticVideo() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4 sm:space-y-6">
-                    {/* Instructions - Compact 2x2 grid on mobile */}
+                    {/* Instructions - Glass card style boxes */}
                     <div className="grid grid-cols-4 gap-2 sm:gap-3 text-center text-xs sm:text-sm">
-                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                      <div className="p-2 sm:p-3 glass-card rounded-lg sm:rounded-xl">
                         <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">🎥</div>
                         <div className="font-medium text-[10px] sm:text-sm">10-30s</div>
                       </div>
-                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                      <div className="p-2 sm:p-3 glass-card rounded-lg sm:rounded-xl">
                         <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">📍</div>
                         <div className="font-medium text-[10px] sm:text-sm">20-50cm</div>
                       </div>
-                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                      <div className="p-2 sm:p-3 glass-card rounded-lg sm:rounded-xl">
                         <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">💡</div>
                         <div className="font-medium text-[10px] sm:text-sm">Lumière</div>
                       </div>
-                      <div className="p-2 sm:p-3 bg-muted rounded-lg sm:rounded-xl">
+                      <div className="p-2 sm:p-3 glass-card rounded-lg sm:rounded-xl">
                         <div className="text-lg sm:text-2xl mb-0.5 sm:mb-1">📱</div>
                         <div className="font-medium text-[10px] sm:text-sm">Stable</div>
                       </div>
                     </div>
 
                     {/* Video Area */}
-                    <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
+                    <div className={`relative aspect-video bg-black rounded-2xl overflow-hidden transition-shadow duration-300 ${isRecording ? 'ring-2 ring-violet-500 shadow-glow-sm' : ''}`}>
                       {!recordedVideo ? (
                         <>
                           <video
@@ -481,8 +485,8 @@ export default function DiagnosticVideo() {
                           )}
                           {isRecording && (
                             <div className="absolute top-4 left-4 flex items-center gap-2">
-                              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                              <span className="text-white font-mono bg-black/50 px-3 py-1 rounded-lg">
+                              <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse shadow-glow-sm" />
+                              <span className="text-white font-mono bg-black/50 px-3 py-1 rounded-lg backdrop-blur-sm">
                                 {recordingTime}s / 30s
                               </span>
                             </div>
@@ -514,17 +518,26 @@ export default function DiagnosticVideo() {
                       className="hidden"
                     />
 
-                    {/* Buttons - Stack on mobile */}
+                    {/* Buttons */}
                     <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-center">
                       {!recordedVideo ? (
                         <>
                           {!isRecording ? (
                             <>
-                              <Button size="lg" onClick={startRecording} className="w-full sm:w-auto text-sm sm:text-base py-3">
+                              <Button
+                                size="lg"
+                                onClick={startRecording}
+                                className="w-full sm:w-auto text-sm sm:text-base py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700 text-white shadow-glow-sm transition-all duration-300 hover:shadow-glow"
+                              >
                                 <Camera className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                                 Filmer
                               </Button>
-                              <Button size="lg" variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full sm:w-auto text-sm sm:text-base py-3">
+                              <Button
+                                size="lg"
+                                variant="outline"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full sm:w-auto text-sm sm:text-base py-3 glass border-violet-200/30 dark:border-violet-700/30 hover:border-violet-400/50 dark:hover:border-violet-500/50"
+                              >
                                 <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                                 Importer
                               </Button>
@@ -537,7 +550,11 @@ export default function DiagnosticVideo() {
                           )}
                         </>
                       ) : (
-                        <Button variant="outline" onClick={resetRecording} className="w-full sm:w-auto">
+                        <Button
+                          variant="outline"
+                          onClick={resetRecording}
+                          className="w-full sm:w-auto glass border-violet-200/30 dark:border-violet-700/30 hover:border-violet-400/50 dark:hover:border-violet-500/50"
+                        >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           Changer de vidéo
                         </Button>
@@ -552,10 +569,10 @@ export default function DiagnosticVideo() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    <Card>
+                    <Card className="glass-card border-white/10 dark:border-white/5">
                       <CardHeader className="pb-2 sm:pb-4">
                         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                          <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5" />
+                          <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5 text-violet-500" />
                           Description (optionnel)
                         </CardTitle>
                         <CardDescription className="text-xs sm:text-sm">
@@ -567,7 +584,7 @@ export default function DiagnosticVideo() {
                           value={userDescription}
                           onChange={(e) => setUserDescription(e.target.value)}
                           placeholder="Ex: Grincement au freinage depuis 2 semaines..."
-                          className="h-20 sm:h-24 resize-none text-base sm:text-sm"
+                          className="h-20 sm:h-24 resize-none text-base sm:text-sm focus:ring-violet-500 focus:border-violet-500 focus-visible:ring-violet-500"
                           maxLength={500}
                         />
                         <div className="text-[10px] sm:text-xs text-muted-foreground text-right mt-1">
@@ -579,7 +596,7 @@ export default function DiagnosticVideo() {
                     {/* Analyze Button */}
                     <Button
                       size="lg"
-                      className="w-full mt-4 sm:mt-6 h-12 sm:h-14 text-base sm:text-lg bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 active:scale-98"
+                      className={`w-full mt-4 sm:mt-6 h-12 sm:h-14 text-base sm:text-lg bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-700 hover:to-cyan-700 active:scale-98 shadow-glow-sm transition-all duration-300 hover:shadow-glow ${isAnalyzing ? 'shimmer' : ''}`}
                       onClick={analyzeVideo}
                       disabled={isAnalyzing}
                     >
@@ -603,33 +620,34 @@ export default function DiagnosticVideo() {
                   </motion.div>
                 )}
 
-                {/* Tips - Collapsed on mobile */}
-                <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                {/* Tips - Violet tinted glass card */}
+                <Card className="glass-card border-violet-200/30 dark:border-violet-700/20" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.06) 0%, rgba(124,58,237,0.03) 100%)' }}>
                   <CardHeader className="pb-2 sm:pb-4">
-                    <CardTitle className="text-blue-900 dark:text-blue-100 flex items-center gap-2 text-sm sm:text-base">
-                      💡 Conseils
+                    <CardTitle className="text-violet-900 dark:text-violet-100 flex items-center gap-2 text-sm sm:text-base">
+                      <Lightbulb className="h-4 w-4 text-violet-500" />
+                      Conseils
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-blue-800 dark:text-blue-200">
+                    <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-violet-800 dark:text-violet-200">
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-600">•</span>
+                        <span className="text-violet-500">-</span>
                         <span>Filme de près (20-50cm)</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-600">•</span>
+                        <span className="text-violet-500">-</span>
                         <span>Bonne lumière = meilleure analyse</span>
                       </li>
                       <li className="flex items-start gap-2">
-                        <span className="text-blue-600">•</span>
+                        <span className="text-violet-500">-</span>
                         <span>Capture le problème en action</span>
                       </li>
                       <li className="hidden sm:flex items-start gap-2">
-                        <span className="text-blue-600">•</span>
+                        <span className="text-violet-500">-</span>
                         <span>Montre différents angles</span>
                       </li>
                       <li className="hidden sm:flex items-start gap-2">
-                        <span className="text-blue-600">•</span>
+                        <span className="text-violet-500">-</span>
                         <span>Active le son pour les bruits</span>
                       </li>
                     </ul>
@@ -646,7 +664,11 @@ export default function DiagnosticVideo() {
                 <ResultatAnalyseVideo data={{ ...result, fromCache }} />
 
                 <div className="flex justify-center">
-                  <Button variant="outline" onClick={resetRecording}>
+                  <Button
+                    variant="outline"
+                    onClick={resetRecording}
+                    className="glass border-violet-200/30 dark:border-violet-700/30 hover:border-violet-400/50 dark:hover:border-violet-500/50 transition-all duration-300"
+                  >
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Nouveau diagnostic vidéo
                   </Button>

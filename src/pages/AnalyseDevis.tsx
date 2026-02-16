@@ -361,11 +361,12 @@ export default function AnalyseDevis() {
 
   return (
     <PageTransition>
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen gradient-mesh">
       <Sidebar />
 
       <main className="md:pl-64">
         <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 md:pb-8 max-w-3xl">
+          {/* Header */}
           <motion.div
             className="mb-4 sm:mb-8"
             initial={{ opacity: 0, y: 20 }}
@@ -373,25 +374,37 @@ export default function AnalyseDevis() {
           >
             <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold flex items-center gap-2">
-                <motion.div whileHover={{ rotate: 10 }}>
-                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                <motion.div
+                  whileHover={{ rotate: 10 }}
+                  className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/25"
+                >
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </motion.div>
-                <span className="hidden sm:inline">Analyseur de Devis</span>
-                <span className="sm:hidden">Analyse Devis</span>
+                <div>
+                  <span className="hidden sm:inline gradient-primary-text">Analyseur de Devis</span>
+                  <span className="sm:hidden gradient-primary-text">Analyse Devis</span>
+                </div>
               </h1>
               <div className="flex items-center gap-1.5 sm:gap-2">
                 {devisList.length > 0 && (
                   <Link to="/app/history?tab=devis">
-                    <Button variant="outline" size="sm" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
-                      <History className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <Button variant="outline" size="sm" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30">
+                      <History className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-violet-600 dark:text-violet-400" />
                       <span className="hidden sm:inline">Historique ({devisList.length})</span>
                       <span className="sm:hidden">{devisList.length}</span>
                     </Button>
                   </Link>
                 )}
-                <Badge variant={isPremium ? "premium" : "secondary"} className="text-[10px] sm:text-sm px-2 py-0.5">
+                <Badge
+                  variant={isPremium ? "premium" : "secondary"}
+                  className={`text-[10px] sm:text-sm px-2 py-0.5 ${
+                    isPremium
+                      ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white border-0'
+                      : ''
+                  }`}
+                >
                   {isPremium ? (
-                    <>✨ <span className="hidden sm:inline">Illimité</span><span className="sm:hidden">∞</span></>
+                    <>&#10024; <span className="hidden sm:inline">Illimité</span><span className="sm:hidden">&#8734;</span></>
                   ) : (
                     <>
                       <span className="hidden sm:inline">{displayRemaining}/1 analyse gratuite</span>
@@ -403,16 +416,18 @@ export default function AnalyseDevis() {
               </div>
             </div>
             <p className="text-muted-foreground mt-2">
-              Détection d'arnaques • Comparaison prix marché • Analyse experte
+              Détection d'arnaques &bull; Comparaison prix marché &bull; Analyse experte
             </p>
           </motion.div>
 
-          {/* Disclaimer */}
-          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 text-sm text-blue-800 dark:text-blue-200 flex items-start gap-3">
-            <Shield className="h-5 w-5 shrink-0 mt-0.5 text-blue-600" />
+          {/* Disclaimer - Violet tinted glass */}
+          <div className="mb-6 p-4 rounded-xl glass-card bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border border-violet-200 dark:border-violet-800 text-sm text-violet-800 dark:text-violet-200 flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shrink-0 mt-0.5">
+              <Shield className="h-4 w-4 text-white" />
+            </div>
             <div>
               <p className="font-medium mb-1">Analyse professionnelle garantie</p>
-              <p className="text-blue-700 dark:text-blue-300">
+              <p className="text-violet-700 dark:text-violet-300">
                 Prix comparés aux tarifs marché 2026.
               </p>
             </div>
@@ -449,15 +464,15 @@ export default function AnalyseDevis() {
 
               {/* Original Quote Preview */}
               {selectedFile?.dataUrl && (
-                <Card>
+                <Card className="glass-card border-violet-200/50 dark:border-violet-800/50">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
-                      <FileText className="h-5 w-5" />
+                      <FileText className="h-5 w-5 text-violet-600 dark:text-violet-400" />
                       Devis original
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="rounded-xl overflow-hidden border-2 border-dashed border-muted bg-muted/30">
+                    <div className="rounded-xl overflow-hidden border-2 border-dashed border-violet-200 dark:border-violet-800 bg-violet-50/30 dark:bg-violet-950/20">
                       <img
                         src={selectedFile.dataUrl}
                         alt="Devis original"
@@ -471,7 +486,7 @@ export default function AnalyseDevis() {
               {/* New Analysis Button */}
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30 hover:border-violet-400 dark:hover:border-violet-600 transition-all"
                 onClick={reset}
               >
                 Analyser un autre devis
@@ -480,10 +495,12 @@ export default function AnalyseDevis() {
           )}
 
           {!analysisResult && (
-            <Card className="border-2">
+            <Card className="glass-card border-violet-200/50 dark:border-violet-800/50 shadow-lg shadow-violet-500/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-5 w-5" />
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center">
+                    <Upload className="h-4 w-4 text-white" />
+                  </div>
                   Upload ton devis
                 </CardTitle>
                 <CardDescription>
@@ -510,52 +527,54 @@ export default function AnalyseDevis() {
 
                 {/* Preview if file selected */}
                 {selectedFile ? (
-                  <div className="border-2 border-dashed rounded-xl p-6 text-center">
+                  <div className="border-2 border-dashed border-violet-300 dark:border-violet-700 rounded-xl p-6 text-center bg-violet-50/30 dark:bg-violet-950/20">
                     <img
                       src={selectedFile.dataUrl}
                       alt="Devis"
-                      className="max-h-64 mx-auto rounded-lg shadow-md mb-4"
+                      className="max-h-64 mx-auto rounded-lg shadow-md shadow-violet-500/10 mb-4"
                     />
                     <div className="flex gap-3 justify-center">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30"
                         onClick={() => cameraInputRef.current?.click()}
                       >
-                        <Camera className="h-4 w-4 mr-2" />
+                        <Camera className="h-4 w-4 mr-2 text-violet-600 dark:text-violet-400" />
                         Reprendre
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="border-violet-200 dark:border-violet-800 hover:bg-violet-50 dark:hover:bg-violet-950/30"
                         onClick={() => galleryInputRef.current?.click()}
                       >
-                        <ImageIcon className="h-4 w-4 mr-2" />
+                        <ImageIcon className="h-4 w-4 mr-2 text-violet-600 dark:text-violet-400" />
                         Changer
                       </Button>
                     </div>
                   </div>
                 ) : isMobile ? (
-                  /* Mobile: Two separate buttons */
+                  /* Mobile: Two separate buttons with gradient icons */
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <Button
                         variant="outline"
-                        className="h-32 flex-col gap-3 border-2 border-dashed hover:border-primary hover:bg-primary/5"
+                        className="h-32 flex-col gap-3 border-2 border-dashed border-violet-200 dark:border-violet-800 hover:border-violet-400 dark:hover:border-violet-600 hover:bg-violet-50/50 dark:hover:bg-violet-950/30 transition-all"
                         onClick={() => cameraInputRef.current?.click()}
                       >
-                        <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                          <Camera className="h-6 w-6 text-blue-600" />
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                          <Camera className="h-6 w-6 text-white" />
                         </div>
                         <span className="font-medium">Prendre photo</span>
                       </Button>
                       <Button
                         variant="outline"
-                        className="h-32 flex-col gap-3 border-2 border-dashed hover:border-primary hover:bg-primary/5"
+                        className="h-32 flex-col gap-3 border-2 border-dashed border-violet-200 dark:border-violet-800 hover:border-cyan-400 dark:hover:border-cyan-600 hover:bg-cyan-50/50 dark:hover:bg-cyan-950/30 transition-all"
                         onClick={() => galleryInputRef.current?.click()}
                       >
-                        <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                          <ImageIcon className="h-6 w-6 text-violet-600" />
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-cyan-500/25">
+                          <ImageIcon className="h-6 w-6 text-white" />
                         </div>
                         <span className="font-medium">Galerie</span>
                       </Button>
@@ -565,27 +584,31 @@ export default function AnalyseDevis() {
                     </p>
                   </div>
                 ) : (
-                  /* Desktop: Click zone */
+                  /* Desktop: Click zone with glass styling */
                   <div
-                    className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-all"
+                    className="border-2 border-dashed border-violet-200 dark:border-violet-800 rounded-xl p-8 text-center cursor-pointer hover:border-violet-400 dark:hover:border-violet-600 hover:bg-violet-50/50 dark:hover:bg-violet-950/20 transition-all group"
                     onClick={() => galleryInputRef.current?.click()}
                   >
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
-                      <Upload className="h-8 w-8 text-primary" />
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center shadow-lg shadow-violet-500/25 group-hover:shadow-violet-500/40 transition-shadow">
+                      <Upload className="h-8 w-8 text-white" />
                     </div>
                     <p className="font-medium text-lg">Clique ou glisse ton devis ici</p>
                     <p className="text-sm text-muted-foreground mt-1">JPG, PNG (max 15MB)</p>
                   </div>
                 )}
 
+                {/* Error state - red tinted glass */}
                 {error && (
-                  <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
+                  <div className="p-3 rounded-lg glass-card bg-red-50/80 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
                     {error}
                   </div>
                 )}
 
+                {/* Analyze button - gradient violet with glow + shimmer loading */}
                 <Button
-                  className="w-full h-16 text-base font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25"
+                  className={`w-full h-16 text-base font-semibold bg-gradient-to-r from-violet-600 via-purple-600 to-cyan-600 hover:from-violet-700 hover:via-purple-700 hover:to-cyan-700 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all border-0 ${
+                    isAnalyzing ? 'shimmer' : ''
+                  }`}
                   size="lg"
                   onClick={handleAnalyzeQuote}
                   disabled={!selectedFile || isAnalyzing}
@@ -609,12 +632,14 @@ export default function AnalyseDevis() {
             </Card>
           )}
 
-          {/* Tips */}
+          {/* Tips - Glass card style */}
           {!analysisResult && (
-            <Card className="mt-8">
+            <Card className="mt-8 glass-card border-violet-200/50 dark:border-violet-800/50">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Info className="h-5 w-5" />
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center">
+                    <Info className="h-4 w-4 text-white" />
+                  </div>
                   Conseils pour un bon devis
                 </CardTitle>
               </CardHeader>
@@ -630,7 +655,7 @@ export default function AnalyseDevis() {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                    N'hésite pas à négocier, surtout sur la main d'œuvre
+                    N'hésite pas à négocier, surtout sur la main d'oeuvre
                   </li>
                 </ul>
               </CardContent>

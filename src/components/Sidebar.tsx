@@ -23,12 +23,11 @@ import {
   HelpCircle,
   Car,
   Video,
-  TrendingUp,
   MessageCircle,
   Settings,
   Menu,
   X,
-  Microscope,
+  Mic,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -43,25 +42,24 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/app', icon: Home, label: 'Accueil', shortLabel: 'Accueil', mobileShow: true },
-  { href: '/app/mechanic-chat', icon: MessageCircle, label: 'Chat Mécanicien 24/7', shortLabel: 'Chat', mobileShow: true },
-  { href: '/app/diagnostic-pro', icon: Microscope, label: 'Diagnostic PRO', shortLabel: 'Diagnostic' }, // 2 free/month
-  { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis' },
-  { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic vidéo', shortLabel: 'Vidéo', tier: 'premium' },
-  { href: '/app/prevision-pannes', icon: TrendingUp, label: 'Prévision pannes', shortLabel: 'Prévision', tier: 'premium' },
-  { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules', mobileShow: true },
-  { href: '/app/garages', icon: MapPin, label: 'Trouver un garage', shortLabel: 'Garages', mobileShow: true },
-  { href: '/app/pieces', icon: ShoppingCart, label: 'Chercher une pièce', shortLabel: 'Pièces' },
+  { href: '/app/mechanic-chat', icon: MessageCircle, label: 'Chat Mécanicien', shortLabel: 'Chat', mobileShow: true },
+  { href: '/app/analyser-devis', icon: FileText, label: 'Scanner un Devis', shortLabel: 'Devis', mobileShow: true },
+  { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic Vidéo', shortLabel: 'Vidéo', tier: 'premium' },
+  { href: '/app/sound-scan', icon: Mic, label: 'SoundScan', shortLabel: 'Son', tier: 'premium' },
+  { href: '/app/vehicules', icon: Car, label: 'Mes Véhicules', shortLabel: 'Auto', mobileShow: true },
+  { href: '/app/garages', icon: MapPin, label: 'Trouver un Garage', shortLabel: 'Garages' },
+  { href: '/app/pieces', icon: ShoppingCart, label: 'Pièces Auto', shortLabel: 'Pièces' },
   { href: '/app/history', icon: History, label: 'Historique', shortLabel: 'Historique' },
-  { href: '/app/settings', icon: Settings, label: 'Paramètres', shortLabel: 'Paramètres' },
-  { href: '/app/account', icon: User, label: 'Mon compte', shortLabel: 'Compte' },
+  { href: '/app/settings', icon: Settings, label: 'Paramètres', shortLabel: 'Param.' },
+  { href: '/app/account', icon: User, label: 'Mon Compte', shortLabel: 'Compte' },
 ]
 
 // Items shown in mobile bottom nav (4 items + menu button)
-// Accueil, Chat Mécanicien, Garages, Véhicules
+// Accueil, Chat, Devis, Auto
 const mobileNavItems = [
   navItems.find(item => item.href === '/app')!,
   navItems.find(item => item.href === '/app/mechanic-chat')!,
-  navItems.find(item => item.href === '/app/garages')!,
+  navItems.find(item => item.href === '/app/analyser-devis')!,
   navItems.find(item => item.href === '/app/vehicules')!,
 ]
 
@@ -94,10 +92,10 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r bg-card">
+      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 border-r border-white/10 bg-gradient-to-b from-slate-950/95 via-slate-900/95 to-slate-950/95 backdrop-blur-xl">
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-4 border-b">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-white/10">
             <Logo size="sm" linkTo="/app" />
             <DarkModeToggle />
           </div>
@@ -108,7 +106,7 @@ export default function Sidebar() {
               <PremiumBadge className="w-full justify-center py-1.5" />
             ) : (
               <Tooltip content="Passe Premium pour des diagnostics illimites !">
-                <Badge variant="secondary" className="w-full justify-center py-1 cursor-help">
+                <Badge variant="secondary" className="w-full justify-center py-1 cursor-help bg-white/5 border border-white/10 text-slate-300">
                   Gratuit: {Math.max(0, userLimits.diagnosticsLimit - userLimits.diagnosticsThisMonth)}/2 restants
                   <HelpCircle className="h-3 w-3 ml-1" />
                 </Badge>
@@ -116,7 +114,7 @@ export default function Sidebar() {
             )}
           </div>
 
-          <Separator />
+          <Separator className="bg-white/10" />
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -133,17 +131,17 @@ export default function Sidebar() {
                   <Link
                     to={isLocked ? '/pricing' : item.href}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                      'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
                       isActive
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                      isLocked && 'opacity-60'
+                        ? 'bg-violet-600/20 text-violet-300 shadow-[0_0_15px_rgba(139,92,246,0.15)] border border-violet-500/30'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
+                      isLocked && 'opacity-50'
                     )}
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className={cn('h-5 w-5', isActive && 'text-violet-400')} />
                     <span className="flex-1">{item.label}</span>
                     {item.tier === 'premium' && !userLimits.isPremium && (
-                      <Badge variant="secondary" className="ml-auto text-[10px] px-1.5 py-0">
+                      <Badge className="ml-auto text-[10px] px-1.5 py-0 bg-gradient-to-r from-violet-600 to-cyan-500 text-white border-0">
                         Premium
                       </Badge>
                     )}
@@ -157,7 +155,7 @@ export default function Sidebar() {
           {!userLimits.isPremium && (
             <div className="px-3 pb-2">
               <Link to="/pricing">
-                <Button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700">
+                <Button className="w-full bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-700 hover:to-violet-600 shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.45)] transition-shadow duration-300 border-0">
                   <Sparkles className="h-4 w-4 mr-2" />
                   Passer Premium
                 </Button>
@@ -166,10 +164,10 @@ export default function Sidebar() {
           )}
 
           {/* Logout */}
-          <div className="p-3 border-t">
+          <div className="p-3 border-t border-white/10">
             <Button
               variant="ghost"
-              className="w-full justify-start text-muted-foreground"
+              className="w-full justify-start text-slate-500 hover:text-slate-300 hover:bg-white/5"
               onClick={handleSignOut}
             >
               <LogOut className="h-5 w-5 mr-3" />
@@ -180,7 +178,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Nav - 4 items + Menu button */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t z-50 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-white/10 z-50 pb-safe">
         <div className="grid grid-cols-5">
           {mobileNavItems.map((item) => {
             const isActive = location.pathname === item.href
@@ -189,8 +187,8 @@ export default function Sidebar() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-muted/50 transition-colors',
-                  isActive ? 'text-primary' : 'text-muted-foreground'
+                  'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-white/5 transition-colors',
+                  isActive ? 'text-violet-400' : 'text-slate-500'
                 )}
               >
                 <item.icon className={cn(
@@ -199,7 +197,7 @@ export default function Sidebar() {
                 )} />
                 <span className={cn(
                   'text-[11px] font-medium leading-tight text-center',
-                  isActive && 'text-primary'
+                  isActive && 'text-violet-400'
                 )}>
                   {item.shortLabel}
                 </span>
@@ -211,8 +209,8 @@ export default function Sidebar() {
           <button
             onClick={() => setMobileMenuOpen(true)}
             className={cn(
-              'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-muted/50 transition-colors',
-              mobileMenuOpen ? 'text-primary' : 'text-muted-foreground'
+              'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-white/5 transition-colors',
+              mobileMenuOpen ? 'text-violet-400' : 'text-slate-500'
             )}
           >
             <Menu className="h-6 w-6" />
@@ -232,7 +230,7 @@ export default function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="md:hidden fixed inset-0 bg-black/50 z-[60]"
+              className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
               onClick={() => setMobileMenuOpen(false)}
             />
 
@@ -242,16 +240,16 @@ export default function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="md:hidden fixed inset-y-0 right-0 w-[85%] max-w-sm bg-card z-[70] shadow-2xl flex flex-col"
+              className="md:hidden fixed inset-y-0 right-0 w-[85%] max-w-sm bg-slate-950/95 backdrop-blur-xl border-l border-white/10 z-[70] shadow-2xl shadow-violet-950/20 flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <Logo size="sm" />
                 <div className="flex items-center gap-2">
                   <DarkModeToggle />
                   <button
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-2 rounded-full hover:bg-muted"
+                    className="p-2 rounded-full hover:bg-white/5 text-slate-400"
                   >
                     <X className="h-6 w-6" />
                   </button>
@@ -264,11 +262,11 @@ export default function Sidebar() {
                   <PremiumBadge className="w-full justify-center py-2" />
                 ) : (
                   <div className="space-y-2">
-                    <Badge variant="secondary" className="w-full justify-center py-2 text-sm">
+                    <Badge variant="secondary" className="w-full justify-center py-2 text-sm bg-white/5 border border-white/10 text-slate-300">
                       Gratuit: {Math.max(0, userLimits.diagnosticsLimit - userLimits.diagnosticsThisMonth)}/2 restants
                     </Badge>
                     <Button
-                      className="w-full bg-gradient-to-r from-blue-600 to-violet-600"
+                      className="w-full bg-gradient-to-r from-violet-600 to-violet-500 shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.45)] transition-shadow duration-300 border-0"
                       onClick={() => handleNavClick('/pricing', false)}
                     >
                       <Sparkles className="h-4 w-4 mr-2" />
@@ -278,7 +276,7 @@ export default function Sidebar() {
                 )}
               </div>
 
-              <Separator />
+              <Separator className="bg-white/10" />
 
               {/* Navigation - Scrollable (excluding items already in bottom nav) */}
               <nav className="flex-1 overflow-y-auto py-2">
@@ -293,20 +291,20 @@ export default function Sidebar() {
                         key={item.href}
                         onClick={() => handleNavClick(item.href, isLocked)}
                         className={cn(
-                          'flex items-center gap-4 px-4 py-3.5 w-full text-left transition-colors min-h-[56px]',
+                          'flex items-center gap-4 px-4 py-3.5 w-full text-left transition-all duration-200 min-h-[56px]',
                           isActive
-                            ? 'bg-primary/10 text-primary border-r-4 border-primary'
-                            : 'text-foreground hover:bg-muted',
-                          isLocked && 'opacity-60'
+                            ? 'bg-violet-600/15 text-violet-300 border-r-4 border-violet-500 shadow-[inset_0_0_20px_rgba(139,92,246,0.08)]'
+                            : 'text-slate-300 hover:bg-white/5 hover:text-slate-100',
+                          isLocked && 'opacity-50'
                         )}
                       >
                         <item.icon className={cn(
                           'h-6 w-6 shrink-0',
-                          isActive && 'text-primary'
+                          isActive && 'text-violet-400'
                         )} />
                         <span className="flex-1 font-medium">{item.label}</span>
                         {item.tier === 'premium' && !userLimits.isPremium && (
-                          <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[10px] px-2">
+                          <Badge className="bg-gradient-to-r from-violet-600 to-cyan-500 text-white text-[10px] px-2 border-0">
                             Premium
                           </Badge>
                         )}
@@ -316,10 +314,10 @@ export default function Sidebar() {
               </nav>
 
               {/* Footer - Logout */}
-              <div className="border-t p-4 pb-safe">
+              <div className="border-t border-white/10 p-4 pb-safe">
                 <Button
                   variant="ghost"
-                  className="w-full justify-start text-muted-foreground h-12"
+                  className="w-full justify-start text-slate-500 hover:text-slate-300 hover:bg-white/5 h-12"
                   onClick={handleSignOut}
                 >
                   <LogOut className="h-5 w-5 mr-3" />

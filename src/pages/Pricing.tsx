@@ -21,13 +21,11 @@ export default function Pricing() {
   const { trackInitiateCheckout } = useTikTokTracking()
 
   const handleSubscribe = async () => {
-    // Check if user is logged in
     if (!user) {
       navigate(`/login?redirect=/pricing&plan=${yearly ? 'yearly' : 'monthly'}`)
       return
     }
 
-    // Check if already premium
     if (isPremium) {
       navigate('/app/settings')
       return
@@ -35,12 +33,8 @@ export default function Pricing() {
 
     setLoading(true)
     try {
-      // Track checkout initiation for TikTok Pixel
       trackInitiateCheckout(yearly)
-
-      // Store plan type for tracking on success page
       localStorage.setItem('mecai_checkout_plan', yearly ? 'yearly' : 'monthly')
-
       const priceId = yearly ? STRIPE_PRICES.PREMIUM_YEARLY : STRIPE_PRICES.PREMIUM_MONTHLY
       await createCheckoutSession(priceId, true, user.id)
     } catch (error) {
@@ -53,9 +47,9 @@ export default function Pricing() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-background gradient-mesh">
         {/* Header */}
-        <div className="sticky top-0 bg-background/95 backdrop-blur-lg z-40 border-b">
+        <div className="sticky top-0 bg-background/80 backdrop-blur-xl z-40 border-b border-border/50">
           <div className="container mx-auto px-4 py-3 flex items-center gap-4">
             <Link to={user ? '/app' : '/'}>
               <Button variant="ghost" size="sm" className="h-10 px-3">
@@ -70,11 +64,11 @@ export default function Pricing() {
         <div className="container mx-auto px-4 py-6 pb-24">
           {/* Title Section */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 text-primary px-4 py-2 rounded-full mb-4">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-violet-500/10 via-violet-500/10 to-cyan-500/10 text-primary px-4 py-2 rounded-full mb-4">
               <Sparkles className="h-4 w-4" />
               <span className="text-sm font-medium">Plans MECAI</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold mb-3 dark:text-white">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">
               Choisis ton plan
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
@@ -92,50 +86,48 @@ export default function Pricing() {
               <span className={`text-sm ${yearly ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
                 Annuel
               </span>
-              <Badge className="bg-green-500 text-white text-[10px] px-1.5">
+              <Badge className="bg-emerald-500 text-white text-[10px] px-1.5">
                 -25%
               </Badge>
             </div>
           </div>
 
-          {/* Pricing Cards - Stack on mobile */}
+          {/* Pricing Cards */}
           <div className="grid gap-6 max-w-lg mx-auto">
 
-            {/* PREMIUM - First on mobile (recommended) */}
-            <Card className="p-5 relative border-2 border-primary shadow-lg dark:bg-gray-800 order-first">
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4">
+            {/* PREMIUM */}
+            <Card className="p-5 relative border-2 border-violet-500/50 shadow-glow-sm bg-card order-first">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-violet-600 to-cyan-500 text-white px-4">
                 RECOMMANDÉ
               </Badge>
 
               <div className="flex items-center gap-4 mb-4 pt-2">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-violet-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-glow-sm">
                   <Star className="h-7 w-7 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold dark:text-white">Premium</h3>
+                  <h3 className="text-xl font-bold">Premium</h3>
                   <p className="text-sm text-muted-foreground">Pour les passionnés</p>
                 </div>
               </div>
 
-              {/* Price */}
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold dark:text-white">
+                <span className="text-4xl font-bold">
                   {yearly ? '89€' : '9,99€'}
                 </span>
                 <span className="text-muted-foreground">/{yearly ? 'an' : 'mois'}</span>
               </div>
               {yearly && (
-                <p className="text-sm text-green-600 font-medium mb-4 -mt-2">
+                <p className="text-sm text-emerald-500 font-medium mb-4 -mt-2">
                   Soit 7,42€/mois - {PLANS.premium.yearlyDiscount}
                 </p>
               )}
 
-              {/* Features List */}
               <ul className="space-y-2.5 mb-6">
                 {PLANS.premium.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm dark:text-gray-300">
-                    <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                  <li key={i} className="flex items-start gap-2.5 text-sm">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-3 w-3 text-emerald-500" />
                     </div>
                     <span>{feature}</span>
                   </li>
@@ -143,7 +135,7 @@ export default function Pricing() {
               </ul>
 
               <Button
-                className="w-full h-12 text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="w-full h-12 text-base bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-700 hover:to-cyan-600 shadow-glow-sm"
                 onClick={handleSubscribe}
                 disabled={loading || isPremium}
               >
@@ -167,41 +159,38 @@ export default function Pricing() {
             </Card>
 
             {/* FREE */}
-            <Card className="p-5 relative dark:bg-gray-800 dark:border-gray-700">
+            <Card className="p-5 relative bg-card">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center">
-                  <Zap className="h-7 w-7 text-gray-600 dark:text-gray-300" />
+                <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center">
+                  <Zap className="h-7 w-7 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold dark:text-white">Gratuit</h3>
+                  <h3 className="text-xl font-bold">Gratuit</h3>
                   <p className="text-sm text-muted-foreground">Pour découvrir</p>
                 </div>
               </div>
 
-              {/* Price */}
               <div className="flex items-baseline gap-1 mb-4">
-                <span className="text-4xl font-bold dark:text-white">0€</span>
+                <span className="text-4xl font-bold">0€</span>
                 <span className="text-muted-foreground">/mois</span>
               </div>
 
-              {/* Features - Included */}
               <ul className="space-y-2.5 mb-4">
                 {PLANS.free.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm dark:text-gray-300">
-                    <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center shrink-0 mt-0.5">
-                      <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
+                  <li key={i} className="flex items-start gap-2.5 text-sm">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="h-3 w-3 text-emerald-500" />
                     </div>
                     <span>{feature}</span>
                   </li>
                 ))}
               </ul>
 
-              {/* Features - Not Included */}
               <ul className="space-y-2.5 mb-6">
                 {PLANS.free.notIncluded.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                    <div className="w-5 h-5 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 mt-0.5">
-                      <X className="h-3 w-3 text-gray-400" />
+                    <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center shrink-0 mt-0.5">
+                      <X className="h-3 w-3 text-muted-foreground" />
                     </div>
                     <span className="line-through opacity-60">{feature}</span>
                   </li>
@@ -219,12 +208,12 @@ export default function Pricing() {
             </Card>
           </div>
 
-          {/* Comparison Table - Mobile Friendly */}
+          {/* Comparison Table */}
           <div className="mt-10">
-            <h3 className="text-lg font-bold text-center mb-4 dark:text-white">
+            <h3 className="text-lg font-bold text-center mb-4">
               Comparatif détaillé
             </h3>
-            <Card className="overflow-hidden dark:bg-gray-800">
+            <Card className="overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -236,9 +225,14 @@ export default function Pricing() {
                   </thead>
                   <tbody className="divide-y">
                     <tr>
-                      <td className="p-3">Diagnostics Pro</td>
-                      <td className="p-3 text-center">2/mois</td>
-                      <td className="p-3 text-center font-medium text-primary">Illimités</td>
+                      <td className="p-3">Chat Mécanicien</td>
+                      <td className="p-3 text-center">10 msg/jour</td>
+                      <td className="p-3 text-center font-medium text-primary">Illimité 24/7</td>
+                    </tr>
+                    <tr>
+                      <td className="p-3">Analyse de devis</td>
+                      <td className="p-3 text-center">1/mois</td>
+                      <td className="p-3 text-center font-medium text-primary">Illimité</td>
                     </tr>
                     <tr>
                       <td className="p-3">Véhicules enregistrés</td>
@@ -246,44 +240,34 @@ export default function Pricing() {
                       <td className="p-3 text-center font-medium text-primary">Illimités</td>
                     </tr>
                     <tr>
-                      <td className="p-3">Chat mécanicien</td>
-                      <td className="p-3 text-center">10 msg/jour</td>
-                      <td className="p-3 text-center font-medium text-primary">Illimité 24/7</td>
-                    </tr>
-                    <tr>
-                      <td className="p-3">Analyse de devis (anti-arnaque)</td>
-                      <td className="p-3 text-center">1/mois</td>
-                      <td className="p-3 text-center font-medium text-primary">Illimité</td>
-                    </tr>
-                    <tr>
                       <td className="p-3">Diagnostic vidéo IA</td>
-                      <td className="p-3 text-center"><X className="h-4 w-4 mx-auto text-gray-400" /></td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><X className="h-4 w-4 mx-auto text-muted-foreground" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
                     </tr>
                     <tr>
-                      <td className="p-3">Prévision de pannes</td>
-                      <td className="p-3 text-center"><X className="h-4 w-4 mx-auto text-gray-400" /></td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3">SoundScan audio</td>
+                      <td className="p-3 text-center"><X className="h-4 w-4 mx-auto text-muted-foreground" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
                     </tr>
                     <tr>
                       <td className="p-3">Recherche de garage</td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
                     </tr>
                     <tr>
                       <td className="p-3">Recherche de pièces</td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
                     </tr>
                     <tr>
                       <td className="p-3">Historique diagnostics</td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
                     </tr>
                     <tr>
                       <td className="p-3">Export PDF</td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
-                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-green-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
+                      <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
                     </tr>
                     <tr>
                       <td className="p-3">Support</td>
@@ -300,13 +284,13 @@ export default function Pricing() {
           <div className="mt-10 text-center">
             <div className="flex flex-wrap justify-center gap-3 text-xs sm:text-sm text-muted-foreground mb-6">
               <span className="flex items-center gap-1.5 bg-muted/50 px-3 py-2 rounded-full">
-                💳 Paiement sécurisé
+                Paiement sécurisé
               </span>
               <span className="flex items-center gap-1.5 bg-muted/50 px-3 py-2 rounded-full">
-                ✅ Annulation libre
+                Annulation libre
               </span>
               <span className="flex items-center gap-1.5 bg-muted/50 px-3 py-2 rounded-full">
-                🔒 Données chiffrées
+                Données chiffrées
               </span>
             </div>
             <p className="text-sm text-muted-foreground mb-3">
@@ -316,7 +300,7 @@ export default function Pricing() {
               </a>
             </p>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              Les Diagnostics Pro sont fournis à titre indicatif.
+              Les diagnostics sont fournis à titre indicatif.
               Pour toute intervention mécanique, consultez un professionnel certifié.
             </p>
           </div>
