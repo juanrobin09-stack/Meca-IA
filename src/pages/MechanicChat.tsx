@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
@@ -420,50 +421,77 @@ export default function MechanicChat() {
         </div>
 
         {/* HISTORY PANEL */}
-        {showHistory && (
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            right: 0,
-            bottom: 0,
-            width: 280,
-            maxWidth: '80vw',
-            zIndex: 50,
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '-8px 0 32px rgba(0,0,0,0.4)',
-            animation: 'slideInRight 0.2s ease-out'
-          }} className="bg-neutral-900/95 backdrop-blur-xl border-l border-white/[0.06]">
-            <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-white/[0.06]">
-              <span className="text-white font-semibold">Historique</span>
-              <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-500 hover:text-white transition-colors">×</button>
-            </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
-              {conversations.map(conv => (
-                <button
-                  key={conv.id}
-                  onClick={() => { setCurrentConversation(conv); loadMessages(conv.id); setShowHistory(false) }}
-                  style={{
-                    width: '100%',
-                    padding: 12,
-                    textAlign: 'left',
-                    border: 'none',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    marginBottom: 4
-                  }}
-                  className={currentConversation?.id === conv.id
-                    ? 'bg-violet-500/15 border border-violet-500/20 text-white'
-                    : 'bg-transparent hover:bg-white/[0.06] text-neutral-300 transition-colors'}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {conv.title || 'Nouvelle conversation'}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {showHistory && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                onClick={() => setShowHistory(false)}
+                style={{ position: 'absolute', inset: 0, zIndex: 40 }}
+                className="bg-black/40 backdrop-blur-sm"
+              />
+              {/* Panel */}
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: 280,
+                  maxWidth: '80vw',
+                  zIndex: 50,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxShadow: '-8px 0 32px rgba(0,0,0,0.4)'
+                }}
+                className="bg-neutral-900/95 backdrop-blur-xl border-l border-white/[0.06]"
+              >
+                <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="border-b border-white/[0.06]">
+                  <span className="text-white font-semibold">Historique</span>
+                  <button onClick={() => setShowHistory(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }} className="text-neutral-500 hover:text-white transition-colors">×</button>
+                </div>
+                <div style={{ flex: 1, overflowY: 'auto', padding: 8 }}>
+                  {conversations.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+                      <p className="text-neutral-500 text-sm">Aucune conversation</p>
+                    </div>
+                  ) : (
+                    conversations.map(conv => (
+                      <button
+                        key={conv.id}
+                        onClick={() => { setCurrentConversation(conv); loadMessages(conv.id); setShowHistory(false) }}
+                        style={{
+                          width: '100%',
+                          padding: 12,
+                          textAlign: 'left',
+                          border: 'none',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          marginBottom: 4
+                        }}
+                        className={currentConversation?.id === conv.id
+                          ? 'bg-violet-500/15 border border-violet-500/20 text-white'
+                          : 'bg-transparent hover:bg-white/[0.06] text-neutral-300 transition-colors'}
+                      >
+                        <div style={{ fontSize: 14, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {conv.title || 'Nouvelle conversation'}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* MESSAGES */}
         <div style={{
@@ -480,26 +508,49 @@ export default function MechanicChat() {
 
             {messages.length === 0 ? (
               /* Empty State */
-              <div style={{ textAlign: 'center', paddingTop: '10vh' }}>
-                <div style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: 24,
-                  background: 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 40,
-                  margin: '0 auto 20px',
-                  boxShadow: '0 12px 40px rgba(124,58,237,0.35), 0 0 60px rgba(124,58,237,0.15)'
-                }}>🔧</div>
-                <h2 className="text-white text-2xl font-bold tracking-tight mb-1">Salut, c'est Alex !</h2>
-                <p className="text-neutral-500 text-base mb-8">Ton pote mécanicien, dispo 24h/24</p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                style={{ textAlign: 'center', paddingTop: '10vh' }}
+              >
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: 24,
+                    background: 'linear-gradient(135deg, #7C3AED 0%, #06B6D4 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 40,
+                    margin: '0 auto 20px',
+                    boxShadow: '0 12px 40px rgba(124,58,237,0.35), 0 0 60px rgba(124,58,237,0.15)'
+                  }}
+                >🔧</motion.div>
+                <motion.h2
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.3 }}
+                  className="text-white text-2xl font-bold tracking-tight mb-1"
+                >Salut, c'est Alex !</motion.h2>
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.3 }}
+                  className="text-neutral-500 text-base mb-8"
+                >Ton pote mécanicien, dispo 24h/24</motion.p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, maxWidth: 340, margin: '0 auto' }}>
                   {QUICK_ACTIONS.map((action, i) => (
-                    <button
+                    <motion.button
                       key={i}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 + i * 0.07, duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                       onClick={() => sendMessage(action.message)}
                       style={{
                         padding: '14px 12px',
@@ -511,18 +562,19 @@ export default function MechanicChat() {
                         gap: 10
                       }}
                       className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-sm hover:bg-white/[0.08] hover:border-violet-500/30 transition-all duration-200 group"
+                      whileTap={{ scale: 0.97 }}
                     >
                       <span style={{ fontSize: 18, width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="bg-violet-500/10">{action.icon}</span>
                       <span className="text-neutral-300 text-sm group-hover:text-white transition-colors">{action.label}</span>
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             ) : (
               /* Messages */
               <>
                 {messages.map(msg => (
-                  <div key={msg.id} style={{
+                  <div key={msg.id} className="animate-message-in" style={{
                     display: 'flex',
                     justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start',
                     marginBottom: 16
@@ -607,8 +659,8 @@ export default function MechanicChat() {
         <div style={{
           flexShrink: 0,
           padding: '12px 16px',
-          paddingBottom: 'max(env(safe-area-inset-bottom), 100px)'
-        }} className="bg-neutral-950/80 backdrop-blur-xl border-t border-white/[0.06] md:pb-4">
+          paddingBottom: 'max(env(safe-area-inset-bottom), 80px)'
+        }} className="bg-neutral-950/80 backdrop-blur-xl border-t border-white/[0.06] md:!pb-4">
           <div style={{ maxWidth: '768px', margin: '0 auto' }}>
             {/* Image preview */}
             {selectedImage && (

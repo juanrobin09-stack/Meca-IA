@@ -421,3 +421,25 @@ svg {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CHAT SLIDE & MESSAGE ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes messageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-message-in {
+  animation: messageIn 0.25s ease-out both;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.2s ease-out both;
+}
