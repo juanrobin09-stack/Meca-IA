@@ -270,8 +270,8 @@ export default function Pricing() {
                       <td className="p-3 text-center"><Check className="h-4 w-4 mx-auto text-emerald-500" /></td>
                     </tr>
                     <tr>
-                      <td className="p-3">Support</td>
-                      <td className="p-3 text-center">Standard</td>
+                      <td className="p-3">Assistance</td>
+                      <td className="p-3 text-center">Basique</td>
                       <td className="p-3 text-center font-medium text-primary">Prioritaire</td>
                     </tr>
                   </tbody>

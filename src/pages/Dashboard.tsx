@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useSoundEffects } from '@/hooks/useSoundEffects'
 
 interface Vehicle {
   id: string
@@ -72,6 +73,7 @@ export default function Dashboard() {
   const { diagnostics } = useDiagnostics(user?.id)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [tipIndex, setTipIndex] = useState(0)
+  const { playNavigate } = useSoundEffects()
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'utilisateur'
 
@@ -149,7 +151,7 @@ export default function Dashboard() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gray-950 dark:bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
+      <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
         <Sidebar />
 
         <main className="md:pl-64 pb-24 md:pb-0">
@@ -217,22 +219,22 @@ export default function Dashboard() {
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="flex items-center gap-2 bg-white/5 dark:bg-white/5 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className={`w-2 h-2 rounded-full ${diagnosticsRemaining > 0 ? 'bg-emerald-400' : 'bg-red-400'}`} />
                         <span className="text-gray-400">Diagnostics:</span>
                         <span className="font-medium text-white">{diagnosticsRemaining}/2</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/5 dark:bg-white/5 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
                         <span className="text-gray-400">Devis:</span>
                         <span className="font-medium text-white">1/mois</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/5 dark:bg-white/5 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
                         <span className="text-gray-400">Chat:</span>
                         <span className="font-medium text-white">10/jour</span>
                       </div>
-                      <div className="flex items-center gap-2 bg-white/5 dark:bg-white/5 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
                         <span className="text-gray-400">Vehicule:</span>
                         <span className="font-medium text-white">1 max</span>
@@ -246,7 +248,7 @@ export default function Dashboard() {
               <motion.div variants={itemVariants}>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {quickActions.map((action) => (
-                    <Link key={action.to} to={action.to}>
+                    <Link key={action.to} to={action.to} onClick={() => playNavigate()}>
                       <motion.div
                         whileHover={{ scale: 1.03, y: -2 }}
                         whileTap={{ scale: 0.97 }}

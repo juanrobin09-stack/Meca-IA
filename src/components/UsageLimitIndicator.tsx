@@ -89,7 +89,7 @@ export function UsageLimitIndicator({
                 className="ml-1 text-primary hover:underline"
               >
                 <Sparkles className="h-3 w-3 inline mr-0.5" />
-                Upgrade
+                Passer Premium
               </button>
             )}
           </>

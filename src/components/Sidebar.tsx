@@ -7,7 +7,7 @@ import { useUserLimits } from '@/hooks/useUserLimits'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { DarkModeToggle } from '@/components/DarkModeToggle'
+
 import { Tooltip } from '@/components/ui/tooltip'
 import Logo from '@/components/Logo'
 import PremiumBadge from '@/components/PremiumBadge'
@@ -30,6 +30,7 @@ import {
   Mic,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useSoundEffects } from '@/hooks/useSoundEffects'
 
 interface NavItem {
   href: string
@@ -70,6 +71,7 @@ export default function Sidebar() {
   useSubscription(profile) // Keep for any side effects
   const userLimits = useUserLimits()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { playClick, playNavigate } = useSoundEffects()
 
   // Note: User limits are now managed globally via context
   // No need to refresh on route change - the context handles auto-refresh
@@ -81,6 +83,7 @@ export default function Sidebar() {
   }
 
   function handleNavClick(href: string, isLocked: boolean) {
+    playNavigate()
     setMobileMenuOpen(false)
     if (isLocked) {
       navigate('/pricing')
@@ -97,7 +100,6 @@ export default function Sidebar() {
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-white/10">
             <Logo size="sm" linkTo="/app" />
-            <DarkModeToggle />
           </div>
 
           {/* Status Badge */}
@@ -186,6 +188,7 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 to={item.href}
+                onClick={() => playNavigate()}
                 className={cn(
                   'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-white/5 transition-colors',
                   isActive ? 'text-violet-400' : 'text-slate-500'
@@ -207,7 +210,7 @@ export default function Sidebar() {
 
           {/* Menu Button */}
           <button
-            onClick={() => setMobileMenuOpen(true)}
+            onClick={() => { playClick(); setMobileMenuOpen(true) }}
             className={cn(
               'flex flex-col items-center justify-center gap-1 py-3 min-h-[64px] active:bg-white/5 transition-colors',
               mobileMenuOpen ? 'text-violet-400' : 'text-slate-500'
@@ -246,7 +249,6 @@ export default function Sidebar() {
               <div className="flex items-center justify-between p-4 border-b border-white/10">
                 <Logo size="sm" />
                 <div className="flex items-center gap-2">
-                  <DarkModeToggle />
                   <button
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-full hover:bg-white/5 text-slate-400"

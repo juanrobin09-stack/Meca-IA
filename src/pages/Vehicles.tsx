@@ -246,7 +246,7 @@ export default function Vehicles() {
                   </div>
                   {!isPremium && (
                     <Button size="sm" variant="outline" asChild>
-                      <Link to="/pricing">Upgrade</Link>
+                      <Link to="/pricing">Passer Premium</Link>
                     </Button>
                   )}
                 </div>

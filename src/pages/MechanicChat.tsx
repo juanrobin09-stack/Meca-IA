@@ -8,6 +8,7 @@ import { useSubscription } from '@/hooks/useSubscription'
 import { useUserLimits } from '@/hooks/useUserLimits'
 import { supabase } from '@/lib/supabase'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
+import { useSoundEffects } from '@/hooks/useSoundEffects'
 
 interface Vehicle {
   id: string
@@ -35,6 +36,7 @@ export default function MechanicChat() {
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
   const userLimits = useUserLimits()
+  const { playSend, playError, playClick } = useSoundEffects()
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('')
@@ -189,6 +191,7 @@ export default function MechanicChat() {
     const messageContent = hasImage ? `[IMAGE]\n${text || 'Analyse cette image'}` : text
     setInputMessage('')
     setIsTyping(true)
+    playSend()
 
     const tempMsg: Message = {
       id: 'temp-' + Date.now(),
@@ -255,6 +258,7 @@ export default function MechanicChat() {
     } catch (err) {
       const error = err as { name?: string }
       // Message d'erreur user-friendly
+      playError()
       const errorMessage = error?.name === 'AbortError'
         ? "La réponse prend trop de temps. Réessaie avec une question plus simple !"
         : "Oups, un problème est survenu. Réessaie !"
@@ -357,7 +361,7 @@ export default function MechanicChat() {
 
             {/* History button */}
             <button
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={() => { playClick(); setShowHistory(!showHistory) }}
               style={{
                 width: 36,
                 height: 36,
@@ -374,7 +378,7 @@ export default function MechanicChat() {
 
             {/* New chat button */}
             <button
-              onClick={() => { setCurrentConversation(null); setMessages([]); setShowHistory(false) }}
+              onClick={() => { playClick(); setCurrentConversation(null); setMessages([]); setShowHistory(false) }}
               style={{
                 width: 36,
                 height: 36,
