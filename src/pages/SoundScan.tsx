@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import Sidebar from '@/components/Sidebar'
 import PageTransition from '@/components/PageTransition'
 import PaywallModal from '@/components/PaywallModal'
@@ -361,6 +362,7 @@ function ResultCard({
 // ---------------------------------------------------------------------------
 
 export default function SoundScan() {
+  useDocumentTitle('SoundScan')
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
   const [showPaywall, setShowPaywall] = useState(false)

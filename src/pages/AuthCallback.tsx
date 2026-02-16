@@ -204,6 +204,7 @@ export default function AuthCallback() {
                   <Link
                     to="/cgu"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary hover:underline font-semibold"
                   >
                     Conditions Générales d'Utilisation
@@ -212,6 +213,7 @@ export default function AuthCallback() {
                   <Link
                     to="/confidentialite"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary hover:underline font-semibold"
                   >
                     Politique de Confidentialité

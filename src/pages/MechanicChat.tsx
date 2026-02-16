@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import Sidebar from '@/components/Sidebar'
 import PaywallModal from '@/components/PaywallModal'
 import PremiumDisclaimer from '@/components/PremiumDisclaimer'
@@ -34,6 +35,7 @@ interface Message {
 }
 
 export default function MechanicChat() {
+  useDocumentTitle('Chat Mécanicien')
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
   const userLimits = useUserLimits()

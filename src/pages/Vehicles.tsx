@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Plus, Car, Pencil, Trash2, AlertCircle, Camera } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -69,6 +70,7 @@ const fuelTypeToDisplay = (dbValue: string | undefined): string => {
 }
 
 export default function Vehicles() {
+  useDocumentTitle('Mes véhicules')
   const { user, profile } = useAuth()
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)

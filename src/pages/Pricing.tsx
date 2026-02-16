@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Check, X, Zap, Star, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,7 @@ import PageTransition from '@/components/PageTransition'
 import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 
 export default function Pricing() {
+  useDocumentTitle('Tarifs')
   const [yearly, setYearly] = useState(false)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()

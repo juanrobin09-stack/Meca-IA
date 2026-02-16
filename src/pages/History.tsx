@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { Link, useSearchParams } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAuth } from '@/hooks/useAuth'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useDevis } from '@/hooks/useDevis'
 import { useVideoDiagnostics } from '@/hooks/useVideoDiagnostics'
 import { useDiagnosticProSessions } from '@/hooks/useDiagnosticProSessions'
@@ -122,6 +123,7 @@ function formatAnalysisObject(obj: AnalysisObject): string {
 }
 
 export default function History() {
+  useDocumentTitle('Historique')
   const { user } = useAuth()
   const { devisList, loading: loadingDevis, deleteDevis } = useDevis(user?.id)
   const { videoDiagnostics, loading: loadingVideo, deleteVideoDiagnostic } = useVideoDiagnostics(user?.id)

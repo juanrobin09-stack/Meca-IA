@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useUserLimits } from '@/hooks/useUserLimits'
 import { useDevis } from '@/hooks/useDevis'
@@ -56,6 +57,7 @@ function setCachedCounters(remaining: number, purchased: number) {
 }
 
 export default function AnalyseDevis() {
+  useDocumentTitle('Analyse de Devis')
   const { user, profile, refreshProfile } = useAuth()
   const { isPremium, devisRemaining, purchasedDevisCredits, checkDevisLimit, incrementDevisCount } = useSubscription(profile)
   const userLimits = useUserLimits()

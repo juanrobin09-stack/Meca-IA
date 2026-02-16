@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +13,7 @@ import { Loader2 } from 'lucide-react'
 import { GoogleAuthButton } from '@/components/GoogleAuthButton'
 
 export default function Signup() {
+  useDocumentTitle('Inscription')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -147,6 +149,7 @@ export default function Signup() {
                   <Link
                     to="/cgu"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary hover:underline font-semibold"
                   >
                     Conditions Générales d'Utilisation
@@ -155,6 +158,7 @@ export default function Signup() {
                   <Link
                     to="/confidentialite"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary hover:underline font-semibold"
                   >
                     Politique de Confidentialité

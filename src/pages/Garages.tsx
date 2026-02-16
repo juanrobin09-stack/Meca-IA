@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import Sidebar from '@/components/Sidebar'
 import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
@@ -190,6 +191,7 @@ function GarageCard({
 }
 
 export default function Garages() {
+  useDocumentTitle('Garages')
   const [query, setQuery] = useState('')
   const [garages, setGarages] = useState<Garage[]>([])
   const [loading, setLoading] = useState(false)

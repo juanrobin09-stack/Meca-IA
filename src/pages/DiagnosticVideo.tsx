@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import Sidebar from '@/components/Sidebar'
 import PageTransition from '@/components/PageTransition'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ import {
 } from 'lucide-react'
 
 export default function DiagnosticVideo() {
+  useDocumentTitle('Diagnostic Vidéo')
   const { user, profile } = useAuth()
   const { isPremium } = useSubscription(profile)
   const [showPaywall, setShowPaywall] = useState(false)

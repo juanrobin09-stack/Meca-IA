@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAuth } from '@/hooks/useAuth'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useSubscription } from '@/hooks/useSubscription'
 import { createCheckoutSession, getCustomerPortalUrl, STRIPE_PRICES } from '@/lib/stripe'
 import Sidebar from '@/components/Sidebar'
@@ -24,6 +25,7 @@ import { Loader2, ExternalLink, Trash2, CheckCircle2, RefreshCw, Key, Eye, EyeOf
 import { formatDate } from '@/lib/utils'
 
 export default function Account() {
+  useDocumentTitle('Mon compte')
   const navigate = useNavigate()
   const { user, profile, deleteAccount, updatePassword, updateProfile } = useAuth()
   const { isPremium, diagnosticsUsed, diagnosticsRemaining } = useSubscription(profile)

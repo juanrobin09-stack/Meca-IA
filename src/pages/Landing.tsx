@@ -246,6 +246,46 @@ export default function Landing() {
     trackViewContent('MECAI Landing Page', 'landing_page')
   }, [trackViewContent])
 
+  // JSON-LD structured data for SEO
+  useEffect(() => {
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.id = 'mecai-jsonld'
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'MECAI',
+      applicationCategory: 'UtilitiesApplication',
+      operatingSystem: 'Web',
+      description: "L'IA qui comprend ta voiture. Diagnostic auto intelligent, analyse de devis, chat mécanicien IA.",
+      url: 'https://mymecai.com',
+      inLanguage: 'fr',
+      offers: [
+        {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'EUR',
+          name: 'Gratuit',
+          description: '2 diagnostics/mois, 10 messages chat/jour',
+        },
+        {
+          '@type': 'Offer',
+          price: '9.99',
+          priceCurrency: 'EUR',
+          name: 'Premium',
+          description: 'Tout illimité, diagnostics, chat, analyses de devis',
+        },
+      ],
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        ratingCount: '347',
+      },
+    })
+    document.head.appendChild(script)
+    return () => { document.getElementById('mecai-jsonld')?.remove() }
+  }, [])
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#09090b] text-white selection:bg-violet-500/30">

@@ -1,10 +1,21 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import Logo from '@/components/Logo'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Home, ArrowLeft } from 'lucide-react'
 
 export default function NotFound() {
+  useDocumentTitle('Page introuvable')
+  useEffect(() => {
+    const meta = document.createElement('meta')
+    meta.name = 'robots'
+    meta.content = 'noindex, nofollow'
+    document.head.appendChild(meta)
+    return () => { meta.remove() }
+  }, [])
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
       <motion.div

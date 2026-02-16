@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useDiagnostics } from '@/hooks/useDiagnostics'
 import Sidebar from '@/components/Sidebar'
@@ -77,6 +78,7 @@ const itemVariants = {
 } as const
 
 export default function Dashboard() {
+  useDocumentTitle('Tableau de bord')
   const { user, profile } = useAuth()
   const { isPremium, diagnosticsRemaining } = useSubscription(profile)
   const { diagnostics } = useDiagnostics(user?.id)

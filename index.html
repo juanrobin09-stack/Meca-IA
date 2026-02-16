@@ -15,10 +15,15 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/logo-192.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/logo-192.png" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="MECAI" />
+    <!-- iOS splash screens (generated from logo-512) -->
+    <link rel="apple-touch-startup-image" href="/logo-512.png" />
 
     <!-- Open Graph -->
     <meta property="og:title" content="MECAI - L'IA qui comprend ta voiture" />
@@ -66,6 +71,14 @@
     <div id="root">
       <div class="initial-loader"></div>
     </div>
+    <noscript>
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#09090b;color:#fafafa;padding:2rem;text-align:center;font-family:system-ui,sans-serif">
+        <div>
+          <h1 style="font-size:1.5rem;margin-bottom:1rem">MECAI</h1>
+          <p>JavaScript est nécessaire pour utiliser cette application. Veuillez activer JavaScript dans les paramètres de votre navigateur.</p>
+        </div>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
