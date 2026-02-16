@@ -14,14 +14,12 @@ import {
   MessageCircle,
   Mic,
   CheckCircle2,
-  X,
   Star,
   Shield,
   Zap,
   ArrowRight,
   ChevronRight,
 } from 'lucide-react'
-import { PLANS } from '@/config/plans'
 
 // ---------------------------------------------------------------------------
 // Floating Particles
@@ -586,78 +584,25 @@ export default function Landing() {
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
-              {/* Free plan */}
+            <div className="grid md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto items-start">
+              {/* Premium plan - FIRST, highlighted */}
               <motion.div
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-              >
-                <Card className="relative h-full border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm hover:border-white/[0.12] transition-all duration-300 rounded-2xl shadow-none">
-                  <CardHeader className="pb-4">
-                    <CardTitle className="flex items-center gap-3 text-white">
-                      <div className="h-10 w-10 rounded-xl bg-gray-800 flex items-center justify-center">
-                        <Zap className="h-5 w-5 text-gray-400" />
-                      </div>
-                      Gratuit
-                    </CardTitle>
-                    <div className="text-4xl font-bold text-white mt-2">
-                      0\u20AC
-                    </div>
-                    <CardDescription className="text-gray-500">
-                      Pour decouvrir MECAI
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {PLANS.free.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-sm">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
-                          <span className="text-gray-300">{feature}</span>
-                        </li>
-                      ))}
-                      {PLANS.free.notIncluded.map((feature, i) => (
-                        <li
-                          key={`not-${i}`}
-                          className="flex items-start gap-2.5 text-sm text-gray-600"
-                        >
-                          <X className="h-4 w-4 shrink-0 mt-0.5" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link to="/signup" className="block mt-6">
-                      <Button
-                        variant="outline"
-                        className="w-full h-12 rounded-xl border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06] text-white hover:text-white"
-                      >
-                        Commencer gratuitement
-                        <ChevronRight className="ml-1.5 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Premium plan */}
-              <motion.div
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="relative"
+                className="relative order-first"
               >
                 {/* Gradient glow behind card */}
                 <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-violet-600 via-purple-500 to-cyan-500 opacity-70 blur-[1px]" />
                 <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-br from-violet-600 via-purple-500 to-cyan-500 opacity-20 blur-lg" />
 
-                <Card className="relative h-full border-0 bg-[#0f0f14] rounded-2xl shadow-2xl shadow-violet-600/10 overflow-hidden">
+                <Card className="relative border-0 bg-[#0f0f14] rounded-2xl shadow-2xl shadow-violet-600/10 overflow-hidden">
                   {/* Populaire badge */}
                   <div className="absolute -top-0 left-1/2 -translate-x-1/2 translate-y-0 z-10">
                     <Badge className="bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 border-0 shadow-lg shadow-violet-600/30 text-white px-4 py-1 rounded-b-xl rounded-t-none">
                       <Star className="h-3 w-3 mr-1.5 fill-current" />
-                      Populaire
+                      Recommande
                     </Badge>
                   </div>
 
@@ -671,34 +616,98 @@ export default function Landing() {
                       </div>
                       Premium
                     </CardTitle>
-                    <div className="text-4xl font-bold text-white mt-2">
-                      9,99\u20AC
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-4xl font-bold text-white">9,99€</span>
                       <span className="text-base font-normal text-gray-500">/mois</span>
                     </div>
-                    <CardDescription className="text-gray-500">
+                    <CardDescription className="text-gray-400 mt-1">
                       Tout illimite, zero limite
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-3">
-                      {PLANS.premium.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2.5 text-sm">
-                          <CheckCircle2 className="h-4 w-4 text-violet-400 shrink-0 mt-0.5" />
+                  <CardContent className="space-y-5">
+                    <ul className="space-y-2.5">
+                      {[
+                        'Diagnostics Pro illimites',
+                        'Chat mecanicien 24/7 illimite',
+                        'Analyses de devis illimitees',
+                        'Diagnostic video IA',
+                        'SoundScan audio',
+                        'Vehicules illimites',
+                        'Prevision de pannes intelligente',
+                        'Support prioritaire',
+                      ].map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2.5 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-violet-400 shrink-0" />
                           <span className="text-gray-300">{feature}</span>
                         </li>
                       ))}
                     </ul>
-                    <Link to="/signup" className="block mt-6">
+                    <Link to="/signup" className="block">
                       <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                        <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 text-white shadow-lg shadow-violet-600/25 border-0 font-semibold">
+                        <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 text-white shadow-lg shadow-violet-600/25 border-0 font-semibold text-base">
                           Passer Premium
                           <ArrowRight className="ml-1.5 h-4 w-4" />
                         </Button>
                       </motion.div>
                     </Link>
-                    <p className="text-xs text-gray-500 text-center mt-4">
-                      Ou 89\u20AC/an (2 mois offerts)
+                    <p className="text-xs text-gray-500 text-center">
+                      Ou{' '}
+                      <span className="text-violet-400 font-medium">89€/an</span>{' '}
+                      (2 mois offerts)
                     </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Free plan */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <Card className="relative border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm hover:border-white/[0.12] transition-all duration-300 rounded-2xl shadow-none">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="flex items-center gap-3 text-white">
+                      <div className="h-10 w-10 rounded-xl bg-gray-800 flex items-center justify-center">
+                        <Zap className="h-5 w-5 text-gray-400" />
+                      </div>
+                      Gratuit
+                    </CardTitle>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-4xl font-bold text-white">0€</span>
+                      <span className="text-base font-normal text-gray-500">/mois</span>
+                    </div>
+                    <CardDescription className="text-gray-500">
+                      Pour decouvrir MECAI
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <ul className="space-y-2.5">
+                      {[
+                        '2 diagnostics par mois',
+                        '10 messages chat/jour',
+                        '1 analyse de devis/mois',
+                        '1 vehicule enregistre',
+                        'Recherche de garages',
+                        'Recherche de pieces',
+                        'Export PDF',
+                      ].map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2.5 text-sm">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span className="text-gray-300">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link to="/signup" className="block">
+                      <Button
+                        variant="outline"
+                        className="w-full h-12 rounded-xl border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06] text-white hover:text-white"
+                      >
+                        Commencer gratuitement
+                        <ChevronRight className="ml-1.5 h-4 w-4" />
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               </motion.div>
