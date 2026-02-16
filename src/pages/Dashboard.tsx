@@ -38,13 +38,20 @@ interface Vehicle {
   fuel_type: string
 }
 
-// Conseils auto rotatifs
+function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 6) return 'Bonne nuit'
+  if (h < 12) return 'Bonjour'
+  if (h < 18) return 'Bon après-midi'
+  return 'Bonsoir'
+}
+
 const AUTO_TIPS = [
-  { icon: Fuel, tip: "Verifie ton niveau d'huile tous les 1000 km", color: "text-amber-500" },
-  { icon: Wrench, tip: "Une vidange tous les 15 000 km prolonge la vie du moteur", color: "text-blue-500" },
-  { icon: AlertTriangle, tip: "Des freins qui grincent = plaquettes a verifier", color: "text-red-500" },
-  { icon: CheckCircle, tip: "Pneus gonfles = economie de carburant", color: "text-green-500" },
-  { icon: Calendar, tip: "Controle technique tous les 2 ans apres 4 ans", color: "text-purple-500" },
+  { icon: Fuel, tip: "Vérifie ton niveau d'huile tous les 1 000 km", color: 'text-amber-500' },
+  { icon: Wrench, tip: 'Une vidange tous les 15 000 km prolonge la vie du moteur', color: 'text-blue-500' },
+  { icon: AlertTriangle, tip: 'Des freins qui grincent = plaquettes à vérifier', color: 'text-red-500' },
+  { icon: CheckCircle, tip: 'Pneus bien gonflés = économie de carburant', color: 'text-green-500' },
+  { icon: Calendar, tip: 'Contrôle technique tous les 2 ans après 4 ans', color: 'text-purple-500' },
 ]
 
 const containerVariants = {
@@ -52,18 +59,18 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
+      staggerChildren: 0.06,
+      delayChildren: 0.05,
     },
   },
 } as const
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5 },
+    transition: { type: 'spring', stiffness: 300, damping: 24 },
   },
 } as const
 
@@ -83,7 +90,6 @@ export default function Dashboard() {
     return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear()
   })
 
-  // Charger les vehicules
   useEffect(() => {
     if (user?.id) {
       supabase
@@ -95,7 +101,6 @@ export default function Dashboard() {
     }
   }, [user?.id])
 
-  // Rotation des conseils
   useEffect(() => {
     const interval = setInterval(() => {
       setTipIndex((prev) => (prev + 1) % AUTO_TIPS.length)
@@ -109,7 +114,7 @@ export default function Dashboard() {
   const quickActions = [
     {
       title: 'Scanner un Devis',
-      description: 'Analyse et compare tes devis garage',
+      description: 'Analyse tes devis garage',
       icon: FileText,
       to: '/app/analyser-devis',
       gradient: 'from-violet-600 to-violet-400',
@@ -118,8 +123,8 @@ export default function Dashboard() {
       premiumOnly: false,
     },
     {
-      title: 'Chat Mecanicien',
-      description: 'Pose tes questions auto en direct',
+      title: 'Chat Mécanicien',
+      description: 'Pose tes questions auto',
       icon: MessageCircle,
       to: '/app/mechanic-chat',
       gradient: 'from-cyan-600 to-cyan-400',
@@ -128,8 +133,8 @@ export default function Dashboard() {
       premiumOnly: false,
     },
     {
-      title: 'Diagnostic Video',
-      description: 'Montre le probleme en video',
+      title: 'Diagnostic Vidéo',
+      description: 'Montre le problème',
       icon: Video,
       to: '/app/diagnostic-video',
       gradient: 'from-violet-600 to-cyan-400',
@@ -139,7 +144,7 @@ export default function Dashboard() {
     },
     {
       title: 'SoundScan',
-      description: 'Identifie un bruit suspect',
+      description: 'Identifie un bruit',
       icon: Mic,
       to: '/app/sound-scan',
       gradient: 'from-cyan-600 to-violet-400',
@@ -160,17 +165,16 @@ export default function Dashboard() {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="space-y-6"
+              className="space-y-5"
             >
               {/* ========== WELCOME SECTION ========== */}
               <motion.div variants={itemVariants} className="space-y-4">
                 <div>
                   <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
-                    Salut{' '}
+                    {getGreeting()}{' '}
                     <span className="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
                       {displayName}
-                    </span>{' '}
-                    !
+                    </span>
                   </h1>
                   <p className="text-sm sm:text-base text-gray-400 mt-1">
                     Que veux-tu faire aujourd'hui ?
@@ -196,7 +200,7 @@ export default function Dashboard() {
                             <Crown className="h-4 w-4 text-yellow-300" />
                           </div>
                           <p className="text-xs sm:text-sm text-white/80">
-                            Toutes les fonctionnalites illimitees
+                            Toutes les fonctionnalités illimitées
                           </p>
                         </div>
                         <Zap className="h-5 w-5 text-yellow-300 hidden sm:block" />
@@ -215,28 +219,28 @@ export default function Dashboard() {
                         </Link>
                       </div>
                       <p className="text-xs text-gray-400">
-                        Limites mensuelles - se reinitialisent chaque mois
+                        Limites mensuelles — se réinitialisent chaque mois
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className={`w-2 h-2 rounded-full ${diagnosticsRemaining > 0 ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                        <span className="text-gray-400">Diagnostics:</span>
+                        <span className="text-gray-400">Diagnostics :</span>
                         <span className="font-medium text-white">{diagnosticsRemaining}/2</span>
                       </div>
                       <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-gray-400">Devis:</span>
+                        <span className="text-gray-400">Devis :</span>
                         <span className="font-medium text-white">1/mois</span>
                       </div>
                       <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-gray-400">Chat:</span>
+                        <span className="text-gray-400">Chat :</span>
                         <span className="font-medium text-white">10/jour</span>
                       </div>
                       <div className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
                         <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                        <span className="text-gray-400">Vehicule:</span>
+                        <span className="text-gray-400">Véhicule :</span>
                         <span className="font-medium text-white">1 max</span>
                       </div>
                     </div>
@@ -247,11 +251,14 @@ export default function Dashboard() {
               {/* ========== QUICK ACTIONS - 2x2 GRID ========== */}
               <motion.div variants={itemVariants}>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                  {quickActions.map((action) => (
+                  {quickActions.map((action, i) => (
                     <Link key={action.to} to={action.to} onClick={() => playNavigate()}>
                       <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.15 + i * 0.06, type: 'spring', stiffness: 300, damping: 20 }}
                         whileHover={{ scale: 1.03, y: -2 }}
-                        whileTap={{ scale: 0.97 }}
+                        whileTap={{ scale: 0.96 }}
                         className="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 h-full relative overflow-hidden group cursor-pointer"
                       >
                         {/* Gradient glow on hover */}
@@ -269,7 +276,7 @@ export default function Dashboard() {
 
                         <div className="relative space-y-3">
                           {/* Icon */}
-                          <div className={`h-11 w-11 sm:h-12 sm:w-12 rounded-xl ${action.iconBg} flex items-center justify-center`}>
+                          <div className={`h-11 w-11 sm:h-12 sm:w-12 rounded-xl ${action.iconBg} flex items-center justify-center transition-transform duration-300 group-hover:scale-110`}>
                             <action.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${action.iconColor}`} />
                           </div>
 
@@ -278,7 +285,7 @@ export default function Dashboard() {
                             <h3 className="font-semibold text-sm sm:text-base text-white group-hover:text-white transition-colors">
                               {action.title}
                             </h3>
-                            <p className="text-xs text-gray-500 mt-0.5 hidden sm:block">
+                            <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">
                               {action.description}
                             </p>
                           </div>
@@ -299,11 +306,11 @@ export default function Dashboard() {
                         <div className="h-8 w-8 rounded-lg bg-violet-500/15 flex items-center justify-center">
                           <Car className="h-4 w-4 text-violet-400" />
                         </div>
-                        <h3 className="font-semibold text-sm text-white">Mon vehicule</h3>
+                        <h3 className="font-semibold text-sm text-white">Mon véhicule</h3>
                       </div>
                       <Link to="/app/vehicules">
                         <span className="text-xs text-violet-400 hover:text-violet-300 font-medium transition-colors flex items-center gap-0.5">
-                          Gerer
+                          Gérer
                           <ChevronRight className="h-3 w-3" />
                         </span>
                       </Link>
@@ -325,7 +332,7 @@ export default function Dashboard() {
                           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-gray-700 hover:border-violet-500/50 text-gray-400 hover:text-violet-400 transition-colors text-sm"
                         >
                           <Plus className="h-4 w-4" />
-                          Ajouter un vehicule
+                          Ajouter un véhicule
                         </motion.button>
                       </Link>
                     )}
@@ -340,9 +347,15 @@ export default function Dashboard() {
                       <h3 className="font-semibold text-sm text-white">Ce mois-ci</h3>
                     </div>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
+                      <motion.span
+                        key={thisMonthDiagnostics.length}
+                        initial={{ scale: 1.3, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                        className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent"
+                      >
                         {thisMonthDiagnostics.length}
-                      </span>
+                      </motion.span>
                       <span className="text-sm text-gray-400">
                         diagnostic{thisMonthDiagnostics.length !== 1 ? 's' : ''}
                       </span>
@@ -359,10 +372,9 @@ export default function Dashboard() {
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -30 }}
-                    transition={{ duration: 0.4, ease: 'easeInOut' }}
+                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
                   >
                     <div className="glass-card rounded-2xl p-4 relative overflow-hidden">
-                      {/* Subtle gradient accent */}
                       <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-violet-500 to-cyan-500 rounded-l-2xl" />
                       <div className="flex items-center gap-3 pl-2">
                         <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
@@ -375,7 +387,6 @@ export default function Dashboard() {
                           <p className="text-sm font-medium text-gray-200">{currentTip.tip}</p>
                         </div>
                       </div>
-                      {/* Tip indicator dots */}
                       <div className="flex items-center justify-center gap-1.5 mt-3 pl-2">
                         {AUTO_TIPS.map((_, i) => (
                           <div
@@ -416,13 +427,14 @@ export default function Dashboard() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.05 }}
                           whileHover={{ scale: 1.01, x: 4 }}
+                          whileTap={{ scale: 0.99 }}
                           className="glass-card glass-card-hover rounded-xl p-3 sm:p-4 flex items-center justify-between group cursor-pointer"
                         >
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm text-white truncate group-hover:text-violet-300 transition-colors">
                               {diag.car_brand && diag.car_model
                                 ? `${diag.car_brand} ${diag.car_model}`
-                                : 'Vehicule non specifie'}
+                                : 'Véhicule non spécifié'}
                             </p>
                             <p className="text-xs text-gray-500 truncate mt-0.5">
                               {diag.problem_description}
