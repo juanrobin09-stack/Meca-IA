@@ -8,8 +8,8 @@ import { Mail, ArrowLeft } from 'lucide-react'
 export default function EmailConfirmation() {
   return (
     <PageTransition>
-      <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950 px-4">
+        <Card className="w-full max-w-md border-white/10 bg-white/[0.03] backdrop-blur-xl">
           <CardHeader className="text-center">
             <Link to="/" className="flex justify-center mb-4">
               <Logo size="lg" showText={false} />
@@ -27,7 +27,7 @@ export default function EmailConfirmation() {
               Clique sur le lien dans l'email pour activer ton compte et commencer à utiliser MECAI.
             </p>
 
-            <div className="bg-muted/50 rounded-lg p-4">
+            <div className="bg-white/[0.03] border border-white/10 rounded-lg p-4">
               <p className="text-sm text-muted-foreground">
                 <span className="font-semibold">Astuce :</span> Pense à vérifier tes spams si tu ne reçois rien dans les prochaines minutes.
               </p>

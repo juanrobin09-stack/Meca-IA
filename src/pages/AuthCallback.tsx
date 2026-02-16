@@ -158,7 +158,7 @@ export default function AuthCallback() {
   }, [navigate, searchParams])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950 px-4">
       <div className="bg-card p-8 rounded-xl shadow-lg max-w-md w-full text-center border">
         <div className="flex justify-center mb-6">
           <Logo size="lg" showText={false} />

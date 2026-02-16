@@ -2,7 +2,7 @@ import { memo } from 'react'
 
 const LoadingSkeleton = memo(function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-background gradient-mesh flex items-center justify-center">
+    <div className="min-h-screen bg-gray-950 flex items-center justify-center animate-fade-in">
       <div className="w-full max-w-md p-8 text-center">
         {/* Logo pulse */}
         <div className="flex justify-center mb-8">

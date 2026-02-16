@@ -161,7 +161,7 @@ export default function Success() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/40">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center py-12">
             <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
@@ -174,7 +174,7 @@ export default function Success() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950 px-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-destructive">Erreur</CardTitle>
@@ -196,12 +196,12 @@ export default function Success() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle2 className="h-8 w-8 text-emerald-400" />
             </div>
           </div>
           <CardTitle className="text-2xl">Paiement réussi !</CardTitle>

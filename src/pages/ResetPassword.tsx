@@ -61,8 +61,8 @@ export default function ResetPassword() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen flex items-center justify-center bg-muted/40 px-4">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950 px-4">
+        <Card className="w-full max-w-md border-white/10 bg-white/[0.03] backdrop-blur-xl">
           <CardHeader className="text-center">
             <Link to="/" className="flex justify-center mb-4">
               <Logo size="lg" showText={false} />
@@ -85,7 +85,7 @@ export default function ResetPassword() {
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-4">
                 {error && (
-                  <div className="p-3 text-sm text-red-600 bg-red-50 rounded-md">
+                  <div className="p-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-md">
                     {error}
                   </div>
                 )}

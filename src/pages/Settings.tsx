@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import PageTransition from '@/components/PageTransition'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { getCustomerPortalUrlByUserId, createCheckoutSession, STRIPE_PRICES } from '@/lib/stripe'
@@ -84,7 +85,8 @@ export default function Settings() {
   const statusInfo = getSubscriptionStatus()
 
   return (
-    <div className="min-h-screen bg-muted/40">
+    <PageTransition>
+    <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
       <Sidebar />
 
       <main className="md:pl-64 pb-20 md:pb-0">
@@ -372,5 +374,6 @@ export default function Settings() {
         </div>
       </main>
     </div>
+    </PageTransition>
   )
 }

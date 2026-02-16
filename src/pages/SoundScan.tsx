@@ -590,7 +590,7 @@ export default function SoundScan() {
   if (!isPremium) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-muted/40">
+        <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
           <Sidebar />
           <main className="md:pl-64">
             <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 pb-28 md:pb-8 max-w-4xl">
@@ -702,7 +702,7 @@ export default function SoundScan() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-muted/40">
+      <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
         <Sidebar />
 
         <main className="md:pl-64">

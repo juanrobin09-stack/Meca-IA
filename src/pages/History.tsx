@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import PageTransition from '@/components/PageTransition'
 import { useAuth } from '@/hooks/useAuth'
 import { useDevis } from '@/hooks/useDevis'
 import { useVideoDiagnostics } from '@/hooks/useVideoDiagnostics'
@@ -189,7 +190,8 @@ export default function History() {
 
 
   return (
-    <div className="min-h-screen bg-muted/40">
+    <PageTransition>
+    <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
       <Sidebar />
 
       <main className="md:pl-64 pb-32 md:pb-8">
@@ -409,6 +411,7 @@ export default function History() {
         </div>
       </main>
     </div>
+    </PageTransition>
   )
 }
 
