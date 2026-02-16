@@ -25,9 +25,11 @@ import {
   Plus,
   Zap,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useSoundEffects } from '@/hooks/useSoundEffects'
+import { usePullToRefresh } from '@/hooks/usePullToRefresh'
 
 interface Vehicle {
   id: string
@@ -80,7 +82,29 @@ export default function Dashboard() {
   const { diagnostics } = useDiagnostics(user?.id)
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [tipIndex, setTipIndex] = useState(0)
-  const { playNavigate } = useSoundEffects()
+  const { playNavigate, playSuccess } = useSoundEffects()
+
+  const loadVehicles = useCallback(() => {
+    if (user?.id) {
+      supabase
+        .from('vehicles')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => setVehicles(data || []))
+    }
+  }, [user?.id])
+
+  const handleRefresh = useCallback(async () => {
+    playSuccess()
+    loadVehicles()
+    // Small delay to show the refresh animation
+    await new Promise(resolve => setTimeout(resolve, 600))
+  }, [loadVehicles, playSuccess])
+
+  const { containerRef, pullDistance, isRefreshing, progress } = usePullToRefresh({
+    onRefresh: handleRefresh,
+  })
 
   const displayName = profile?.display_name || user?.email?.split('@')[0] || 'utilisateur'
 
@@ -91,15 +115,8 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
-    if (user?.id) {
-      supabase
-        .from('vehicles')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .then(({ data }) => setVehicles(data || []))
-    }
-  }, [user?.id])
+    loadVehicles()
+  }, [loadVehicles])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -159,7 +176,21 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-950/20 via-gray-950 to-gray-950">
         <Sidebar />
 
-        <main className="md:pl-64 pb-24 md:pb-0">
+        <main ref={containerRef} className="md:pl-64 pb-24 md:pb-0 overflow-y-auto" style={{ minHeight: '100vh' }}>
+          {/* Pull-to-refresh indicator (mobile only) */}
+          {(pullDistance > 0 || isRefreshing) && (
+            <div
+              className="flex items-center justify-center md:hidden overflow-hidden transition-all"
+              style={{ height: isRefreshing ? 48 : pullDistance }}
+            >
+              <div
+                className="transition-transform"
+                style={{ transform: `rotate(${progress * 360}deg)` }}
+              >
+                <Loader2 className={`h-5 w-5 text-violet-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </div>
+            </div>
+          )}
           <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
             <motion.div
               variants={containerVariants}

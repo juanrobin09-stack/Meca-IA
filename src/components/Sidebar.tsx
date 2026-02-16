@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion'
 import { useAuth } from '@/hooks/useAuth'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useUserLimits } from '@/hooks/useUserLimits'
@@ -75,6 +75,13 @@ export default function Sidebar() {
 
   // Note: User limits are now managed globally via context
   // No need to refresh on route change - the context handles auto-refresh
+
+  const handleMenuDragEnd = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    // Close menu if dragged > 100px to the right or with enough velocity
+    if (info.offset.x > 100 || info.velocity.x > 500) {
+      setMobileMenuOpen(false)
+    }
+  }, [])
 
   async function handleSignOut() {
     setMobileMenuOpen(false)
@@ -237,12 +244,16 @@ export default function Sidebar() {
               onClick={() => setMobileMenuOpen(false)}
             />
 
-            {/* Slide-over Menu */}
+            {/* Slide-over Menu (swipe right to close) */}
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={{ left: 0, right: 0.4 }}
+              onDragEnd={handleMenuDragEnd}
               className="md:hidden fixed inset-y-0 right-0 w-[85%] max-w-sm bg-slate-950/95 backdrop-blur-xl border-l border-white/10 z-[70] shadow-2xl shadow-violet-950/20 flex flex-col"
             >
               {/* Header */}
