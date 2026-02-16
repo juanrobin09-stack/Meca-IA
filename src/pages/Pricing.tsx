@@ -201,7 +201,7 @@ export default function Pricing() {
                 variant="outline"
                 className="w-full h-12 text-base"
                 disabled={!!user}
-                onClick={() => !user && navigate('/register')}
+                onClick={() => !user && navigate('/signup')}
               >
                 {user ? 'Plan actuel' : 'Commencer gratuitement'}
               </Button>

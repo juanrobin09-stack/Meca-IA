@@ -4,7 +4,7 @@
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: geolocation=(), microphone=(), camera=(self), payment=(self)
+  Permissions-Policy: geolocation=(self), microphone=(self), camera=(self), payment=(self)
 
   # Cache control for HTML
   Cache-Control: no-cache, no-store, must-revalidate

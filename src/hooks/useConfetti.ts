@@ -1,8 +1,7 @@
-import confetti from 'canvas-confetti';
-
 export function useConfetti() {
-  const celebrate = () => {
-    // Premier burst
+  const celebrate = async () => {
+    const confetti = (await import('canvas-confetti')).default
+
     confetti({
       particleCount: 100,
       spread: 70,
@@ -10,7 +9,6 @@ export function useConfetti() {
       colors: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd']
     });
 
-    // Deuxième burst après 200ms
     setTimeout(() => {
       confetti({
         particleCount: 50,
@@ -32,12 +30,13 @@ export function useConfetti() {
     }, 400);
   };
 
-  const celebrateSuccess = () => {
+  const celebrateSuccess = async () => {
+    const confetti = (await import('canvas-confetti')).default
     confetti({
       particleCount: 80,
       spread: 100,
       origin: { y: 0.7 },
-      colors: ['#22c55e', '#4ade80', '#86efac'] // Vert pour succès
+      colors: ['#22c55e', '#4ade80', '#86efac']
     });
   };
 

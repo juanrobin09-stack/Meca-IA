@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatRelativeTime, formatPrice } from '@/lib/utils'
 import { ChevronRight, Download, Trash2 } from 'lucide-react'
-import { jsPDF } from 'jspdf'
 import { downloadPDF } from '@/lib/pdfDownload'
 import type { Diagnostic } from '@/types'
 
@@ -56,8 +55,8 @@ export default function DiagnosticCard({ diagnostic, onDelete }: DiagnosticCardP
     e.preventDefault()
     e.stopPropagation()
 
-    console.log('[PDF] Starting PDF export for diagnostic:', diagnostic.id)
     try {
+      const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()

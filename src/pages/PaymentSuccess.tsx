@@ -4,7 +4,7 @@ import { useUserLimits } from '@/hooks/useUserLimits'
 import { useTikTokTracking } from '@/hooks/useTikTokTracking'
 import { motion } from 'framer-motion'
 import { CheckCircle2, Loader2, Sparkles, MessageCircle, FileText, Microscope } from 'lucide-react'
-import confetti from 'canvas-confetti'
+// confetti is lazy-loaded when needed
 
 export default function PaymentSuccess() {
   const navigate = useNavigate()
@@ -39,11 +39,11 @@ export default function PaymentSuccess() {
           // Fire confetti and track subscription
           if (!confettiFiredRef.current) {
             confettiFiredRef.current = true
-            confetti({
+            import('canvas-confetti').then(m => m.default({
               particleCount: 100,
               spread: 70,
               origin: { y: 0.6 }
-            })
+            }))
           }
 
           // Track successful subscription for TikTok Pixel
@@ -84,11 +84,11 @@ export default function PaymentSuccess() {
 
       if (!confettiFiredRef.current) {
         confettiFiredRef.current = true
-        confetti({
+        import('canvas-confetti').then(m => m.default({
           particleCount: 100,
           spread: 70,
           origin: { y: 0.6 }
-        })
+        }))
       }
 
       // Track successful subscription for TikTok Pixel

@@ -225,9 +225,15 @@ export default function MechanicChat() {
 
       const result = await response.json()
 
+      // Vérifier LIMIT_REACHED en premier (avant le check error générique)
+      if (result.error === 'LIMIT_REACHED' || result.errorType === 'LIMIT_REACHED') {
+        setShowPaywall(true)
+        setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
+        return
+      }
+
       // Gérer les erreurs retournées par le backend (même avec status 200)
-      if (result.error === true) {
-        // Afficher le message d'erreur comme réponse d'Alex
+      if (result.error === true || !response.ok) {
         const errorMsg: Message = {
           id: 'error-' + Date.now(),
           conversation_id: convId,
@@ -237,15 +243,6 @@ export default function MechanicChat() {
         }
         setMessages(prev => [...prev.filter(m => m.id !== tempMsg.id), tempMsg, errorMsg])
         return
-      }
-
-      if (!response.ok) {
-        if (result.error === 'LIMIT_REACHED') {
-          setShowPaywall(true)
-          setMessages(prev => prev.filter(m => m.id !== tempMsg.id))
-          return
-        }
-        throw new Error(result.error)
       }
 
       // Recharger les messages depuis la DB pour garantir la persistance

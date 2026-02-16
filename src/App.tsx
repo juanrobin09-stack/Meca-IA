@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { UserLimitsProvider } from '@/contexts/UserLimitsContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import LoadingSkeleton from '@/components/LoadingSkeleton'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 // Lazy loaded pages - Code splitting pour performance
 const Landing = lazy(() => import('@/pages/Landing'))
@@ -89,6 +90,7 @@ const OnboardingWrapper = memo(function OnboardingWrapper({ children }: { childr
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <UserLimitsProvider>
       <OnboardingWrapper>
@@ -267,5 +269,6 @@ export default function App() {
       </OnboardingWrapper>
       </UserLimitsProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   )
 }

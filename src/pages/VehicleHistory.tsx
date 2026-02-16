@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useSubscription } from '@/hooks/useSubscription'
 import { useAuth } from '@/hooks/useAuth'
-import html2canvas from 'html2canvas'
+// html2canvas is lazy-loaded in exportReport()
 
 interface TechnicalControl {
   date: string
@@ -124,6 +124,7 @@ export default function VehicleHistory() {
     setExporting(true)
 
     try {
+      const { default: html2canvas } = await import('html2canvas')
       const canvas = await html2canvas(reportRef.current, {
         scale: 2,
         backgroundColor: '#0f172a',

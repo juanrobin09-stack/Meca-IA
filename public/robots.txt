@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /auth/
+Disallow: /reset-password
+Disallow: /email-confirmation
+
+Sitemap: https://mymecai.com/sitemap.xml

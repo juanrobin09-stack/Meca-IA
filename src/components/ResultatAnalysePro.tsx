@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { jsPDF } from 'jspdf'
 import { downloadPDF } from '@/lib/pdfDownload'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -125,6 +124,7 @@ export default function ResultatAnalysePro({ data }: Props) {
   // Télécharger le rapport en PDF
   const handleDownload = async () => {
     try {
+      const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
       const margin = 20

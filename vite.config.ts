@@ -62,5 +62,6 @@ export default defineConfig({
   esbuild: {
     legalComments: 'none',
     treeShaking: true,
+    drop: ['console', 'debugger'],
   },
 })

@@ -31,7 +31,6 @@ import {
   ChevronUp
 } from 'lucide-react'
 import type { DevisAnalysis, VideoDiagnostic, DiagnosticProSession } from '@/types'
-import { jsPDF } from 'jspdf'
 import { downloadPDF } from '@/lib/pdfDownload'
 
 // Helper function to convert analysis_result to string (handles both old string format and new JSON format)
@@ -489,8 +488,8 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
   }
 
   const exportToPDF = async () => {
-    console.log('[PDF] Starting PDF export for devis:', devis.id)
     try {
+      const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
@@ -860,8 +859,8 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
   }
 
   const exportToPDF = async () => {
-    console.log('[PDF] Starting PDF export for video diagnostic:', video.id)
     try {
+      const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()
@@ -1193,8 +1192,8 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
   }
 
   const exportToPDF = async () => {
-    console.log('[PDF] Starting PDF export for diagnostic pro:', session.id)
     try {
+      const { jsPDF } = await import('jspdf')
       const doc = new jsPDF()
       const pageWidth = doc.internal.pageSize.getWidth()
       const pageHeight = doc.internal.pageSize.getHeight()

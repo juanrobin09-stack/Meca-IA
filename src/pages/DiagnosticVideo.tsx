@@ -67,9 +67,15 @@ export default function DiagnosticVideo() {
         videoRef.current.srcObject = stream
       }
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'video/webm;codecs=vp9'
-      })
+      // Detect best supported MIME type (Safari doesn't support WebM)
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : MediaRecorder.isTypeSupported('video/webm')
+          ? 'video/webm'
+          : 'video/mp4'
+      const fileExt = mimeType.startsWith('video/mp4') ? 'mp4' : 'webm'
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType })
 
       mediaRecorderRef.current = mediaRecorder
       chunksRef.current = []
@@ -81,10 +87,10 @@ export default function DiagnosticVideo() {
       }
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' })
+        const blob = new Blob(chunksRef.current, { type: mimeType })
         const url = URL.createObjectURL(blob)
         setRecordedVideo(url)
-        const file = new File([blob], `recording-${Date.now()}.webm`, { type: 'video/webm' })
+        const file = new File([blob], `recording-${Date.now()}.${fileExt}`, { type: mimeType })
         setVideoFile(file)
         stream.getTracks().forEach(track => track.stop())
       }
