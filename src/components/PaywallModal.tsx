@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { createCheckoutSession, STRIPE_PRICES, type ProductType } from '@/lib/stripe'
 import {
@@ -243,7 +244,7 @@ export default function PaywallModal({
     } catch (error: unknown) {
       console.error('Checkout error details:', error)
       const err = error as { message?: string }
-      alert(`Erreur: ${err?.message || 'Erreur inconnue'}`)
+      toast.error(err?.message || 'Erreur lors du paiement')
     } finally {
       setLoading(null)
     }

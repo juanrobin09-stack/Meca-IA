@@ -67,6 +67,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <button
             onClick={handleSkip}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-300 transition-colors"
+            aria-label="Passer l'introduction"
           >
             <X className="h-5 w-5" />
           </button>
@@ -101,7 +102,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                 className={`h-2 rounded-full transition-all ${
                   index === currentStep ? 'bg-blue-600 w-6' : 'bg-gray-600 w-2'
                 }`}
-                layoutId="progress"
+                layout
               />
             ))}
           </div>

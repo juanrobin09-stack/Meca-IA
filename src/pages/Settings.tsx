@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAuth } from '@/hooks/useAuth'
@@ -46,7 +47,7 @@ export default function Settings() {
         return
       }
       console.error('Portal error:', error)
-      alert('Erreur lors de l\'ouverture du portail. Réessaie.')
+      toast.error('Erreur lors de l\'ouverture du portail')
     } finally {
       setLoading(null)
     }
@@ -60,7 +61,7 @@ export default function Settings() {
       await createCheckoutSession(priceId, isSubscription, user.id)
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Erreur lors du paiement. Réessaie.')
+      toast.error('Erreur lors du paiement')
     } finally {
       setLoading(null)
     }

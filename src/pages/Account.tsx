@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAuth } from '@/hooks/useAuth'
@@ -51,7 +52,7 @@ export default function Account() {
       await createCheckoutSession(priceId, isSubscription, user.id)
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Erreur lors du paiement. Réessaie.')
+      toast.error('Erreur lors du paiement')
     } finally {
       setLoading(null)
     }
@@ -66,7 +67,7 @@ export default function Account() {
       window.location.href = url
     } catch (error) {
       console.error('Portal error:', error)
-      alert('Erreur. Réessaie.')
+      toast.error('Erreur lors de l\'ouverture du portail')
     } finally {
       setLoading(null)
     }
@@ -81,7 +82,7 @@ export default function Account() {
       navigate('/')
     } catch (error) {
       console.error('Delete error:', error)
-      alert('Erreur lors de la suppression. Réessaie.')
+      toast.error('Erreur lors de la suppression du compte')
     } finally {
       setLoading(null)
     }

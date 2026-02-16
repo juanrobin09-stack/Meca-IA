@@ -6,6 +6,7 @@ import { UserLimitsProvider } from '@/contexts/UserLimitsContext'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import LoadingSkeleton from '@/components/LoadingSkeleton'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { Toaster } from 'sonner'
 
 // Lazy loaded pages - Code splitting pour performance
 const Landing = lazy(() => import('@/pages/Landing'))
@@ -266,6 +267,14 @@ export default function App() {
         <Suspense fallback={null}>
           <TikTokPixel />
         </Suspense>
+
+        <Toaster
+          theme="dark"
+          position="top-center"
+          toastOptions={{
+            style: { background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', color: '#fafafa' },
+          }}
+        />
       </OnboardingWrapper>
       </UserLimitsProvider>
     </BrowserRouter>

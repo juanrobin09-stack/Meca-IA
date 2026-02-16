@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Check, X, Zap, Star, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -39,7 +40,7 @@ export default function Pricing() {
       await createCheckoutSession(priceId, true, user.id)
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Erreur lors de la création de la session de paiement. Réessaie.')
+      toast.error('Erreur lors du paiement. Réessaie.')
     } finally {
       setLoading(false)
     }

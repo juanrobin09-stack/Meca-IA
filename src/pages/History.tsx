@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { toast } from 'sonner'
 import { Link, useSearchParams } from 'react-router-dom'
 import PageTransition from '@/components/PageTransition'
 import { useAuth } from '@/hooks/useAuth'
@@ -479,8 +480,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
         await onDelete(devis.id)
       } catch (error) {
         console.error('Error deleting devis:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-        alert(`Impossible de supprimer le devis: ${errorMessage}\n\nAssurez-vous que la migration RLS a été appliquée dans Supabase.`)
+        toast.error('Impossible de supprimer le devis')
       } finally {
         setIsDeleting(false)
       }
@@ -652,7 +652,7 @@ function DevisCard({ devis, onDelete }: DevisCardProps) {
       console.log('[PDF] PDF saved successfully')
     } catch (err) {
       console.error('[PDF] Error generating PDF:', err)
-      alert(`Erreur lors de la génération du PDF: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+      toast.error('Erreur lors de la génération du PDF')
     }
   }
 
@@ -850,8 +850,7 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
         await onDelete(video.id)
       } catch (error) {
         console.error('Error deleting video diagnostic:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-        alert(`Impossible de supprimer le diagnostic vidéo: ${errorMessage}\n\nAssurez-vous que la migration RLS a été appliquée dans Supabase.`)
+        toast.error('Impossible de supprimer le diagnostic vidéo')
       } finally {
         setIsDeleting(false)
       }
@@ -1006,7 +1005,7 @@ function VideoDiagnosticCard({ video, onDelete }: VideoDiagnosticCardProps) {
       console.log('[PDF] Video PDF saved successfully')
     } catch (err) {
       console.error('[PDF] Error generating video PDF:', err)
-      alert(`Erreur lors de la génération du PDF: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+      toast.error('Erreur lors de la génération du PDF')
     }
   }
 
@@ -1183,8 +1182,7 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
         await onDelete(session.id)
       } catch (error) {
         console.error('Error deleting diagnostic pro session:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-        alert(`Impossible de supprimer: ${errorMessage}`)
+        toast.error('Impossible de supprimer le diagnostic')
       } finally {
         setIsDeleting(false)
       }
@@ -1378,7 +1376,7 @@ function DiagnosticProCard({ session, onDelete }: DiagnosticProCardProps) {
       console.log('[PDF] Diagnostic Pro PDF saved successfully')
     } catch (err) {
       console.error('[PDF] Error generating diagnostic pro PDF:', err)
-      alert(`Erreur lors de la génération du PDF: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+      toast.error('Erreur lors de la génération du PDF')
     }
   }
 

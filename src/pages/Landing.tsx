@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTikTokTracking } from '@/hooks/useTikTokTracking'
@@ -232,6 +232,15 @@ const cardVariant = {
 // ---------------------------------------------------------------------------
 export default function Landing() {
   const { trackViewContent } = useTikTokTracking()
+  const [reducedMotion, setReducedMotion] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReducedMotion(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   useEffect(() => {
     trackViewContent('MECAI Landing Page', 'landing_page')
@@ -240,6 +249,14 @@ export default function Landing() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-[#09090b] text-white selection:bg-violet-500/30">
+        {/* Skip to content - Accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-violet-600 focus:text-white focus:rounded-lg"
+        >
+          Aller au contenu principal
+        </a>
+
         {/* ------------------------------------------------------------------ */}
         {/* HEADER                                                              */}
         {/* ------------------------------------------------------------------ */}
@@ -274,11 +291,12 @@ export default function Landing() {
           </div>
         </header>
 
+        <main id="main-content">
         {/* ------------------------------------------------------------------ */}
         {/* HERO                                                                */}
         {/* ------------------------------------------------------------------ */}
         <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-          <AnimatedBackground />
+          {!reducedMotion && <AnimatedBackground />}
 
           <div className="relative container mx-auto px-4 sm:px-6 py-20 md:py-28">
             <div className="max-w-4xl mx-auto text-center">
@@ -318,9 +336,9 @@ export default function Landing() {
                 transition={{ duration: 0.6, delay: 0.25 }}
                 className="text-lg sm:text-xl md:text-2xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed px-4"
               >
-                Diagnostic instantane, detection d'arnaques sur devis et conseils
-                personnalises.{' '}
-                <span className="text-white font-medium">Ton mecanicien IA, 24h/24.</span>
+                Diagnostic instantané, détection d'arnaques sur devis et conseils
+                personnalisés.{' '}
+                <span className="text-white font-medium">Ton mécanicien IA, 24h/24.</span>
               </motion.p>
 
               {/* CTA */}
@@ -361,8 +379,8 @@ export default function Landing() {
                 className="mt-16 sm:mt-20 grid grid-cols-3 gap-4 sm:gap-6 max-w-xl mx-auto"
               >
                 {[
-                  { value: '12,847', label: 'diagnostics realises' },
-                  { value: '342\u20AC', label: 'economises en moyenne' },
+                  { value: '12,847', label: 'diagnostics réalisés' },
+                  { value: '342\u20AC', label: 'économisés en moyenne' },
                   { value: '24/7', label: 'disponible' },
                 ].map((stat, i) => (
                   <motion.div
@@ -401,7 +419,7 @@ export default function Landing() {
             >
               <Badge className="mb-4 bg-violet-500/10 text-violet-300 border-violet-500/20 hover:bg-violet-500/15 px-4 py-1.5 text-sm">
                 <Zap className="h-3.5 w-3.5 mr-1.5" />
-                Fonctionnalites
+                Fonctionnalités
               </Badge>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 text-white">
                 Tout ce dont tu as{' '}
@@ -423,28 +441,28 @@ export default function Landing() {
                 {
                   icon: FileText,
                   title: 'Scan de Devis',
-                  desc: 'Scanne ton devis, detecte les arnaques. Notre IA compare les prix et identifie les lignes suspectes.',
+                  desc: 'Scanne ton devis, détecte les arnaques. Notre IA compare les prix et identifie les lignes suspectes.',
                   gradient: 'from-violet-600 to-purple-600',
                   glow: 'violet',
                 },
                 {
                   icon: Video,
-                  title: 'Diagnostic Video',
-                  desc: "Filme le probleme, l'IA diagnostique. Analyse visuelle en temps reel de l'etat de ta voiture.",
+                  title: 'Diagnostic Vidéo',
+                  desc: "Filme le problème, l'IA diagnostique. Analyse visuelle en temps réel de l'état de ta voiture.",
                   gradient: 'from-cyan-600 to-blue-600',
                   glow: 'cyan',
                 },
                 {
                   icon: MessageCircle,
-                  title: 'Chat Mecanicien',
-                  desc: 'Parle a Alex, ton mecanicien IA. Des reponses precises adaptees a ton vehicule, jour et nuit.',
+                  title: 'Chat Mécanicien',
+                  desc: 'Parle à Alex, ton mécanicien IA. Des réponses précises adaptées à ton véhicule, jour et nuit.',
                   gradient: 'from-violet-500 to-fuchsia-500',
                   glow: 'violet',
                 },
                 {
                   icon: Mic,
                   title: 'SoundScan',
-                  desc: 'Enregistre le bruit, identifie la panne. Analyse audio intelligente pour detecter les anomalies.',
+                  desc: 'Enregistre le bruit, identifie la panne. Analyse audio intelligente pour détecter les anomalies.',
                   gradient: 'from-cyan-500 to-teal-500',
                   glow: 'cyan',
                   isNew: true,
@@ -499,11 +517,11 @@ export default function Landing() {
                 Simple et rapide
               </Badge>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 text-white">
-                Comment ca{' '}
+                Comment ça{' '}
                 <span className="gradient-primary-text">marche</span>
               </h2>
               <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                Trois etapes, zero prise de tete
+                Trois étapes, zéro prise de tête
               </p>
             </motion.div>
 
@@ -517,18 +535,18 @@ export default function Landing() {
               {[
                 {
                   step: '1',
-                  title: 'Decris ou montre ton probleme',
-                  desc: 'Texte, photo, video ou meme un enregistrement audio du bruit suspect.',
+                  title: 'Décris ou montre ton problème',
+                  desc: 'Texte, photo, vidéo ou même un enregistrement audio du bruit suspect.',
                 },
                 {
                   step: '2',
-                  title: "L'IA analyse en temps reel",
-                  desc: "Notre modele specialise croise des milliers de cas pour identifier la panne.",
+                  title: "L'IA analyse en temps réel",
+                  desc: "Notre modèle spécialisé croise des milliers de cas pour identifier la panne.",
                 },
                 {
                   step: '3',
-                  title: 'Diagnostic complet + prix estimes',
-                  desc: 'Causes, urgence, estimation du cout et recommandation de garages.',
+                  title: 'Diagnostic complet + prix estimés',
+                  desc: 'Causes, urgence, estimation du coût et recommandation de garages.',
                 },
               ].map((item, i) => (
                 <motion.div key={i} variants={cardVariant} className="text-center relative">
@@ -580,7 +598,7 @@ export default function Landing() {
                 <span className="gradient-primary-text">transparents</span>
               </h2>
               <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-                Commence gratuitement, passe Premium quand tu es pret
+                Commence gratuitement, passe Premium quand tu es prêt
               </p>
             </motion.div>
 
@@ -602,7 +620,7 @@ export default function Landing() {
                   <div className="absolute -top-0 left-1/2 -translate-x-1/2 translate-y-0 z-10">
                     <Badge className="bg-gradient-to-r from-violet-600 to-purple-500 hover:from-violet-500 hover:to-purple-400 border-0 shadow-lg shadow-violet-600/30 text-white px-4 py-1 rounded-b-xl rounded-t-none">
                       <Star className="h-3 w-3 mr-1.5 fill-current" />
-                      Recommande
+                      Recommandé
                     </Badge>
                   </div>
 
@@ -621,19 +639,19 @@ export default function Landing() {
                       <span className="text-base font-normal text-gray-500">/mois</span>
                     </div>
                     <CardDescription className="text-gray-400 mt-1">
-                      Tout illimite, zero limite
+                      Tout illimité, zéro limite
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5">
                     <ul className="space-y-2.5">
                       {[
-                        'Diagnostics Pro illimites',
-                        'Chat mecanicien 24/7 illimite',
-                        'Analyses de devis illimitees',
-                        'Diagnostic video IA',
+                        'Diagnostics Pro illimités',
+                        'Chat mécanicien 24/7 illimité',
+                        'Analyses de devis illimitées',
+                        'Diagnostic vidéo IA',
                         'SoundScan audio',
-                        'Vehicules illimites',
-                        'Prevision de pannes intelligente',
+                        'Véhicules illimités',
+                        'Prévision de pannes intelligente',
                         'Support prioritaire',
                       ].map((feature, i) => (
                         <li key={i} className="flex items-center gap-2.5 text-sm">
@@ -679,7 +697,7 @@ export default function Landing() {
                       <span className="text-base font-normal text-gray-500">/mois</span>
                     </div>
                     <CardDescription className="text-gray-500">
-                      Pour decouvrir MECAI
+                      Pour découvrir MECAI
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-5">
@@ -688,9 +706,9 @@ export default function Landing() {
                         '2 diagnostics par mois',
                         '10 messages chat/jour',
                         '1 analyse de devis/mois',
-                        '1 vehicule enregistre',
+                        '1 véhicule enregistré',
                         'Recherche de garages',
-                        'Recherche de pieces',
+                        'Recherche de pièces',
                         'Export PDF',
                       ].map((feature, i) => (
                         <li key={i} className="flex items-center gap-2.5 text-sm">
@@ -733,8 +751,8 @@ export default function Landing() {
               viewport={{ once: true, margin: '-80px' }}
             >
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 text-white">
-                Pret a reprendre le{' '}
-                <span className="gradient-primary-text">controle</span> ?
+                Prêt à reprendre le{' '}
+                <span className="gradient-primary-text">contrôle</span> ?
               </h2>
               <p className="text-gray-400 text-lg sm:text-xl mb-10 max-w-xl mx-auto">
                 Rejoins des milliers d'automobilistes qui ne se font plus avoir au garage.
@@ -754,12 +772,14 @@ export default function Landing() {
                   </Button>
                 </motion.div>
               </Link>
-              <p className="text-sm text-gray-600 mt-4">
+              <p className="text-sm text-gray-500 mt-4">
                 Gratuit, sans engagement, sans carte bancaire
               </p>
             </motion.div>
           </div>
         </section>
+
+        </main>
 
         {/* ------------------------------------------------------------------ */}
         {/* FOOTER                                                              */}
@@ -773,7 +793,7 @@ export default function Landing() {
                   to="/mentions-legales"
                   className="hover:text-white transition-colors duration-200"
                 >
-                  Mentions legales
+                  Mentions légales
                 </Link>
                 <Link
                   to="/cgu"
@@ -785,7 +805,7 @@ export default function Landing() {
                   to="/confidentialite"
                   className="hover:text-white transition-colors duration-200"
                 >
-                  Confidentialite
+                  Confidentialité
                 </Link>
               </div>
               <p className="text-sm text-gray-600">

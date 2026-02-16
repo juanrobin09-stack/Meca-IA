@@ -279,6 +279,7 @@ export default function Vehicles() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={`Modifier ${vehicle.name}`}
                         onClick={() => {
                           setEditingVehicle(vehicle)
                           setShowAddModal(true)
@@ -289,6 +290,7 @@ export default function Vehicles() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        aria-label={`Supprimer ${vehicle.name}`}
                         onClick={() => handleDeleteVehicle(vehicle.id)}
                         className="text-red-500 hover:text-red-700"
                       >
@@ -422,8 +424,9 @@ function VehicleModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nom du véhicule</label>
+            <label htmlFor="vehicle-name" className="block text-sm font-medium mb-1">Nom du véhicule</label>
             <Input
+              id="vehicle-name"
               placeholder="Ex: Ma 208, Voiture de Marie..."
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -433,12 +436,12 @@ function VehicleModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Marque</label>
+              <label htmlFor="vehicle-brand" className="block text-sm font-medium mb-1">Marque</label>
               <Select
                 value={formData.brand}
                 onValueChange={(v) => setFormData({ ...formData, brand: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="vehicle-brand">
                   <SelectValue placeholder="Marque" />
                 </SelectTrigger>
                 <SelectContent>
@@ -451,8 +454,9 @@ function VehicleModal({
               </Select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Modèle</label>
+              <label htmlFor="vehicle-model" className="block text-sm font-medium mb-1">Modèle</label>
               <Input
+                id="vehicle-model"
                 placeholder="208, Clio, C3..."
                 value={formData.model}
                 onChange={(e) => setFormData({ ...formData, model: e.target.value })}
@@ -462,8 +466,9 @@ function VehicleModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Année</label>
+              <label htmlFor="vehicle-year" className="block text-sm font-medium mb-1">Année</label>
               <Input
+                id="vehicle-year"
                 type="number"
                 min={1990}
                 max={new Date().getFullYear() + 1}
@@ -472,12 +477,12 @@ function VehicleModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Carburant</label>
+              <label htmlFor="vehicle-fuel-type" className="block text-sm font-medium mb-1">Carburant</label>
               <Select
                 value={formData.fuel_type}
                 onValueChange={(v) => setFormData({ ...formData, fuel_type: v })}
               >
-                <SelectTrigger>
+                <SelectTrigger id="vehicle-fuel-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -493,8 +498,9 @@ function VehicleModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Kilométrage</label>
+              <label htmlFor="vehicle-mileage" className="block text-sm font-medium mb-1">Kilométrage</label>
               <Input
+                id="vehicle-mileage"
                 type="number"
                 placeholder="80000"
                 value={formData.mileage}
@@ -504,8 +510,9 @@ function VehicleModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Plaque (optionnel)</label>
+              <label htmlFor="vehicle-plate" className="block text-sm font-medium mb-1">Plaque (optionnel)</label>
               <Input
+                id="vehicle-plate"
                 placeholder="AB-123-CD"
                 value={formData.plate}
                 onChange={(e) =>

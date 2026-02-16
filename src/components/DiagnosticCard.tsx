@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -43,8 +44,7 @@ export default function DiagnosticCard({ diagnostic, onDelete }: DiagnosticCardP
         await onDelete(diagnostic.id)
       } catch (error) {
         console.error('Error deleting diagnostic:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue'
-        alert(`Impossible de supprimer le diagnostic: ${errorMessage}\n\nAssurez-vous que la migration RLS a été appliquée dans Supabase.`)
+        toast.error('Impossible de supprimer le diagnostic')
       } finally {
         setIsDeleting(false)
       }
@@ -219,7 +219,7 @@ export default function DiagnosticCard({ diagnostic, onDelete }: DiagnosticCardP
       console.log('[PDF] Diagnostic PDF saved successfully')
     } catch (err) {
       console.error('[PDF] Error generating diagnostic PDF:', err)
-      alert(`Erreur lors de la generation du PDF: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+      toast.error('Erreur lors de la génération du PDF')
     }
   }
 

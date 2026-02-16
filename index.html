@@ -47,8 +47,9 @@
     <!-- Preload critical resources -->
     <link rel="preload" href="/favicon-32.png" as="image" type="image/png" />
 
-    <!-- Font - Inter with variable weight -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Font - Inter (non-blocking) -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" as="style" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
 
     <!-- Critical CSS -->
     <style>

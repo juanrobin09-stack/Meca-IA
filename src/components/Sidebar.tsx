@@ -263,6 +263,7 @@ export default function Sidebar() {
                   <button
                     onClick={() => setMobileMenuOpen(false)}
                     className="p-2 rounded-full hover:bg-white/5 text-slate-400"
+                    aria-label="Fermer le menu"
                   >
                     <X className="h-6 w-6" />
                   </button>

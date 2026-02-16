@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { downloadPDF } from '@/lib/pdfDownload'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -277,7 +278,7 @@ export default function ResultatAnalysePro({ data }: Props) {
       }
     } catch (err) {
       console.error('Download failed:', err)
-      alert(`Erreur lors du téléchargement: ${err instanceof Error ? err.message : 'Erreur inconnue'}`)
+      toast.error('Erreur lors du téléchargement du PDF')
     }
   }
 

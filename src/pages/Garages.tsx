@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from '@/components/Sidebar'
 import PageTransition from '@/components/PageTransition'
@@ -304,9 +305,8 @@ export default function Garages() {
       if (isMobile) {
         window.location.href = `tel:${garage.phone.replace(/\s/g, '')}`
       } else {
-        // Sur PC, afficher le numéro dans une alerte avec option de copier
-        const copied = await navigator.clipboard.writeText(garage.phone).then(() => true).catch(() => false)
-        alert(`📞 ${garage.phone}${copied ? '\n\n(Numéro copié dans le presse-papier)' : ''}`)
+        await navigator.clipboard.writeText(garage.phone).catch(() => {})
+        toast.success(`${garage.phone} — copié !`)
       }
       return
     }
@@ -322,14 +322,14 @@ export default function Garages() {
         if (isMobile) {
           window.location.href = `tel:${details.phone.replace(/\s/g, '')}`
         } else {
-          const copied = await navigator.clipboard.writeText(details.phone).then(() => true).catch(() => false)
-          alert(`📞 ${details.phone}${copied ? '\n\n(Numéro copié dans le presse-papier)' : ''}`)
+          await navigator.clipboard.writeText(details.phone).catch(() => {})
+          toast.success(`${details.phone} — copié !`)
         }
       } else {
-        alert('Numéro non disponible pour ce garage')
+        toast.error('Numéro non disponible pour ce garage')
       }
     } catch {
-      alert('Impossible de récupérer le numéro')
+      toast.error('Impossible de récupérer le numéro')
     }
   }
 
