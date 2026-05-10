@@ -63,8 +63,10 @@ function parsePidValue(pid: string, raw: string): number | null {
 
 function parseDTCResponse(raw: string): OBDFaultCode[] {
   const codes: OBDFaultCode[] = []
-  // Strip ALL whitespace — ELM327 responses often have spaces between bytes
-  const cleaned = raw.toUpperCase().replace(/\s+/g, '')
+  // Strip frame numbers (0: 1: 2:) from multi-frame responses, then all whitespace
+  const cleaned = raw.toUpperCase()
+    .replace(/[0-9A-F]+:/g, ' ')  // retire préfixes de frame ISO-TP
+    .replace(/\s+/g, '')           // retire tous les espaces
   // Match mode 03 (43), mode 07 pending (47), mode 0A permanent (4A)
   const match = cleaned.match(/(43|47|4A)[0-9A-F]{4,}/g)
   if (!match) return codes
@@ -207,6 +209,7 @@ async function initELM327(send: SendFn): Promise<string> {
   await send('ATL0')      // Linefeeds off
   await send('ATS0')      // Spaces off
   await send('ATH0')      // Headers off
+  await send('ATAL')      // Allow Long messages — crucial pour DTCs multi-frame
   await send('ATCAF1')    // Auto formatting
   await send('ATAT1')     // Adaptive timing
   await send('ATST 96')   // Longer timeout while the ECU wakes up
@@ -264,35 +267,43 @@ async function readDTCs(send: SendFn, onStep?: (s: string) => void): Promise<OBD
     }
   }
 
-  // Mode 03 — codes confirmés ECM
+  // Adressage fonctionnel (broadcast → tous les ECU répondent au mode 03)
+  await send('AT SH 7DF')
+
+  // Mode 03 — codes confirmés (ECM répond à 7DF)
   onStep?.('Lecture codes défauts moteur…')
   addUnique(parseDTCResponse(await send('03')))
 
   // Mode 07 — codes en attente ECM
+  onStep?.('Codes en attente…')
   const pending = parseDTCResponse(await send('07')).map(c => ({ ...c, pending: true }))
   addUnique(pending)
 
-  // Réduit le timeout ELM327 à 200ms pour les modules silencieux (NO DATA rapide)
-  try { await send('ATST 32') } catch { /* ignore */ }
+  // Mode 0A — codes permanents (ne s'effacent pas)
+  onStep?.('Codes permanents…')
+  addUnique(parseDTCResponse(await send('0A')))
 
-  // Scan tous les modules ECU (AT SH seulement — AT CRA non supporté par tous les clones)
+  // Timeout ELM327 à 320ms pour les modules silencieux (NO DATA en 320ms au lieu de 1500ms)
+  try { await send('ATST 50') } catch { /* ATST non supporté par certains clones */ }
+
+  // Scan de tous les modules ECU par adresse CAN physique
   for (const mod of ALL_ECU_MODULES) {
     try {
       onStep?.(`Scan ${mod.label}…`)
       await send(`AT SH ${mod.send}`)
       const raw = await send('03')
       if (!raw || raw.includes('NO DATA') || raw.includes('ERROR') ||
-          raw.includes('UNABLE') || raw.includes('BUS') || raw.includes('?')) continue
+          raw.includes('UNABLE') || raw.includes('BUS') || raw.includes('?') ||
+          raw.includes('STOPPED')) continue
       const codes = parseDTCResponse(raw).map(c => ({ ...c, module: mod.label }))
       addUnique(codes)
-    } catch { /* module absent */ }
+    } catch { /* module absent ou non supporté */ }
   }
 
-  // Remet le timeout par défaut et l'adressage broadcast
+  // Remet le timeout par défaut et l'adressage fonctionnel
   try {
     await send('ATST FF')
     await send('AT SH 7DF')
-    await send('ATE0')
   } catch { /* ignore */ }
 
   return all
