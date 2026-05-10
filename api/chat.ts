@@ -139,7 +139,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const authHeader = req.headers.authorization
   if (!authHeader?.startsWith('Bearer ')) return json(res, 401, { error: 'Unauthorized' })
 
-  const { messages } = req.body as { messages: ChatMessage[] }
+  const { messages, stream: wantStream } = req.body as { messages: ChatMessage[]; stream?: boolean }
   if (!messages || !Array.isArray(messages)) return json(res, 400, { error: 'Invalid messages format' })
 
   try {
@@ -156,9 +156,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return { role: m.role as 'user' | 'assistant', content: m.content }
     })
 
+    if (wantStream) {
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+      res.setHeader('Cache-Control', 'no-cache, no-transform')
+      res.setHeader('X-Accel-Buffering', 'no')
+      res.status(200)
+
+      const stream = anthropic.messages.stream({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        system: SYSTEM_PROMPT,
+        messages: formattedMessages,
+      })
+
+      for await (const event of stream) {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
+        }
+      }
+
+      res.write('data: [DONE]\n\n')
+      res.end()
+      return
+    }
+
+    // Non-streaming fallback
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 2048,
+      max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages: formattedMessages,
     })

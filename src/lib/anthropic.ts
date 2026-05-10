@@ -46,8 +46,6 @@ export async function* streamMessage(messages: ChatMessage[]): AsyncGenerator<st
     throw new Error('User not authenticated')
   }
 
-  // Note: Netlify functions don't support true streaming
-  // So we fetch the complete response and yield it
   const response = await fetch(`${API_BASE}/chat`, {
     method: 'POST',
     headers: {
@@ -63,15 +61,28 @@ export async function* streamMessage(messages: ChatMessage[]): AsyncGenerator<st
     throw new Error('Failed to get response from AI')
   }
 
-  const data = await response.json()
+  // Read true SSE stream from the API
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
 
-  // Simulate streaming by yielding chunks of the response
-  const text = data.content
-  const chunkSize = 10
-  for (let i = 0; i < text.length; i += chunkSize) {
-    yield text.slice(i, i + chunkSize)
-    // Small delay to simulate streaming effect
-    await new Promise(resolve => setTimeout(resolve, 10))
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
+      const payload = line.slice(6).trim()
+      if (payload === '[DONE]') return
+      try {
+        const { text } = JSON.parse(payload)
+        if (text) yield text
+      } catch { /* incomplete chunk, skip */ }
+    }
   }
 }
 
