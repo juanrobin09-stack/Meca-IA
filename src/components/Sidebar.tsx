@@ -24,6 +24,7 @@ import {
   TrendingUp,
   MessageCircle,
   Settings,
+  Cpu,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { href: '/app/chat', icon: MessageSquarePlus, label: 'Diagnostic IA', shortLabel: 'Diagnostic', mobileShow: true },
   { href: '/app/mechanic-chat', icon: MessageCircle, label: 'Chat Mécanicien 24/7', shortLabel: 'Chat' },
   { href: '/app/analyser-devis', icon: FileText, label: 'Analyser un devis', shortLabel: 'Devis' },
+  { href: '/app/diagnostic-obd', icon: Cpu, label: 'Valise OBD', shortLabel: 'OBD' },
   { href: '/app/diagnostic-video', icon: Video, label: 'Diagnostic vidéo', shortLabel: 'Vidéo', tier: 'premium' },
   { href: '/app/prevision-pannes', icon: TrendingUp, label: 'Prévision pannes', shortLabel: 'Prévision', tier: 'premium' },
   { href: '/app/vehicules', icon: Car, label: 'Mes véhicules', shortLabel: 'Véhicules', mobileShow: true },
