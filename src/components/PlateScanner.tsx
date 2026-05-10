@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Camera, Loader2, Car, CheckCircle2 } from 'lucide-react'
 import { compressImage, validateImageFile } from '@/utils/imageCompression'
+import { getEngineOptions, getFuelForEngine, getModel, getModels, getYears, MANUAL_OPTION, UNKNOWN_ENGINE } from '@/data/vehicleCatalog'
 
 interface VehicleInfo {
   plate: string
@@ -44,6 +45,23 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  function handleBrandChange(brand: string) {
+    const firstModel = getModels(brand).find((model) => model !== MANUAL_OPTION) ?? ''
+    const firstEngine = getEngineOptions(brand, firstModel).find((engine) => engine !== UNKNOWN_ENGINE && engine !== MANUAL_OPTION) ?? ''
+    const firstYear = getYears(brand, firstModel, firstEngine)[0]?.toString() ?? new Date().getFullYear().toString()
+    const fuel = getFuelForEngine(brand, firstModel, firstEngine) ?? vehicle.fuel
+    setError(null)
+    setVehicle((prev) => ({ ...prev, brand, model: firstModel, year: firstYear, fuel }))
+  }
+
+  function handleModelChange(model: string) {
+    const firstEngine = getEngineOptions(vehicle.brand, model).find((engine) => engine !== UNKNOWN_ENGINE && engine !== MANUAL_OPTION) ?? ''
+    const firstYear = getYears(vehicle.brand, model, firstEngine)[0]?.toString() ?? vehicle.year
+    const fuel = getFuelForEngine(vehicle.brand, model, firstEngine) ?? vehicle.fuel
+    setError(null)
+    setVehicle((prev) => ({ ...prev, model, year: firstYear, fuel }))
+  }
+
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -64,7 +82,7 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
 
       // Call Claude Vision to extract plate
       const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-      if (!apiKey) throw new Error('API key not configured')
+      if (!apiKey) throw new Error('Le scan plaque n est pas configure: cle API manquante.')
 
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -97,7 +115,16 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
         }),
       })
 
-      if (!response.ok) throw new Error('API error')
+      if (!response.ok) {
+        let detail = ''
+        try {
+          const body = await response.json()
+          detail = body?.error?.message ? ` ${body.error.message}` : ''
+        } catch {
+          detail = ''
+        }
+        throw new Error(`Service de scan indisponible (${response.status}).${detail}`)
+      }
 
       const data = await response.json()
       const extractedPlate = data.content[0].text.trim().toUpperCase()
@@ -112,6 +139,10 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
       setStep('confirm')
     } catch (err) {
       console.error('Scan error:', err)
+      if (err instanceof Error) {
+        setError(err.message)
+        return
+      }
       setError("Erreur lors du scan. Réessaie.")
     } finally {
       setIsScanning(false)
@@ -213,7 +244,7 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
                     id="brand"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={vehicle.brand}
-                    onChange={(e) => setVehicle((prev) => ({ ...prev, brand: e.target.value }))}
+                    onChange={(e) => handleBrandChange(e.target.value)}
                   >
                     {BRANDS.map((brand) => (
                       <option key={brand} value={brand}>{brand}</option>
@@ -222,26 +253,53 @@ export default function PlateScanner({ open, onOpenChange, onVehicleConfirmed }:
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="model">Modèle *</Label>
-                  <Input
-                    id="model"
-                    placeholder="ex: 208, Clio..."
-                    value={vehicle.model}
-                    onChange={(e) => setVehicle((prev) => ({ ...prev, model: e.target.value }))}
-                  />
+                  {getModels(vehicle.brand).length > 0 ? (
+                    <select
+                      id="model"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={vehicle.model}
+                      onChange={(e) => handleModelChange(e.target.value)}
+                    >
+                      <option value="">Selectionner</option>
+                      {getModels(vehicle.brand).map((model) => (
+                        <option key={model} value={model}>{model}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Input
+                      id="model"
+                      placeholder="ex: 208, Clio..."
+                      value={vehicle.model}
+                      onChange={(e) => setVehicle((prev) => ({ ...prev, model: e.target.value }))}
+                    />
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="year">Année</Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    min="1990"
-                    max={new Date().getFullYear()}
-                    value={vehicle.year}
-                    onChange={(e) => setVehicle((prev) => ({ ...prev, year: e.target.value }))}
-                  />
+                  {getModel(vehicle.brand, vehicle.model) ? (
+                    <select
+                      id="year"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={vehicle.year}
+                      onChange={(e) => setVehicle((prev) => ({ ...prev, year: e.target.value }))}
+                    >
+                      {getYears(vehicle.brand, vehicle.model).map((year) => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Input
+                      id="year"
+                      type="number"
+                      min="1990"
+                      max={new Date().getFullYear()}
+                      value={vehicle.year}
+                      onChange={(e) => setVehicle((prev) => ({ ...prev, year: e.target.value }))}
+                    />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="fuel">Carburant</Label>

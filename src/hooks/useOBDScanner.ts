@@ -345,6 +345,12 @@ export function useOBDScanner() {
 
       // Paramètres temps réel
       const parameters = await readParameters(send, setStep)
+      const hasLiveData = parameters.some((param) => param.value !== null)
+      if (!vin && !readinessData && faultCodes.length === 0 && !hasLiveData) {
+        throw new Error(
+          'Connexion etablie avec la valise, mais aucune donnee ECU n a ete lue. Verifie que le contact est mis, que le moteur est demarre si besoin, et que la valise est bien enfoncee dans la prise OBD.'
+        )
+      }
 
       const result: OBDScanResult = {
         timestamp: new Date().toISOString(),
@@ -358,9 +364,15 @@ export function useOBDScanner() {
         readiness: readinessData?.monitors,
         protocolUsed: 'ISO 15765-4 CAN',
       }
-      setState(prev => ({ ...prev, scanResult: result, isScanning: false, scanStep: undefined }))
+      setState(prev => ({ ...prev, scanResult: result, isScanning: false, scanStep: undefined, error: null }))
     } catch (err: any) {
-      setState(prev => ({ ...prev, isScanning: false, scanStep: undefined, error: `Erreur scan: ${err?.message}` }))
+      setState(prev => ({
+        ...prev,
+        status: 'error',
+        isScanning: false,
+        scanStep: undefined,
+        error: `Erreur scan: ${err?.message ?? 'lecture OBD impossible'}`,
+      }))
     }
   }
 

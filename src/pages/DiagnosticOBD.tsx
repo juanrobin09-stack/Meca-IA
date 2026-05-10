@@ -15,6 +15,17 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  getBrand,
+  getBrandNames,
+  getEngineOptions,
+  getFuelForEngine,
+  getModel,
+  getModels,
+  getYears,
+  MANUAL_OPTION,
+  UNKNOWN_ENGINE,
+} from '@/data/vehicleCatalog'
+import {
   Cpu,
   ArrowRight,
   Loader2,
@@ -325,10 +336,84 @@ function VehicleForm({
   onConfirm: () => void
   confirmLabel?: string
 }) {
-  const isValid = value.marque.trim() && value.modele.trim() && value.annee.trim()
+  const [formError, setFormError] = useState<string | null>(null)
+  const [manualBrand, setManualBrand] = useState(false)
+  const [manualModel, setManualModel] = useState(false)
+  const [manualEngine, setManualEngine] = useState(false)
+  const brandOptions = getBrandNames()
+  const modelOptions = getModels(value.marque)
+  const engineOptions = getEngineOptions(value.marque, value.modele)
+  const yearOptions = getYears(value.marque, value.modele, value.moteur)
 
   function set(field: keyof VehicleInfo, v: string) {
     onChange({ ...value, [field]: v })
+    setFormError(null)
+  }
+
+  function selectBrand(brand: string) {
+    setFormError(null)
+    if (brand === MANUAL_OPTION) {
+      setManualBrand(true)
+      setManualModel(true)
+      setManualEngine(true)
+      onChange({ ...value, marque: '', modele: '', moteur: '', annee: '' })
+      return
+    }
+
+    const firstModel = getModels(brand).find((model) => model !== MANUAL_OPTION) ?? ''
+    const firstEngine = getEngineOptions(brand, firstModel).find((engine) => engine !== UNKNOWN_ENGINE && engine !== MANUAL_OPTION) ?? ''
+    const firstYear = getYears(brand, firstModel, firstEngine)[0]?.toString() ?? ''
+    setManualBrand(false)
+    setManualModel(false)
+    setManualEngine(false)
+    onChange({ ...value, marque: brand, modele: firstModel, moteur: firstEngine, annee: firstYear })
+  }
+
+  function selectModel(model: string) {
+    setFormError(null)
+    if (model === MANUAL_OPTION) {
+      setManualModel(true)
+      setManualEngine(true)
+      onChange({ ...value, modele: '', moteur: '', annee: '' })
+      return
+    }
+
+    const firstEngine = getEngineOptions(value.marque, model).find((engine) => engine !== UNKNOWN_ENGINE && engine !== MANUAL_OPTION) ?? ''
+    const firstYear = getYears(value.marque, model, firstEngine)[0]?.toString() ?? ''
+    setManualModel(false)
+    setManualEngine(false)
+    onChange({ ...value, modele: model, moteur: firstEngine, annee: firstYear })
+  }
+
+  function selectEngine(engine: string) {
+    setFormError(null)
+    if (engine === MANUAL_OPTION) {
+      setManualEngine(true)
+      onChange({ ...value, moteur: '', annee: getYears(value.marque, value.modele)[0]?.toString() ?? '' })
+      return
+    }
+
+    const nextEngine = engine === UNKNOWN_ENGINE ? '' : engine
+    const firstYear = getYears(value.marque, value.modele, nextEngine)[0]?.toString() ?? ''
+    setManualEngine(false)
+    onChange({ ...value, moteur: nextEngine, annee: firstYear })
+  }
+
+  function handleConfirmClick() {
+    if (!value.marque.trim()) {
+      setFormError('Choisis ou renseigne la marque du vehicule.')
+      return
+    }
+    if (!value.modele.trim()) {
+      setFormError('Choisis ou renseigne le modele du vehicule.')
+      return
+    }
+    if (!value.annee.trim()) {
+      setFormError('Choisis ou renseigne l annee du vehicule.')
+      return
+    }
+    setFormError(null)
+    onConfirm()
   }
 
   return (
@@ -346,33 +431,71 @@ function VehicleForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="marque">Marque *</Label>
-            <Input
+            <select
               id="marque"
-              placeholder="ex: Renault"
-              value={value.marque}
-              onChange={(e) => set('marque', e.target.value)}
-            />
+              value={manualBrand ? MANUAL_OPTION : value.marque}
+              onChange={(e) => selectBrand(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Selectionner</option>
+              {brandOptions.map((brand) => (
+                <option key={brand} value={brand}>{brand}</option>
+              ))}
+            </select>
+            {manualBrand && (
+              <Input
+                placeholder="ex: Seat"
+                value={value.marque}
+                onChange={(e) => set('marque', e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="modele">Modèle *</Label>
-            <Input
+            <select
               id="modele"
-              placeholder="ex: Clio 4"
-              value={value.modele}
-              onChange={(e) => set('modele', e.target.value)}
-            />
+              value={manualModel ? MANUAL_OPTION : value.modele}
+              onChange={(e) => selectModel(e.target.value)}
+              disabled={!getBrand(value.marque)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+            >
+              <option value="">Selectionner</option>
+              {modelOptions.map((model) => (
+                <option key={model} value={model}>{model}</option>
+              ))}
+            </select>
+            {(manualBrand || manualModel) && (
+              <Input
+                placeholder="ex: Ibiza, Clio 4..."
+                value={value.modele}
+                onChange={(e) => set('modele', e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="annee">Année *</Label>
-            <Input
-              id="annee"
-              placeholder="ex: 2018"
-              type="number"
-              min="1990"
-              max="2030"
-              value={value.annee}
-              onChange={(e) => set('annee', e.target.value)}
-            />
+            {getModel(value.marque, value.modele) ? (
+              <select
+                id="annee"
+                value={value.annee}
+                onChange={(e) => set('annee', e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                id="annee"
+                placeholder="ex: 2018"
+                type="number"
+                min="1990"
+                max="2030"
+                value={value.annee}
+                onChange={(e) => set('annee', e.target.value)}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="km">Kilométrage</Label>
@@ -387,8 +510,25 @@ function VehicleForm({
           </div>
           <div className="col-span-2 space-y-1.5">
             <Label htmlFor="moteur">Motorisation</Label>
+            {getBrand(value.marque) && getModel(value.marque, value.modele) && (
+              <select
+                value={manualEngine ? MANUAL_OPTION : value.moteur || UNKNOWN_ENGINE}
+                onChange={(e) => selectEngine(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                {engineOptions.map((engine) => {
+                  const fuel = getFuelForEngine(value.marque, value.modele, engine)
+                  return (
+                    <option key={engine} value={engine}>
+                      {fuel ? `${engine} - ${fuel}` : engine}
+                    </option>
+                  )
+                })}
+              </select>
+            )}
             <Input
               id="moteur"
+              className={getModel(value.marque, value.modele) && !manualEngine ? 'hidden' : undefined}
               placeholder="ex: 1.5 dCi 90ch, 1.2 TCe 120ch, 2.0 TDI 150ch…"
               value={value.moteur}
               onChange={(e) => set('moteur', e.target.value)}
@@ -396,11 +536,16 @@ function VehicleForm({
           </div>
         </div>
 
+        {formError && (
+          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+            {formError}
+          </div>
+        )}
+
         <Button
           className="w-full gap-2"
           size="lg"
-          onClick={onConfirm}
-          disabled={!isValid}
+          onClick={handleConfirmClick}
         >
           <ArrowRight className="h-4 w-4" />
           {confirmLabel}
@@ -421,6 +566,7 @@ export default function DiagnosticOBD() {
   const [vehicleConfirmed, setVehicleConfirmed] = useState(false)
   const [diagStarted, setDiagStarted] = useState(false)
   const [diagId, setDiagId] = useState<string | null>(null)
+  const [aiError, setAiError] = useState<string | null>(null)
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo>({
     marque: '',
     modele: '',
@@ -434,6 +580,7 @@ export default function DiagnosticOBD() {
   async function handleSendToAI() {
     if (!scan || !user) return
     setDiagStarted(true)
+    setAiError(null)
 
     const km = vehicleInfo.kilometrage.trim() || 'non renseigné'
     const vehicle: VehicleInfo = { ...vehicleInfo, kilometrage: km }
@@ -454,6 +601,7 @@ export default function DiagnosticOBD() {
       }
     } catch (err) {
       console.error('Erreur envoi OBD vers IA:', err)
+      setAiError(err instanceof Error ? err.message : 'Impossible d envoyer le scan a l IA.')
     }
   }
 
@@ -659,6 +807,12 @@ export default function DiagnosticOBD() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                      {aiError && (
+                        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                          {aiError}
+                        </div>
+                      )}
+
                       {isLoading && !streamingContent && (
                         <div className="flex items-center gap-2 text-muted-foreground text-sm">
                           <Loader2 className="h-4 w-4 animate-spin" />

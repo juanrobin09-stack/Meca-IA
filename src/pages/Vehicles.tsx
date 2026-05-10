@@ -23,6 +23,7 @@ import PageTransition from '@/components/PageTransition'
 import Sidebar from '@/components/Sidebar'
 import PlateScanner from '@/components/PlateScanner'
 import { Link } from 'react-router-dom'
+import { getEngineOptions, getFuelForEngine, getModel, getModels, getYears, MANUAL_OPTION, UNKNOWN_ENGINE } from '@/data/vehicleCatalog'
 
 interface Vehicle {
   id: string
@@ -61,6 +62,7 @@ export default function Vehicles() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [showScanner, setShowScanner] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Get tier from user profile subscription status
   const isPremium = profile?.subscription_status === 'premium'
@@ -86,11 +88,13 @@ export default function Vehicles() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (!error && data) {
+      if (error) throw error
+      if (data) {
         setVehicles(data)
       }
     } catch (err) {
       console.error('Error fetching vehicles:', err)
+      setError(err instanceof Error ? err.message : 'Impossible de charger les vehicules.')
     }
     setLoading(false)
   }
@@ -99,10 +103,13 @@ export default function Vehicles() {
     if (!user) return
 
     try {
+      setError(null)
       if (editingVehicle) {
-        await supabase.from('vehicles').update(vehicleData).eq('id', editingVehicle.id)
+        const { error } = await supabase.from('vehicles').update(vehicleData).eq('id', editingVehicle.id)
+        if (error) throw error
       } else {
-        await supabase.from('vehicles').insert({ ...vehicleData, user_id: user.id })
+        const { error } = await supabase.from('vehicles').insert({ ...vehicleData, user_id: user.id })
+        if (error) throw error
       }
 
       fetchVehicles()
@@ -110,6 +117,7 @@ export default function Vehicles() {
       setEditingVehicle(null)
     } catch (err) {
       console.error('Error saving vehicle:', err)
+      setError(err instanceof Error ? err.message : 'Impossible d enregistrer le vehicule.')
     }
   }
 
@@ -117,10 +125,13 @@ export default function Vehicles() {
     if (!confirm('Supprimer ce véhicule ?')) return
 
     try {
-      await supabase.from('vehicles').delete().eq('id', id)
+      setError(null)
+      const { error } = await supabase.from('vehicles').delete().eq('id', id)
+      if (error) throw error
       fetchVehicles()
     } catch (err) {
       console.error('Error deleting vehicle:', err)
+      setError(err instanceof Error ? err.message : 'Impossible de supprimer le vehicule.')
     }
   }
 
@@ -176,6 +187,18 @@ export default function Vehicles() {
                 </Button>
               </div>
             </div>
+
+            {error && (
+              <Card className="p-4 mb-6 bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-900">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-red-800 dark:text-red-200">Erreur</p>
+                    <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {!canAddVehicle && (
               <Card className="p-4 mb-6 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
@@ -341,6 +364,34 @@ function VehicleModal({
     onSave(formData)
   }
 
+  const handleBrandChange = (brand: string) => {
+    const firstModel = getModels(brand).find((model) => model !== MANUAL_OPTION) ?? ''
+    const firstEngine = getEngineOptions(brand, firstModel).find((engine) => engine !== UNKNOWN_ENGINE && engine !== MANUAL_OPTION) ?? ''
+    const firstYear = getYears(brand, firstModel, firstEngine)[0] ?? new Date().getFullYear()
+    const fuel = getFuelForEngine(brand, firstModel, firstEngine) ?? formData.fuel_type
+    setFormData({
+      ...formData,
+      brand,
+      model: firstModel,
+      year: firstYear,
+      fuel_type: fuel,
+      name: formData.name || `${brand} ${firstModel}`.trim(),
+    })
+  }
+
+  const handleModelChange = (model: string) => {
+    const firstEngine = getEngineOptions(formData.brand, model).find((engine) => engine !== UNKNOWN_ENGINE && engine !== MANUAL_OPTION) ?? ''
+    const firstYear = getYears(formData.brand, model, firstEngine)[0] ?? formData.year
+    const fuel = getFuelForEngine(formData.brand, model, firstEngine) ?? formData.fuel_type
+    setFormData({
+      ...formData,
+      model,
+      year: firstYear,
+      fuel_type: fuel,
+      name: formData.name || `${formData.brand} ${model}`.trim(),
+    })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -371,7 +422,7 @@ function VehicleModal({
               <label className="block text-sm font-medium mb-1">Marque</label>
               <Select
                 value={formData.brand}
-                onValueChange={(v) => setFormData({ ...formData, brand: v })}
+                onValueChange={handleBrandChange}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Marque" />
@@ -387,24 +438,60 @@ function VehicleModal({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Modèle</label>
-              <Input
-                placeholder="208, Clio, C3..."
-                value={formData.model}
-                onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-              />
+              {getModels(formData.brand).length > 0 ? (
+                <Select
+                  value={formData.model}
+                  onValueChange={handleModelChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Modele" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getModels(formData.brand).map((model) => (
+                      <SelectItem key={model} value={model}>
+                        {model}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  placeholder="208, Clio, C3..."
+                  value={formData.model}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                />
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Année</label>
-              <Input
-                type="number"
-                min={1990}
-                max={new Date().getFullYear() + 1}
-                value={formData.year}
-                onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-              />
+              {getModel(formData.brand, formData.model) ? (
+                <Select
+                  value={String(formData.year)}
+                  onValueChange={(v) => setFormData({ ...formData, year: parseInt(v) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getYears(formData.brand, formData.model).map((year) => (
+                      <SelectItem key={year} value={String(year)}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input
+                  type="number"
+                  min={1990}
+                  max={new Date().getFullYear() + 1}
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                />
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Carburant</label>

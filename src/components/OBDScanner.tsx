@@ -232,7 +232,7 @@ export default function OBDScanner({
             </div>
             <p className="text-sm text-muted-foreground">{state.error}</p>
             <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={() => setSelectedMode(null)} className="gap-2">
+              <Button variant="outline" size="sm" onClick={() => { setSelectedMode(null); onDisconnect() }} className="gap-2">
                 <RefreshCw className="h-4 w-4" />
                 Réessayer
               </Button>
