@@ -179,25 +179,44 @@ export function useOBDScanner() {
     }
     setStatus({ status: 'connecting', connectionType: 'usb', error: null })
     try {
-      const port = await (navigator as any).serial.requestPort()
-      await port.open({ baudRate: 38400 })
+      // Essaie d'abord les ports déjà autorisés (reconnexion automatique)
+      const existingPorts: any[] = await (navigator as any).serial.getPorts()
+      // filters: [] = accepte TOUS les appareils sans restriction de VID/PID
+      const port = existingPorts.length > 0
+        ? existingPorts[0]
+        : await (navigator as any).serial.requestPort({ filters: [] })
+
+      // Tente plusieurs débits courants des adaptateurs ELM327
+      const baudRates = [38400, 115200, 9600, 57600]
+      let opened = false
+      for (const baudRate of baudRates) {
+        try {
+          await port.open({ baudRate })
+          opened = true
+          break
+        } catch { /* essaie le débit suivant */ }
+      }
+      if (!opened) throw new Error('Impossible d\'ouvrir le port (vérifie qu\'aucun autre programme ne l\'utilise)')
+
       serialPortRef.current = port
       serialWriterRef.current = port.writable.getWriter()
       serialReaderRef.current = port.readable.getReader()
       const send: SendFn = (cmd) =>
         serialSendCommand(serialWriterRef.current!, serialReaderRef.current!, cmd)
       await initELM327(send)
-      setStatus({ status: 'connected', deviceName: 'ELM327 USB' })
-      await runScan('usb', 'ELM327 USB', send)
+      const info = await port.getInfo?.() ?? {}
+      const deviceName = info.usbVendorId ? `USB (VID:${info.usbVendorId.toString(16)})` : 'ELM327 USB'
+      setStatus({ status: 'connected', deviceName })
+      await runScan('usb', deviceName, send)
     } catch (err: any) {
       const msg: string = err?.message ?? ''
       if (msg.includes('No port selected') || msg.includes('cancelled') || msg.includes('user')) {
         setStatus({
           status: 'error',
-          error: 'Aucun port sélectionné. Branche ta valise USB avant de cliquer, puis sélectionne-la dans la liste.',
+          error: 'Aucun port sélectionné. Branche ta valise USB, puis clique à nouveau et sélectionne le port COM dans la liste.',
         })
       } else {
-        setStatus({ status: 'error', error: `Erreur USB : ${msg || 'Vérife que la valise est branchée et que Chrome/Edge est utilisé.'}` })
+        setStatus({ status: 'error', error: msg || 'Erreur connexion USB. Vérife que la valise est branchée et qu\'aucun autre logiciel ne l\'utilise.' })
       }
     }
   }, [])
