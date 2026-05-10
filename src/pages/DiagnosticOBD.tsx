@@ -317,11 +317,13 @@ function ScanSummary({ scan, expanded, onToggle }: { scan: OBDScanResult; expand
 function VehicleForm({
   value,
   onChange,
-  onSubmit,
+  onConfirm,
+  confirmLabel = 'Continuer vers le scan',
 }: {
   value: VehicleInfo
   onChange: (v: VehicleInfo) => void
-  onSubmit: () => void
+  onConfirm: () => void
+  confirmLabel?: string
 }) {
   const isValid = value.marque.trim() && value.modele.trim() && value.annee.trim()
 
@@ -337,7 +339,7 @@ function VehicleForm({
           Votre véhicule
         </CardTitle>
         <CardDescription>
-          Ces informations permettent à l'IA de faire un diagnostic précis adapté à votre véhicule.
+          Renseigne ton véhicule pour que l'IA fasse un diagnostic précis adapté à ton modèle.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -397,17 +399,12 @@ function VehicleForm({
         <Button
           className="w-full gap-2"
           size="lg"
-          onClick={onSubmit}
+          onClick={onConfirm}
           disabled={!isValid}
         >
-          <Cpu className="h-5 w-5" />
-          Analyser avec l'IA MecaIA
           <ArrowRight className="h-4 w-4" />
+          {confirmLabel}
         </Button>
-
-        <p className="text-xs text-center text-muted-foreground">
-          Les codes défauts et paramètres seront envoyés à l'IA pour un diagnostic complet.
-        </p>
       </CardContent>
     </Card>
   )
@@ -421,6 +418,7 @@ export default function DiagnosticOBD() {
   const { messages, isLoading, streamingContent, sendMessage } = useChat()
 
   const [expanded, setExpanded] = useState(true)
+  const [vehicleConfirmed, setVehicleConfirmed] = useState(false)
   const [diagStarted, setDiagStarted] = useState(false)
   const [diagId, setDiagId] = useState<string | null>(null)
   const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo>({
@@ -489,62 +487,112 @@ export default function DiagnosticOBD() {
               </div>
             </motion.div>
 
-            {/* How it works */}
-            {!scan && (
-              <motion.div
-                className="mb-6 grid grid-cols-3 gap-3 text-center"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-              >
-                {[
-                  { step: '1', text: 'Branche ta valise sur le port OBD-II' },
-                  { step: '2', text: 'Indique ton véhicule (marque, année…)' },
-                  { step: '3', text: 'L\'IA analyse tes codes défauts' },
-                ].map((s) => (
-                  <div key={s.step} className="rounded-lg bg-card border p-3">
-                    <div className="h-7 w-7 rounded-full bg-primary/10 text-primary text-sm font-bold flex items-center justify-center mx-auto mb-2">
-                      {s.step}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{s.text}</p>
+            {/* ÉTAPE 1 : Formulaire véhicule */}
+            <AnimatePresence mode="wait">
+              {!vehicleConfirmed && !diagStarted && (
+                <motion.div
+                  key="vehicle-form"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-4"
+                >
+                  <motion.div
+                    className="mb-4 grid grid-cols-3 gap-3 text-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    {[
+                      { step: '1', text: 'Renseigne ton véhicule', active: true },
+                      { step: '2', text: 'Connecte ta valise OBD-II', active: false },
+                      { step: '3', text: 'L\'IA analyse les codes défauts', active: false },
+                    ].map((s) => (
+                      <div key={s.step} className={`rounded-lg border p-3 ${s.active ? 'bg-primary/5 border-primary/30' : 'bg-card'}`}>
+                        <div className={`h-7 w-7 rounded-full text-sm font-bold flex items-center justify-center mx-auto mb-2 ${s.active ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
+                          {s.step}
+                        </div>
+                        <p className={`text-xs ${s.active ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{s.text}</p>
+                      </div>
+                    ))}
+                  </motion.div>
+
+                  <VehicleForm
+                    value={vehicleInfo}
+                    onChange={setVehicleInfo}
+                    onConfirm={() => setVehicleConfirmed(true)}
+                    confirmLabel="Continuer vers le scan OBD"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* ÉTAPE 2 : Connexion OBD */}
+            <AnimatePresence mode="wait">
+              {vehicleConfirmed && !scan && !diagStarted && (
+                <motion.div
+                  key="obd-scanner"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-4"
+                >
+                  <motion.div
+                    className="mb-4 grid grid-cols-3 gap-3 text-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    {[
+                      { step: '1', text: 'Véhicule renseigné', done: true },
+                      { step: '2', text: 'Connecte ta valise OBD-II', active: true },
+                      { step: '3', text: 'L\'IA analyse les codes défauts', active: false },
+                    ].map((s) => (
+                      <div key={s.step} className={`rounded-lg border p-3 ${'done' in s && s.done ? 'bg-green-50/50 border-green-200 dark:bg-green-950/20' : 'active' in s && s.active ? 'bg-primary/5 border-primary/30' : 'bg-card'}`}>
+                        <div className={`h-7 w-7 rounded-full text-sm font-bold flex items-center justify-center mx-auto mb-2 ${'done' in s && s.done ? 'bg-green-500 text-white' : 'active' in s && s.active ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
+                          {'done' in s && s.done ? '✓' : s.step}
+                        </div>
+                        <p className={`text-xs ${'done' in s && s.done ? 'text-green-700 dark:text-green-400' : 'active' in s && s.active ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{s.text}</p>
+                      </div>
+                    ))}
+                  </motion.div>
+
+                  {/* Badge véhicule sélectionné */}
+                  <div className="flex items-center gap-2 text-sm px-1 py-2 rounded-lg bg-card border">
+                    <Car className="h-4 w-4 text-primary shrink-0 ml-2" />
+                    <span className="font-medium">{vehicleInfo.marque} {vehicleInfo.modele} {vehicleInfo.annee}</span>
+                    {vehicleInfo.moteur && <span className="text-muted-foreground">— {vehicleInfo.moteur}</span>}
+                    {vehicleInfo.kilometrage && <span className="text-muted-foreground">— {vehicleInfo.kilometrage} km</span>}
+                    <button onClick={() => setVehicleConfirmed(false)} className="ml-auto mr-2 text-xs text-muted-foreground underline">Modifier</button>
                   </div>
-                ))}
-              </motion.div>
-            )}
 
-            {/* OBD Scanner UI */}
-            {!diagStarted && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                <Card className="mb-4">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      {state.isScanning
-                        ? <><Loader2 className="h-4 w-4 animate-spin text-primary" /> Scan en cours…</>
-                        : 'Connexion à la valise'
-                      }
-                    </CardTitle>
-                    <CardDescription>
-                      {state.scanStep
-                        ? state.scanStep
-                        : 'Port OBD-II situé sous le tableau de bord côté conducteur'
-                      }
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <OBDScanner
-                      state={state}
-                      onConnectUSB={connectUSB}
-                      onConnectBluetooth={connectBluetooth}
-                      onConnectWifi={connectWifi}
-                      onDisconnect={disconnect}
-                      onDemo={connectDemo}
-                    />
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        {state.isScanning
+                          ? <><Loader2 className="h-4 w-4 animate-spin text-primary" /> Scan en cours…</>
+                          : 'Connexion à la valise'
+                        }
+                      </CardTitle>
+                      <CardDescription>
+                        {state.scanStep ?? 'Port OBD-II situé sous le tableau de bord côté conducteur'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <OBDScanner
+                        state={state}
+                        onConnectUSB={connectUSB}
+                        onConnectBluetooth={connectBluetooth}
+                        onConnectWifi={connectWifi}
+                        onDisconnect={disconnect}
+                        onDemo={connectDemo}
+                      />
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {/* Scan result + vehicle form + Send to AI */}
+            {/* ÉTAPE 3 : Résultats scan + Analyser */}
             <AnimatePresence>
               {scan && !diagStarted && (
                 <motion.div
@@ -555,11 +603,14 @@ export default function DiagnosticOBD() {
                 >
                   <ScanSummary scan={scan} expanded={expanded} onToggle={() => setExpanded((v) => !v)} />
 
-                  <VehicleForm
-                    value={vehicleInfo}
-                    onChange={setVehicleInfo}
-                    onSubmit={handleSendToAI}
-                  />
+                  <Button className="w-full gap-2" size="lg" onClick={handleSendToAI}>
+                    <Cpu className="h-5 w-5" />
+                    Analyser avec l'IA MecaIA
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Les codes défauts et paramètres seront envoyés à l'IA pour un diagnostic complet.
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
