@@ -14,9 +14,7 @@ export interface Garage {
   }
 }
 
-const API_BASE = import.meta.env.DEV
-  ? 'http://localhost:8888/.netlify/functions'
-  : '/.netlify/functions'
+const API_BASE = '/api'
 
 export async function searchGarages(query: string): Promise<Garage[]> {
   const response = await fetch(`${API_BASE}/garages?query=${encodeURIComponent(query)}`)

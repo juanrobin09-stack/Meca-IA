@@ -248,7 +248,7 @@ export default function MechanicChat() {
     setMessages(prev => [...prev, tempUserMsg])
 
     try {
-      const response = await fetch('/.netlify/functions/mechanic-chat', {
+      const response = await fetch('/api/mechanic-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

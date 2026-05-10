@@ -19,7 +19,7 @@ export async function createCheckoutSession(priceId: string, isSubscription: boo
   // Detect plan from priceId if not provided
   const detectedPlan = plan || (priceId === STRIPE_PRICES.PREMIUM_YEARLY ? 'yearly' : 'monthly')
 
-  const response = await fetch('/.netlify/functions/create-checkout-session', {
+  const response = await fetch('/api/create-checkout-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -45,7 +45,7 @@ export async function createCheckoutSession(priceId: string, isSubscription: boo
 }
 
 export async function getCustomerPortalUrl(customerId: string): Promise<string> {
-  const response = await fetch('/.netlify/functions/create-portal-session', {
+  const response = await fetch('/api/create-portal-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ customerId }),
@@ -64,7 +64,7 @@ export async function getCustomerPortalUrl(customerId: string): Promise<string> 
 }
 
 export async function getCustomerPortalUrlByUserId(userId: string): Promise<string> {
-  const response = await fetch('/.netlify/functions/create-portal-session', {
+  const response = await fetch('/api/create-portal-session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId }),

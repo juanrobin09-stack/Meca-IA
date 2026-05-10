@@ -6,9 +6,7 @@ export interface ChatMessage {
   image?: string // Base64 data (without data URL prefix) for images
 }
 
-const API_BASE = import.meta.env.DEV
-  ? 'http://localhost:8888/.netlify/functions'
-  : '/.netlify/functions'
+const API_BASE = '/api'
 
 async function getAuthToken(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession()

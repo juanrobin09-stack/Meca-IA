@@ -22,7 +22,7 @@ export default function Success() {
 
       try {
         // Verify session with backend
-        const response = await fetch(`/.netlify/functions/get-session?session_id=${sessionId}`)
+        const response = await fetch(`/api/get-session?session_id=${sessionId}`)
 
         if (response.ok) {
           const session = await response.json()

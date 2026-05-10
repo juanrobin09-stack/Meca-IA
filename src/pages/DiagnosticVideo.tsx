@@ -135,7 +135,7 @@ export default function DiagnosticVideo() {
       const frames = await extractFrames(blob, 5)
 
       // Send to API
-      const apiResponse = await fetch('/.netlify/functions/analyze-video', {
+      const apiResponse = await fetch('/api/analyze-video', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
