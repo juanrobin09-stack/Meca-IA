@@ -77,7 +77,13 @@ function parseDTCResponse(raw: string): OBDFaultCode[] {
       const systemBits = (word >> 14) & 0x03
       const prefixes = ['P', 'C', 'B', 'U']
       const prefix = prefixes[systemBits] ?? 'U'
-      const number = (word & 0x3FFF).toString(10).padStart(4, '0')
+      // Decode each nibble as hex digit (NOT decimal conversion)
+      // P0420 word=0x0420: d1=0 d2=4 d3=2 d4=0 → "0420" ✓
+      const d1 = (word >> 12) & 0x03
+      const d2 = (word >> 8) & 0x0F
+      const d3 = (word >> 4) & 0x0F
+      const d4 = word & 0x0F
+      const number = `${d1}${d2.toString(16)}${d3.toString(16)}${d4.toString(16)}`.toUpperCase()
       const code = `${prefix}${number}`
       const system = DTC_SYSTEM_MAP[prefix] ?? 'powertrain'
       const description = KNOWN_DTC[code] ?? `Code inconnu — ${code}`
@@ -213,21 +219,25 @@ async function readDTCs(send: SendFn, onStep?: (s: string) => void): Promise<OBD
   const pending = parseDTCResponse(await send('07')).map(c => ({ ...c, pending: true }))
   addUnique(pending)
 
-  // Scan tous les modules ECU
+  // Réduit le timeout ELM327 à 200ms pour les modules silencieux (NO DATA rapide)
+  try { await send('ATST 32') } catch { /* ignore */ }
+
+  // Scan tous les modules ECU (AT SH seulement — AT CRA non supporté par tous les clones)
   for (const mod of ALL_ECU_MODULES) {
     try {
       onStep?.(`Scan ${mod.label}…`)
       await send(`AT SH ${mod.send}`)
-      await send(`AT CRA ${mod.recv}`)
       const raw = await send('03')
-      if (!raw || raw.includes('NO DATA') || raw.includes('ERROR') || raw.includes('UNABLE') || raw.includes('BUS')) continue
+      if (!raw || raw.includes('NO DATA') || raw.includes('ERROR') ||
+          raw.includes('UNABLE') || raw.includes('BUS') || raw.includes('?')) continue
       const codes = parseDTCResponse(raw).map(c => ({ ...c, module: mod.label }))
       addUnique(codes)
     } catch { /* module absent */ }
   }
 
-  // Reset adressage broadcast
+  // Remet le timeout par défaut et l'adressage broadcast
   try {
+    await send('ATST FF')
     await send('AT SH 7DF')
     await send('ATE0')
   } catch { /* ignore */ }
