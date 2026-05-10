@@ -162,7 +162,8 @@ async function readParameters(send: SendFn): Promise<OBDParameter[]> {
 
 export function useOBDScanner() {
   const [state, setState] = useState<OBDScannerState>(INITIAL_STATE)
-  const serialPortRef = useRef<SerialPort | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const serialPortRef = useRef<any>(null)
   const serialWriterRef = useRef<WritableStreamDefaultWriter<Uint8Array> | null>(null)
   const serialReaderRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
