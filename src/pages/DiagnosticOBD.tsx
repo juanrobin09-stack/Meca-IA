@@ -30,6 +30,7 @@ interface VehicleInfo {
   marque: string
   modele: string
   annee: string
+  moteur: string
   kilometrage: string
 }
 
@@ -41,6 +42,7 @@ function buildOBDPrompt(scan: OBDScanResult, vehicle: VehicleInfo): string {
     `Marque : ${vehicle.marque}`,
     `Modèle : ${vehicle.modele}`,
     `Année : ${vehicle.annee}`,
+    `Motorisation : ${vehicle.moteur || 'non renseignée'}`,
     `Kilométrage : ${vehicle.kilometrage} km`,
     `Connexion : ${scan.connectionType.toUpperCase()}${scan.deviceName ? ` (${scan.deviceName})` : ''}`,
     '',
@@ -66,10 +68,16 @@ function buildOBDPrompt(scan: OBDScanResult, vehicle: VehicleInfo): string {
   }
 
   lines.push('')
+  const motorLine = vehicle.moteur ? ` motorisé ${vehicle.moteur}` : ''
   lines.push(
-    `Tu es un expert mécanicien spécialisé sur les véhicules ${vehicle.marque} ${vehicle.modele} (${vehicle.annee}).` +
-    ` Analyse ces données OBD pour ce véhicule avec ${vehicle.kilometrage} km au compteur.` +
-    ` Donne un diagnostic complet et précis : causes probables spécifiques à ce modèle, pièces à vérifier en priorité, urgence d'intervention, et coût estimé de réparation.`
+    `Tu es un expert mécanicien spécialisé sur les véhicules ${vehicle.marque} ${vehicle.modele} (${vehicle.annee})${motorLine} avec ${vehicle.kilometrage} km au compteur.` +
+    ` Connais parfaitement les défauts récurrents, les problèmes connus du constructeur, et les spécificités techniques de ce moteur.` +
+    ` Analyse ces données OBD et donne un diagnostic complet et précis :` +
+    ` 1) causes probables spécifiques à ce modèle/moteur,` +
+    ` 2) défauts connus ou rappels constructeur associés,` +
+    ` 3) pièces et composants à vérifier en priorité,` +
+    ` 4) urgence d'intervention (peut-on rouler ?),` +
+    ` 5) coût estimé de réparation chez un garagiste.`
   )
   return lines.join('\n')
 }
@@ -237,6 +245,15 @@ function VehicleForm({
               onChange={(e) => set('kilometrage', e.target.value)}
             />
           </div>
+          <div className="col-span-2 space-y-1.5">
+            <Label htmlFor="moteur">Motorisation</Label>
+            <Input
+              id="moteur"
+              placeholder="ex: 1.5 dCi 90ch, 1.2 TCe 120ch, 2.0 TDI 150ch…"
+              value={value.moteur}
+              onChange={(e) => set('moteur', e.target.value)}
+            />
+          </div>
         </div>
 
         <Button
@@ -272,6 +289,7 @@ export default function DiagnosticOBD() {
     marque: '',
     modele: '',
     annee: '',
+    moteur: '',
     kilometrage: '',
   })
 
@@ -415,7 +433,11 @@ export default function DiagnosticOBD() {
                   {vehicleInfo.marque && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
                       <Car className="h-4 w-4" />
-                      <span>{vehicleInfo.marque} {vehicleInfo.modele} — {vehicleInfo.annee}{vehicleInfo.kilometrage ? ` — ${vehicleInfo.kilometrage} km` : ''}</span>
+                      <span>
+                        {vehicleInfo.marque} {vehicleInfo.modele} — {vehicleInfo.annee}
+                        {vehicleInfo.moteur ? ` — ${vehicleInfo.moteur}` : ''}
+                        {vehicleInfo.kilometrage ? ` — ${vehicleInfo.kilometrage} km` : ''}
+                      </span>
                     </div>
                   )}
 
