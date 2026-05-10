@@ -444,15 +444,23 @@ export default function DiagnosticOBD() {
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base flex items-center gap-2">
-                        <Cpu className="h-4 w-4 text-primary" />
-                        Analyse IA en cours…
+                        {isLoading
+                          ? <Loader2 className="h-4 w-4 text-primary animate-spin" />
+                          : <Cpu className="h-4 w-4 text-primary" />
+                        }
+                        {isLoading && !streamingContent
+                          ? 'Connexion à l\'IA…'
+                          : isLoading
+                          ? 'Analyse en cours…'
+                          : 'Analyse terminée'
+                        }
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {isLoading && !streamingContent && (
                         <div className="flex items-center gap-2 text-muted-foreground text-sm">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Analyse des codes OBD…
+                          Analyse des codes OBD et paramètres…
                         </div>
                       )}
 
