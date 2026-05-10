@@ -181,10 +181,10 @@ export function useOBDScanner() {
     try {
       // Essaie d'abord les ports déjà autorisés (reconnexion automatique)
       const existingPorts: any[] = await (navigator as any).serial.getPorts()
-      // filters: [] = accepte TOUS les appareils sans restriction de VID/PID
+      // Sans filters → affiche TOUS les ports série (USB, COM Bluetooth, etc.)
       const port = existingPorts.length > 0
         ? existingPorts[0]
-        : await (navigator as any).serial.requestPort({ filters: [] })
+        : await (navigator as any).serial.requestPort()
 
       // Tente plusieurs débits courants des adaptateurs ELM327
       const baudRates = [38400, 115200, 9600, 57600]

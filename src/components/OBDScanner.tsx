@@ -288,22 +288,29 @@ export default function OBDScanner({
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Usb className="h-4 w-4 text-orange-500" />
-                  Connexion USB / Port série
+                  USB / Port série (COM)
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Nécessite Chrome ou Edge (pas Firefox). Branche ta valise sur USB, puis clique ci-dessous.
+                  Fonctionne avec Chrome ou Edge uniquement.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-3 py-2 flex gap-2">
-                  <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
-                    Une fenêtre de sélection de port s'ouvre — choisis le port COM correspondant à ta valise. Si rien n'apparaît, vérifie que la valise est bien branchée.
+                <div className="rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 px-3 py-2 space-y-1.5">
+                  <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1">
+                    <Info className="h-3.5 w-3.5" /> Fonctionne aussi avec les valises Bluetooth !
                   </p>
+                  <p className="text-xs text-blue-700 dark:text-blue-400">
+                    Sur Windows : associe ta valise Bluetooth dans les paramètres → un port COM apparaît → sélectionne-le ici.
+                  </p>
+                  <ol className="text-xs text-blue-700 dark:text-blue-400 list-decimal list-inside space-y-0.5">
+                    <li>Paramètres Windows → Bluetooth → associer la valise</li>
+                    <li>Elle crée un port COM (ex: COM3, COM4…)</li>
+                    <li>Clique ci-dessous et sélectionne ce port COM</li>
+                  </ol>
                 </div>
                 <Button className="w-full" onClick={onConnectUSB}>
                   <PlugZap className="h-4 w-4 mr-2" />
-                  Sélectionner le port USB
+                  Ouvrir la sélection de port
                 </Button>
                 {onDemo && (
                   <Button variant="outline" className="w-full" onClick={onDemo}>
