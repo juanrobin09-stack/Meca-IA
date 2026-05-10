@@ -12,6 +12,8 @@ import ChatMessage from '@/components/ChatMessage'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Cpu,
   ArrowRight,
@@ -20,29 +22,43 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Car,
 } from 'lucide-react'
 import type { OBDScanResult } from '@/types/obd'
 
-function buildOBDPrompt(scan: OBDScanResult): string {
+interface VehicleInfo {
+  marque: string
+  modele: string
+  annee: string
+  kilometrage: string
+}
+
+function buildOBDPrompt(scan: OBDScanResult, vehicle: VehicleInfo): string {
   const lines: string[] = [
     `[SCAN OBD — ${new Date(scan.timestamp).toLocaleString('fr-FR')}]`,
+    '',
+    '=== VÉHICULE ===',
+    `Marque : ${vehicle.marque}`,
+    `Modèle : ${vehicle.modele}`,
+    `Année : ${vehicle.annee}`,
+    `Kilométrage : ${vehicle.kilometrage} km`,
     `Connexion : ${scan.connectionType.toUpperCase()}${scan.deviceName ? ` (${scan.deviceName})` : ''}`,
     '',
   ]
 
   if (scan.faultCodes.length > 0) {
-    lines.push(`CODES DÉFAUTS DÉTECTÉS (${scan.faultCodes.length}) :`)
+    lines.push(`=== CODES DÉFAUTS DÉTECTÉS (${scan.faultCodes.length}) ===`)
     for (const dtc of scan.faultCodes) {
       lines.push(`• ${dtc.code} [${dtc.severity === 'high' ? 'URGENT' : dtc.severity === 'medium' ? 'MOYEN' : 'FAIBLE'}] — ${dtc.description}`)
     }
   } else {
-    lines.push('CODES DÉFAUTS : Aucun code défaut détecté')
+    lines.push('=== CODES DÉFAUTS === Aucun code défaut détecté')
   }
 
   const validParams = scan.parameters.filter((p) => p.value !== null)
   if (validParams.length > 0) {
     lines.push('')
-    lines.push('PARAMÈTRES TEMPS RÉEL :')
+    lines.push('=== PARAMÈTRES TEMPS RÉEL ===')
     for (const p of validParams) {
       const v = typeof p.value === 'number' ? p.value.toFixed(1) : p.value
       lines.push(`• ${p.name} : ${v} ${p.unit}`)
@@ -50,7 +66,11 @@ function buildOBDPrompt(scan: OBDScanResult): string {
   }
 
   lines.push('')
-  lines.push('Analyse ces données OBD et donne-moi un diagnostic complet.')
+  lines.push(
+    `Tu es un expert mécanicien spécialisé sur les véhicules ${vehicle.marque} ${vehicle.modele} (${vehicle.annee}).` +
+    ` Analyse ces données OBD pour ce véhicule avec ${vehicle.kilometrage} km au compteur.` +
+    ` Donne un diagnostic complet et précis : causes probables spécifiques à ce modèle, pièces à vérifier en priorité, urgence d'intervention, et coût estimé de réparation.`
+  )
   return lines.join('\n')
 }
 
@@ -148,6 +168,96 @@ function ScanSummary({ scan, expanded, onToggle }: { scan: OBDScanResult; expand
   )
 }
 
+function VehicleForm({
+  value,
+  onChange,
+  onSubmit,
+}: {
+  value: VehicleInfo
+  onChange: (v: VehicleInfo) => void
+  onSubmit: () => void
+}) {
+  const isValid = value.marque.trim() && value.modele.trim() && value.annee.trim()
+
+  function set(field: keyof VehicleInfo, v: string) {
+    onChange({ ...value, [field]: v })
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Car className="h-4 w-4 text-primary" />
+          Votre véhicule
+        </CardTitle>
+        <CardDescription>
+          Ces informations permettent à l'IA de faire un diagnostic précis adapté à votre véhicule.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="marque">Marque *</Label>
+            <Input
+              id="marque"
+              placeholder="ex: Renault"
+              value={value.marque}
+              onChange={(e) => set('marque', e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="modele">Modèle *</Label>
+            <Input
+              id="modele"
+              placeholder="ex: Clio 4"
+              value={value.modele}
+              onChange={(e) => set('modele', e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="annee">Année *</Label>
+            <Input
+              id="annee"
+              placeholder="ex: 2018"
+              type="number"
+              min="1990"
+              max="2030"
+              value={value.annee}
+              onChange={(e) => set('annee', e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="km">Kilométrage</Label>
+            <Input
+              id="km"
+              placeholder="ex: 95000"
+              type="number"
+              min="0"
+              value={value.kilometrage}
+              onChange={(e) => set('kilometrage', e.target.value)}
+            />
+          </div>
+        </div>
+
+        <Button
+          className="w-full gap-2"
+          size="lg"
+          onClick={onSubmit}
+          disabled={!isValid}
+        >
+          <Cpu className="h-5 w-5" />
+          Analyser avec l'IA MecaIA
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+
+        <p className="text-xs text-center text-muted-foreground">
+          Les codes défauts et paramètres seront envoyés à l'IA pour un diagnostic complet.
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function DiagnosticOBD() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -158,6 +268,12 @@ export default function DiagnosticOBD() {
   const [expanded, setExpanded] = useState(true)
   const [diagStarted, setDiagStarted] = useState(false)
   const [diagId, setDiagId] = useState<string | null>(null)
+  const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo>({
+    marque: '',
+    modele: '',
+    annee: '',
+    kilometrage: '',
+  })
 
   const scan = state.scanResult
 
@@ -165,10 +281,13 @@ export default function DiagnosticOBD() {
     if (!scan || !user) return
     setDiagStarted(true)
 
-    const prompt = buildOBDPrompt(scan)
+    const km = vehicleInfo.kilometrage.trim() || 'non renseigné'
+    const vehicle: VehicleInfo = { ...vehicleInfo, kilometrage: km }
+    const prompt = buildOBDPrompt(scan, vehicle)
 
     try {
-      const diag = await createDiagnostic(`Scan OBD — ${scan.faultCodes.length} code(s) défaut`)
+      const title = `OBD — ${vehicleInfo.marque} ${vehicleInfo.modele} ${vehicleInfo.annee} (${scan.faultCodes.length} code(s))`
+      const diag = await createDiagnostic(title)
       setDiagId(diag.id)
 
       const userMsg = { role: 'user' as const, content: prompt, timestamp: new Date().toISOString() }
@@ -224,7 +343,7 @@ export default function DiagnosticOBD() {
               >
                 {[
                   { step: '1', text: 'Branche ta valise sur le port OBD-II' },
-                  { step: '2', text: 'Sélectionne WiFi, Bluetooth ou USB' },
+                  { step: '2', text: 'Indique ton véhicule (marque, année…)' },
                   { step: '3', text: 'L\'IA analyse tes codes défauts' },
                 ].map((s) => (
                   <div key={s.step} className="rounded-lg bg-card border p-3">
@@ -261,7 +380,7 @@ export default function DiagnosticOBD() {
               </motion.div>
             )}
 
-            {/* Scan result summary + Send to AI */}
+            {/* Scan result + vehicle form + Send to AI */}
             <AnimatePresence>
               {scan && !diagStarted && (
                 <motion.div
@@ -272,15 +391,11 @@ export default function DiagnosticOBD() {
                 >
                   <ScanSummary scan={scan} expanded={expanded} onToggle={() => setExpanded((v) => !v)} />
 
-                  <Button className="w-full gap-2" size="lg" onClick={handleSendToAI}>
-                    <Cpu className="h-5 w-5" />
-                    Analyser avec l'IA MecaIA
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-
-                  <p className="text-xs text-center text-muted-foreground">
-                    Les codes défauts et paramètres seront envoyés à l'IA pour un diagnostic complet.
-                  </p>
+                  <VehicleForm
+                    value={vehicleInfo}
+                    onChange={setVehicleInfo}
+                    onSubmit={handleSendToAI}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -295,6 +410,13 @@ export default function DiagnosticOBD() {
                 >
                   {scan && (
                     <ScanSummary scan={scan} expanded={expanded} onToggle={() => setExpanded((v) => !v)} />
+                  )}
+
+                  {vehicleInfo.marque && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
+                      <Car className="h-4 w-4" />
+                      <span>{vehicleInfo.marque} {vehicleInfo.modele} — {vehicleInfo.annee}{vehicleInfo.kilometrage ? ` — ${vehicleInfo.kilometrage} km` : ''}</span>
+                    </div>
                   )}
 
                   <Card>

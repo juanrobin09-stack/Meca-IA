@@ -44,9 +44,11 @@ function parsePidValue(pid: string, raw: string): number | null {
 
 function parseDTCResponse(raw: string): OBDFaultCode[] {
   const codes: OBDFaultCode[] = []
-  const cleaned = raw.trim().replace(/\r/g, '\n').split('\n').join('')
-  // Mode 03 response: 43 XX YY ZZ ... (pairs of bytes = one code each)
-  const match = cleaned.match(/43([0-9A-Fa-f]{2,})/g)
+  // Strip ALL whitespace first — ELM327 responses often have spaces between bytes
+  // e.g. "43 01 71 03 00 00 00" becomes "430171030000"
+  const cleaned = raw.toUpperCase().replace(/\s+/g, '')
+  // Mode 03 response: 43 followed by pairs of hex bytes
+  const match = cleaned.match(/43[0-9A-F]{4,}/g)
   if (!match) return codes
 
   for (const block of match) {
