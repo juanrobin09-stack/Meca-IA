@@ -228,9 +228,14 @@ export default function OBDScanner({
           <CardContent className="p-4 space-y-3">
             <div className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="h-5 w-5" />
-              <p className="font-semibold text-sm">Erreur de connexion</p>
+              <p className="font-semibold text-sm">Erreur de communication OBD</p>
             </div>
             <p className="text-sm text-muted-foreground">{state.error}</p>
+            <ul className="list-disc pl-5 text-xs text-red-700 dark:text-red-300 space-y-1">
+              <li>Mets le contact en position ON, tableau de bord allume.</li>
+              <li>Si ca ne repond pas, demarre le moteur puis relance le scan.</li>
+              <li>En WiFi ELM327 classique, certains adaptateurs ne marchent pas dans un navigateur: essaie USB / port COM.</li>
+            </ul>
             <div className="flex gap-2 flex-wrap">
               <Button variant="outline" size="sm" onClick={() => { setSelectedMode(null); onDisconnect() }} className="gap-2">
                 <RefreshCw className="h-4 w-4" />

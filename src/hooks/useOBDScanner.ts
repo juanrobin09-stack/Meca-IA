@@ -189,13 +189,66 @@ async function wifiSendCommand(ws: WebSocket, cmd: string, timeoutMs = 2000): Pr
 
 type SendFn = (cmd: string) => Promise<string>
 
+function normalizeOBD(raw: string) {
+  return raw.toUpperCase().replace(/\s+/g, '').replace(/>/g, '')
+}
+
+function hasVehicleData(raw: string) {
+  const cleaned = normalizeOBD(raw)
+  if (!cleaned || cleaned.includes('NODATA') || cleaned.includes('UNABLETOCONNECT') || cleaned.includes('BUSERROR') || cleaned.includes('ERROR') || cleaned.includes('?')) {
+    return false
+  }
+  return /(4100|4101|410C|410D|4105|43[0-9A-F]{4}|47[0-9A-F]{4}|4902)/.test(cleaned)
+}
+
 async function initELM327(send: SendFn): Promise<string> {
   await send('ATZ')       // Reset
   await send('ATE0')      // Echo off
   await send('ATL0')      // Linefeeds off
   await send('ATS0')      // Spaces off
-  const proto = await send('ATSP0')  // Auto protocol
+  await send('ATH0')      // Headers off
+  await send('ATCAF1')    // Auto formatting
+  await send('ATAT1')     // Adaptive timing
+  await send('ATST 96')   // Longer timeout while the ECU wakes up
+  await send('ATSP0')     // Auto protocol
+  await send('0100')      // Force protocol discovery on a basic OBD query
+  const proto = await send('ATDPN')
   return proto.trim()
+}
+
+async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Promise<string> {
+  onStep?.('Test communication calculateur...')
+
+  for (const cmd of ['0100', '0101', '010C']) {
+    const raw = await send(cmd)
+    if (hasVehicleData(raw)) return 'Auto'
+  }
+
+  const protocols = [
+    { cmd: 'ATSP6', label: 'CAN 11bit 500k' },
+    { cmd: 'ATSP7', label: 'CAN 29bit 500k' },
+    { cmd: 'ATSP8', label: 'CAN 11bit 250k' },
+    { cmd: 'ATSP9', label: 'CAN 29bit 250k' },
+    { cmd: 'ATSP5', label: 'KWP fast init' },
+    { cmd: 'ATSP4', label: 'KWP 5 baud' },
+  ]
+
+  for (const protocol of protocols) {
+    try {
+      onStep?.(`Essai protocole ${protocol.label}...`)
+      await send(protocol.cmd)
+      await send('0100')
+      for (const cmd of ['0101', '010C']) {
+        const raw = await send(cmd)
+        if (hasVehicleData(raw)) return protocol.label
+      }
+    } catch { /* try next protocol */ }
+  }
+
+  await send('ATSP0')
+  throw new Error(
+    'La valise repond, mais aucun calculateur moteur ne repond. Mets le contact en position ON, demarre le moteur si possible, verifie que la valise est bien enfoncee, puis reessaie. Si tu es en WiFi ELM327, le navigateur ne sait pas parler au TCP brut de certaines valises: utilise plutot USB/port COM ou un pont WebSocket compatible.'
+  )
 }
 
 async function readDTCs(send: SendFn, onStep?: (s: string) => void): Promise<OBDFaultCode[]> {
@@ -332,6 +385,8 @@ export function useOBDScanner() {
   // ── Common scan runner ──────────────────────────────────────────────────────
   async function runScan(type: OBDConnectionType, deviceName: string, send: SendFn, setStep: (s: string) => void) {
     try {
+      const protocolUsed = await probeVehicleECU(send, setStep)
+
       // VIN
       setStep('Lecture VIN…')
       const vin = await readVIN(send)
@@ -362,7 +417,7 @@ export function useOBDScanner() {
         milOn: readinessData?.mil,
         dtcCount: readinessData?.dtcCount,
         readiness: readinessData?.monitors,
-        protocolUsed: 'ISO 15765-4 CAN',
+        protocolUsed,
       }
       setState(prev => ({ ...prev, scanResult: result, isScanning: false, scanStep: undefined, error: null }))
     } catch (err: any) {
