@@ -190,16 +190,29 @@ export function useOBDScanner() {
       setStatus({ status: 'connected', deviceName: 'ELM327 USB' })
       await runScan('usb', 'ELM327 USB', send)
     } catch (err: any) {
-      setStatus({ status: 'error', error: err?.message ?? 'Erreur connexion USB' })
+      const msg: string = err?.message ?? ''
+      if (msg.includes('No port selected') || msg.includes('cancelled') || msg.includes('user')) {
+        setStatus({
+          status: 'error',
+          error: 'Aucun port sélectionné. Branche ta valise USB avant de cliquer, puis sélectionne-la dans la liste.',
+        })
+      } else {
+        setStatus({ status: 'error', error: `Erreur USB : ${msg || 'Vérife que la valise est branchée et que Chrome/Edge est utilisé.'}` })
+      }
     }
   }, [])
 
   // ── Bluetooth ───────────────────────────────────────────────────────────────
   const connectBluetooth = useCallback(async () => {
     if (!('bluetooth' in navigator)) {
-      setStatus({ status: 'error', error: 'Web Bluetooth non supporté. Utilise Chrome sur Android/Desktop.' })
+      setStatus({
+        status: 'error',
+        error: 'Web Bluetooth non supporté sur ce navigateur. Utilise Chrome (pas Firefox ni Safari).',
+      })
       return
     }
+    // Avertissement : la Web Bluetooth API ne supporte que le BLE, pas le Bluetooth classique (SPP)
+    // Les valises ELM327 bon marché utilisent le Bluetooth classique → incompatibles
     setStatus({ status: 'connecting', connectionType: 'bluetooth', error: null })
     try {
       // BLE OBD adapters (ELM327 BLE) expose Nordic UART Service or custom GATT
@@ -338,17 +351,50 @@ export function useOBDScanner() {
 
   const rescan = useCallback(async () => {
     if (state.status !== 'connected') return
-    // Re-use existing connection for a new scan
     setStatus({ scanResult: null })
-    // We can't re-run easily without the send function — user should reconnect
     setStatus({ status: 'disconnected', error: 'Reconnecte-toi pour relancer un scan.' })
   }, [state.status])
+
+  // ── Mode démo ─────────────────────────────────────────────────────────────────
+  const connectDemo = useCallback(() => {
+    const demoResult: OBDScanResult = {
+      timestamp: new Date().toISOString(),
+      connectionType: 'wifi',
+      deviceName: 'Démo — données simulées',
+      protocolUsed: 'ISO 15765-4 CAN (démo)',
+      faultCodes: [
+        { code: 'P0171', description: 'Système carburant — Mélange trop pauvre (Banc 1)', system: 'powertrain', severity: 'medium' },
+        { code: 'P0300', description: 'Ratés d\'allumage aléatoires détectés', system: 'powertrain', severity: 'high' },
+      ],
+      parameters: [
+        { pid: '010C', name: 'Régime moteur',          value: 820,  unit: 'tr/min' },
+        { pid: '010D', name: 'Vitesse',                 value: 0,    unit: 'km/h'  },
+        { pid: '0105', name: 'Temp. refroidissement',   value: 88,   unit: '°C'    },
+        { pid: '0104', name: 'Charge moteur',           value: 12.5, unit: '%'     },
+        { pid: '012F', name: 'Niveau carburant',        value: 45,   unit: '%'     },
+        { pid: '0142', name: 'Tension batterie',        value: 13.8, unit: 'V'     },
+        { pid: '010F', name: 'Temp. admission',         value: 24,   unit: '°C'    },
+        { pid: '0111', name: 'Position papillon',       value: 0,    unit: '%'     },
+        { pid: '0110', name: 'Débit air (MAF)',          value: null, unit: 'g/s'  },
+        { pid: '011F', name: 'Temps moteur actif',      value: 1240, unit: 's'     },
+      ],
+    }
+    setState({
+      status: 'connected',
+      connectionType: 'wifi',
+      deviceName: 'Démo — données simulées',
+      error: null,
+      scanResult: demoResult,
+      isScanning: false,
+    })
+  }, [])
 
   return {
     state,
     connectUSB,
     connectBluetooth,
     connectWifi,
+    connectDemo,
     disconnect,
     rescan,
   }

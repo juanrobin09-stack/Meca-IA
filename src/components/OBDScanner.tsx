@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Wifi, Bluetooth, Usb, Plug, PlugZap, AlertTriangle, CheckCircle2, Loader2, RefreshCw } from 'lucide-react'
+import { Wifi, Bluetooth, Usb, Plug, PlugZap, AlertTriangle, CheckCircle2, Loader2, RefreshCw, Info, FlaskConical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +20,7 @@ interface OBDScannerProps {
   onConnectBluetooth: () => void
   onConnectWifi: (ip: string, port: number) => void
   onDisconnect: () => void
+  onDemo?: () => void
 }
 
 const CONNECTION_MODES = [
@@ -118,6 +119,7 @@ export default function OBDScanner({
   onConnectBluetooth,
   onConnectWifi,
   onDisconnect,
+  onDemo,
 }: OBDScannerProps) {
   const [selectedMode, setSelectedMode] = useState<OBDConnectionType | null>(null)
 
@@ -221,19 +223,30 @@ export default function OBDScanner({
   // ── Error state ──────────────────────────────────────────────────────────────
   if (hasError) {
     return (
-      <Card className="border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900">
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-2 text-red-600">
-            <AlertTriangle className="h-5 w-5" />
-            <p className="font-semibold text-sm">Erreur de connexion</p>
-          </div>
-          <p className="text-sm text-muted-foreground">{state.error}</p>
-          <Button variant="outline" size="sm" onClick={() => setSelectedMode(null)} className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Réessayer
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <Card className="border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              <p className="font-semibold text-sm">Erreur de connexion</p>
+            </div>
+            <p className="text-sm text-muted-foreground">{state.error}</p>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={() => setSelectedMode(null)} className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Réessayer
+              </Button>
+              {onDemo && (
+                <Button variant="ghost" size="sm" onClick={onDemo} className="gap-2 text-muted-foreground">
+                  <FlaskConical className="h-4 w-4" />
+                  Tester avec données démo
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        <CompatibilityNote />
+      </div>
     )
   }
 
@@ -278,14 +291,26 @@ export default function OBDScanner({
                   Connexion USB / Port série
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Nécessite Chrome ou Edge. Branche ta valise OBD sur le port USB de ton PC.
+                  Nécessite Chrome ou Edge (pas Firefox). Branche ta valise sur USB, puis clique ci-dessous.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 px-3 py-2 flex gap-2">
+                  <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    Une fenêtre de sélection de port s'ouvre — choisis le port COM correspondant à ta valise. Si rien n'apparaît, vérifie que la valise est bien branchée.
+                  </p>
+                </div>
                 <Button className="w-full" onClick={onConnectUSB}>
                   <PlugZap className="h-4 w-4 mr-2" />
                   Sélectionner le port USB
                 </Button>
+                {onDemo && (
+                  <Button variant="outline" className="w-full" onClick={onDemo}>
+                    <FlaskConical className="h-4 w-4 mr-2" />
+                    Tester sans valise (données démo)
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -299,15 +324,26 @@ export default function OBDScanner({
                   <Bluetooth className="h-4 w-4 text-indigo-500" />
                   Connexion Bluetooth BLE
                 </CardTitle>
-                <CardDescription className="text-xs">
-                  Nécessite Chrome sur Android ou macOS. Assure-toi que ta valise est allumée et visible.
-                </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-3 py-2 flex gap-2">
+                  <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                  <div className="text-xs text-red-700 dark:text-red-400 space-y-1">
+                    <p className="font-semibold">Compatibilité limitée</p>
+                    <p>Les valises ELM327 bon marché (OBD11, KONNWEI, etc.) utilisent le <strong>Bluetooth classique (SPP)</strong>, incompatible avec les navigateurs.</p>
+                    <p>Seuls les adaptateurs <strong>BLE</strong> fonctionnent : Vgate iCar Pro BLE, OBDLink CX, VEEPEAK OBDCheck BLE+.</p>
+                  </div>
+                </div>
                 <Button className="w-full" onClick={onConnectBluetooth}>
                   <Bluetooth className="h-4 w-4 mr-2" />
-                  Chercher la valise Bluetooth
+                  Chercher un adaptateur BLE
                 </Button>
+                {onDemo && (
+                  <Button variant="outline" className="w-full" onClick={onDemo}>
+                    <FlaskConical className="h-4 w-4 mr-2" />
+                    Tester sans valise (données démo)
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -320,29 +356,71 @@ export default function OBDScanner({
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Wifi className="h-4 w-4 text-blue-500" />
                   Connexion WiFi
+                  <Badge variant="success" className="text-[10px]">Recommandé</Badge>
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  L'adaptateur WiFi crée son propre réseau. Connecte d'abord ton appareil à ce réseau.
+                  L'adaptateur WiFi crée son propre réseau. Connecte d'abord ton appareil à ce réseau WiFi.
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
                 <WifiForm onConnect={onConnectWifi} />
+                {onDemo && (
+                  <Button variant="outline" className="w-full" onClick={onDemo}>
+                    <FlaskConical className="h-4 w-4 mr-2" />
+                    Tester sans valise (données démo)
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </motion.div>
         )}
 
         {!selectedMode && (
-          <motion.div key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             <div className="flex items-center gap-2 rounded-lg bg-muted px-4 py-3">
               <Plug className="h-4 w-4 text-muted-foreground shrink-0" />
               <p className="text-xs text-muted-foreground">
-                Sélectionne un mode de connexion ci-dessus, puis branche ta valise OBD sur le port OBD-II de ton véhicule (sous le tableau de bord).
+                Sélectionne un mode ci-dessus. Le <strong>WiFi</strong> est le plus compatible (ELM327 WiFi). Le <strong>USB</strong> fonctionne avec Chrome/Edge. Le <strong>Bluetooth</strong> nécessite un adaptateur BLE spécifique.
               </p>
             </div>
+            {onDemo && (
+              <Button variant="outline" className="w-full" onClick={onDemo}>
+                <FlaskConical className="h-4 w-4 mr-2" />
+                Tester sans valise (données démo)
+              </Button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  )
+}
+
+function CompatibilityNote() {
+  return (
+    <div className="rounded-lg border bg-muted/50 px-4 py-3 space-y-2">
+      <p className="text-xs font-semibold flex items-center gap-1.5">
+        <Info className="h-3.5 w-3.5 text-primary" />
+        Adaptateurs compatibles
+      </p>
+      <div className="grid grid-cols-3 gap-2 text-[10px] text-muted-foreground">
+        <div>
+          <p className="font-medium text-foreground mb-0.5">WiFi ✅</p>
+          <p>ELM327 WiFi</p>
+          <p>OBDLink LX WiFi</p>
+        </div>
+        <div>
+          <p className="font-medium text-foreground mb-0.5">BLE ✅</p>
+          <p>Vgate iCar Pro BLE</p>
+          <p>OBDLink CX</p>
+        </div>
+        <div>
+          <p className="font-medium text-foreground mb-0.5">USB ✅</p>
+          <p>ELM327 USB</p>
+          <p>(Chrome requis)</p>
+        </div>
+      </div>
+      <p className="text-[10px] text-red-500">❌ ELM327 Bluetooth classique (SPP) non compatible navigateur</p>
     </div>
   )
 }

@@ -151,7 +151,7 @@ function ScanSummary({ scan, expanded, onToggle }: { scan: OBDScanResult; expand
 export default function DiagnosticOBD() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const { state, connectUSB, connectBluetooth, connectWifi, disconnect } = useOBDScanner()
+  const { state, connectUSB, connectBluetooth, connectWifi, connectDemo, disconnect } = useOBDScanner()
   const { createDiagnostic, addMessage } = useDiagnostics(user?.id)
   const { messages, isLoading, streamingContent, sendMessage } = useChat()
 
@@ -254,6 +254,7 @@ export default function DiagnosticOBD() {
                       onConnectBluetooth={connectBluetooth}
                       onConnectWifi={connectWifi}
                       onDisconnect={disconnect}
+                      onDemo={connectDemo}
                     />
                   </CardContent>
                 </Card>
