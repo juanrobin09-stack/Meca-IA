@@ -1,5 +1,4 @@
 export type OBDConnectionType = 'wifi' | 'bluetooth' | 'usb'
-
 export type OBDConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
 
 export interface OBDParameter {
@@ -7,6 +6,7 @@ export interface OBDParameter {
   name: string
   value: number | string | null
   unit: string
+  group: 'engine' | 'fuel' | 'electric' | 'exhaust' | 'diag'
   raw?: string
 }
 
@@ -15,6 +15,14 @@ export interface OBDFaultCode {
   description: string
   system: 'powertrain' | 'chassis' | 'body' | 'network'
   severity: 'low' | 'medium' | 'high'
+  pending?: boolean  // code en attente (mode 07)
+  module?: string    // quel ECU a reporté ce code
+}
+
+export interface ReadinessMonitor {
+  name: string
+  supported: boolean
+  ready: boolean
 }
 
 export interface OBDScanResult {
@@ -23,7 +31,10 @@ export interface OBDScanResult {
   deviceName?: string
   faultCodes: OBDFaultCode[]
   parameters: OBDParameter[]
-  vehicleVin?: string
+  readiness?: ReadinessMonitor[]
+  vin?: string
+  milOn?: boolean
+  dtcCount?: number
   protocolUsed?: string
 }
 
@@ -34,23 +45,44 @@ export interface OBDScannerState {
   error: string | null
   scanResult: OBDScanResult | null
   isScanning: boolean
+  scanStep?: string  // étape courante du scan
 }
 
-// Known PIDs we read (Mode 01)
+// PIDs à lire (Mode 01) — organisés par groupe
 export const OBD_PIDS = {
-  RPM:           { pid: '010C', name: 'Régime moteur',    unit: 'tr/min' },
-  SPEED:         { pid: '010D', name: 'Vitesse',           unit: 'km/h'  },
-  COOLANT_TEMP:  { pid: '0105', name: 'Temp. refroidissement', unit: '°C' },
-  ENGINE_LOAD:   { pid: '0104', name: 'Charge moteur',    unit: '%'     },
-  THROTTLE:      { pid: '0111', name: 'Position papillon',unit: '%'     },
-  FUEL_LEVEL:    { pid: '012F', name: 'Niveau carburant', unit: '%'     },
-  INTAKE_TEMP:   { pid: '010F', name: 'Temp. admission',  unit: '°C'    },
-  MAF:           { pid: '0110', name: 'Débit air (MAF)',   unit: 'g/s'   },
-  BATTERY:       { pid: '0142', name: 'Tension batterie', unit: 'V'     },
-  RUN_TIME:      { pid: '011F', name: 'Temps moteur actif', unit: 's'   },
+  // ── Moteur ──────────────────────────────────────────────────────────────────
+  RPM:           { pid: '010C', name: 'Régime moteur',              unit: 'tr/min', group: 'engine' as const },
+  SPEED:         { pid: '010D', name: 'Vitesse',                    unit: 'km/h',   group: 'engine' as const },
+  ENGINE_LOAD:   { pid: '0104', name: 'Charge moteur',              unit: '%',      group: 'engine' as const },
+  COOLANT_TEMP:  { pid: '0105', name: 'Temp. refroidissement',      unit: '°C',     group: 'engine' as const },
+  OIL_TEMP:      { pid: '015C', name: 'Temp. huile moteur',         unit: '°C',     group: 'engine' as const },
+  INTAKE_TEMP:   { pid: '010F', name: 'Temp. admission',            unit: '°C',     group: 'engine' as const },
+  AMBIENT_TEMP:  { pid: '0146', name: 'Temp. extérieure',           unit: '°C',     group: 'engine' as const },
+  TIMING:        { pid: '010E', name: 'Avance allumage',            unit: '°',      group: 'engine' as const },
+  MAP:           { pid: '010B', name: 'Pression admission (MAP)',   unit: 'kPa',    group: 'engine' as const },
+  MAF:           { pid: '0110', name: 'Débit air (MAF)',            unit: 'g/s',    group: 'engine' as const },
+  ABS_LOAD:      { pid: '0143', name: 'Charge absolue moteur',      unit: '%',      group: 'engine' as const },
+  RUN_TIME:      { pid: '011F', name: 'Temps moteur actif',         unit: 's',      group: 'engine' as const },
+  // ── Carburant ───────────────────────────────────────────────────────────────
+  STFT_B1:       { pid: '0106', name: 'Correction CT carburant B1', unit: '%',      group: 'fuel' as const },
+  LTFT_B1:       { pid: '0107', name: 'Correction LT carburant B1', unit: '%',      group: 'fuel' as const },
+  STFT_B2:       { pid: '0108', name: 'Correction CT carburant B2', unit: '%',      group: 'fuel' as const },
+  LTFT_B2:       { pid: '0109', name: 'Correction LT carburant B2', unit: '%',      group: 'fuel' as const },
+  FUEL_PRESSURE: { pid: '010A', name: 'Pression carburant (rail)',  unit: 'kPa',    group: 'fuel' as const },
+  FUEL_LEVEL:    { pid: '012F', name: 'Niveau carburant',           unit: '%',      group: 'fuel' as const },
+  FUEL_RATE:     { pid: '015E', name: 'Consommation instantanée',   unit: 'L/h',    group: 'fuel' as const },
+  // ── Électrique ──────────────────────────────────────────────────────────────
+  THROTTLE:      { pid: '0111', name: 'Position papillon',          unit: '%',      group: 'electric' as const },
+  BATTERY:       { pid: '0142', name: 'Tension batterie',           unit: 'V',      group: 'electric' as const },
+  BARO:          { pid: '0133', name: 'Pression atmosphérique',     unit: 'kPa',    group: 'electric' as const },
+  // ── Échappement ─────────────────────────────────────────────────────────────
+  CATALYST_TEMP: { pid: '013C', name: 'Temp. catalyseur B1 S1',    unit: '°C',     group: 'exhaust' as const },
+  // ── Diagnostic ──────────────────────────────────────────────────────────────
+  MIL_TIME:      { pid: '014D', name: 'Durée voyant MIL allumé',   unit: 'min',    group: 'diag' as const },
+  DIST_MIL:      { pid: '0121', name: 'Distance avec MIL allumé',  unit: 'km',     group: 'diag' as const },
+  DIST_CLEAR:    { pid: '0131', name: 'Distance depuis effacement', unit: 'km',     group: 'diag' as const },
 } as const
 
-// DTC system prefix mapping
 export const DTC_SYSTEM_MAP: Record<string, OBDFaultCode['system']> = {
   P: 'powertrain',
   C: 'chassis',

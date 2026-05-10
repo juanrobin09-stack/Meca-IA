@@ -21,23 +21,42 @@ const INITIAL_STATE: OBDScannerState = {
 
 function parsePidValue(pid: string, raw: string): number | null {
   const bytes = raw.trim().replace(/\s/g, '')
-  if (!bytes || bytes.toUpperCase() === 'NODATA' || bytes.toUpperCase() === 'ERROR') return null
+  if (!bytes || bytes.toUpperCase().includes('NODATA') || bytes.toUpperCase().includes('ERROR')) return null
 
-  const hex = bytes.replace(/^(41|43)[0-9A-Fa-f]{2}/, '') // strip mode+pid echo
+  // Strip mode+pid echo (ex: 410C → garde les octets de données)
+  const hex = bytes.replace(/^(41|43)[0-9A-Fa-f]{2}/, '')
+  if (hex.length < 2) return null
   const A = parseInt(hex.substring(0, 2), 16)
-  const B = parseInt(hex.substring(2, 4), 16)
+  const B = hex.length >= 4 ? parseInt(hex.substring(2, 4), 16) : 0
 
   switch (pid) {
-    case '010C': return ((A * 256 + B) / 4)           // RPM
-    case '010D': return A                               // Speed km/h
-    case '0105': return A - 40                         // Coolant °C
-    case '0104': return Math.round((A * 100) / 255)   // Engine load %
-    case '0111': return Math.round((A * 100) / 255)   // Throttle %
-    case '012F': return Math.round((A * 100) / 255)   // Fuel level %
-    case '010F': return A - 40                         // Intake temp °C
-    case '0110': return ((A * 256 + B) / 100)         // MAF g/s
-    case '0142': return ((A * 256 + B) / 1000)        // Battery V
-    case '011F': return (A * 256 + B)                  // Run time s
+    case '010C': return Math.round((A * 256 + B) / 4)
+    case '010D': return A
+    case '0104': return Math.round(A * 100 / 255)
+    case '0105': return A - 40
+    case '015C': return A - 40
+    case '010F': return A - 40
+    case '0146': return A - 40
+    case '010E': return +(A / 2 - 64).toFixed(1)
+    case '010B': return A
+    case '0110': return +((A * 256 + B) / 100).toFixed(2)
+    case '0143': return Math.round((A * 256 + B) * 100 / 65535)
+    case '011F': return A * 256 + B
+    // Fuel trims: (A-128)*100/128
+    case '0106': return +((A - 128) * 100 / 128).toFixed(1)
+    case '0107': return +((A - 128) * 100 / 128).toFixed(1)
+    case '0108': return +((A - 128) * 100 / 128).toFixed(1)
+    case '0109': return +((A - 128) * 100 / 128).toFixed(1)
+    case '010A': return A * 3
+    case '012F': return Math.round(A * 100 / 255)
+    case '015E': return +((A * 256 + B) / 20).toFixed(1)
+    case '0111': return Math.round(A * 100 / 255)
+    case '0142': return +((A * 256 + B) / 1000).toFixed(2)
+    case '0133': return A
+    case '013C': return +((A * 256 + B) / 10 - 40).toFixed(0)
+    case '014D': return A * 256 + B
+    case '0121': return A * 256 + B
+    case '0131': return A * 256 + B
     default: return A
   }
 }
@@ -74,16 +93,31 @@ function parseDTCResponse(raw: string): OBDFaultCode[] {
   return codes
 }
 
-// Adresses CAN des modules ABS/ESP courants (constructeur → adresse)
-const ABS_ECU_MODULES = [
-  { send: '7B3', recv: '7BB', label: 'ABS/ESP (générique)' },
-  { send: '760', recv: '768', label: 'ABS (Renault/Peugeot/Citroën/Dacia)' },
-  { send: '7A0', recv: '7A8', label: 'ESP/ABS (PSA/Stellantis)' },
+// Tous les modules ECU à scanner pour les DTCs
+const ALL_ECU_MODULES = [
+  // ABS / ESP / Frein
+  { send: '7B3', recv: '7BB', label: 'ABS/ESP' },
+  { send: '760', recv: '768', label: 'ABS (Renault/PSA)' },
+  { send: '7A0', recv: '7A8', label: 'ESP (PSA/Stellantis)' },
   { send: '7B0', recv: '7B8', label: 'ABS (Ford/Opel)' },
-  { send: '713', recv: '71B', label: 'ABS (Opel/Vauxhall)' },
+  { send: '713', recv: '71B', label: 'ABS (Opel)' },
   { send: '7A4', recv: '7AC', label: 'ABS (Stellantis 2)' },
-  { send: '740', recv: '748', label: 'ABS (Toyota/Lexus)' },
-  { send: '7B5', recv: '7BD', label: 'ESP (VW/Audi/Seat)' },
+  { send: '740', recv: '748', label: 'ABS (Toyota)' },
+  { send: '7B5', recv: '7BD', label: 'ESP (VW/Audi)' },
+  // Boîte de vitesses (TCM)
+  { send: '7E1', recv: '7E9', label: 'Boîte de vitesses (TCM)' },
+  { send: '7A2', recv: '7AA', label: 'TCM (variante)' },
+  // Airbag / SRS
+  { send: '7B8', recv: '7BC', label: 'Airbag/SRS' },
+  { send: '752', recv: '75A', label: 'SRS (Renault/PSA)' },
+  // BSI / BCM (calculateur de confort)
+  { send: '764', recv: '76C', label: 'BSI/BCM (Renault/PSA)' },
+  { send: '7A7', recv: '7AF', label: 'BCM (générique)' },
+  // Climatisation
+  { send: '7A6', recv: '7AE', label: 'Climatisation' },
+  // Direction assistée électrique (EPS)
+  { send: '772', recv: '77A', label: 'Direction assistée (EPS)' },
+  { send: '7A5', recv: '7AD', label: 'EPS (variante)' },
 ]
 
 // ─── Web Serial API (USB + Bluetooth paired as COM) ──────────────────────────
@@ -158,52 +192,107 @@ async function initELM327(send: SendFn): Promise<string> {
   return proto.trim()
 }
 
-async function readDTCs(send: SendFn): Promise<OBDFaultCode[]> {
+async function readDTCs(send: SendFn, onStep?: (s: string) => void): Promise<OBDFaultCode[]> {
   const seen = new Set<string>()
   const all: OBDFaultCode[] = []
 
   function addUnique(codes: OBDFaultCode[]) {
     for (const c of codes) {
-      if (!seen.has(c.code)) {
-        seen.add(c.code)
+      if (!seen.has(c.code + (c.module ?? ''))) {
+        seen.add(c.code + (c.module ?? ''))
         all.push(c)
       }
     }
   }
 
-  // Mode 03 — codes confirmés (ECM/PCM)
+  // Mode 03 — codes confirmés ECM
+  onStep?.('Lecture codes défauts moteur…')
   addUnique(parseDTCResponse(await send('03')))
 
-  // Mode 07 — codes en attente (même module)
-  addUnique(parseDTCResponse(await send('07')))
+  // Mode 07 — codes en attente ECM
+  const pending = parseDTCResponse(await send('07')).map(c => ({ ...c, pending: true }))
+  addUnique(pending)
 
-  // Scan des modules ABS/ESP par adresse CAN
-  for (const mod of ABS_ECU_MODULES) {
+  // Scan tous les modules ECU
+  for (const mod of ALL_ECU_MODULES) {
     try {
-      await send(`AT SH ${mod.send}`)  // cibler ce module
-      await send(`AT CRA ${mod.recv}`) // accepter sa réponse
+      onStep?.(`Scan ${mod.label}…`)
+      await send(`AT SH ${mod.send}`)
+      await send(`AT CRA ${mod.recv}`)
       const raw = await send('03')
-      // Ignorer si le module ne répond pas
-      if (!raw || raw.includes('NO DATA') || raw.includes('ERROR') || raw.includes('UNABLE')) continue
-      addUnique(parseDTCResponse(raw))
-    } catch { /* module absent ou non supporté */ }
+      if (!raw || raw.includes('NO DATA') || raw.includes('ERROR') || raw.includes('UNABLE') || raw.includes('BUS')) continue
+      const codes = parseDTCResponse(raw).map(c => ({ ...c, module: mod.label }))
+      addUnique(codes)
+    } catch { /* module absent */ }
   }
 
-  // Remettre l'adressage fonctionnel (broadcast tous modules)
+  // Reset adressage broadcast
   try {
-    await send('AT SH 7DF')  // adresse fonctionnelle = broadcast
-    await send('ATE0')       // remettre les options de base
+    await send('AT SH 7DF')
+    await send('ATE0')
   } catch { /* ignore */ }
 
   return all
 }
 
-async function readParameters(send: SendFn): Promise<OBDParameter[]> {
+async function readVIN(send: SendFn): Promise<string | null> {
+  try {
+    const raw = await send('0902')
+    if (!raw || raw.includes('NO DATA') || raw.includes('ERROR')) return null
+    // VIN: réponse 49 02 01 [17 bytes ASCII]
+    const cleaned = raw.toUpperCase().replace(/\s+/g, '')
+    const match = cleaned.match(/4902(?:01)?([0-9A-F]{34})/)
+    if (!match) return null
+    const hex = match[1]
+    let vin = ''
+    for (let i = 0; i < hex.length; i += 2) {
+      const code = parseInt(hex.substring(i, i + 2), 16)
+      if (code > 31 && code < 127) vin += String.fromCharCode(code)
+    }
+    return vin.length >= 10 ? vin : null
+  } catch { return null }
+}
+
+async function readReadiness(send: SendFn): Promise<{ mil: boolean; dtcCount: number; monitors: import('@/types/obd').ReadinessMonitor[] } | null> {
+  try {
+    const raw = await send('0101')
+    if (!raw || raw.includes('NO DATA') || raw.includes('ERROR')) return null
+    const cleaned = raw.toUpperCase().replace(/\s+/g, '')
+    const match = cleaned.match(/4101([0-9A-F]{8})/)
+    if (!match) return null
+    const A = parseInt(match[1].substring(0, 2), 16)
+    const B = parseInt(match[1].substring(2, 4), 16)
+    const C = parseInt(match[1].substring(4, 6), 16)
+    const D = parseInt(match[1].substring(6, 8), 16)
+
+    const mil = (A & 0x80) !== 0
+    const dtcCount = A & 0x7F
+
+    const monitors: import('@/types/obd').ReadinessMonitor[] = [
+      { name: 'Ratés allumage',      supported: !(B & 0x10), ready: !(B & 0x01) },
+      { name: 'Système carburant',   supported: !(B & 0x20), ready: !(B & 0x02) },
+      { name: 'Composants',          supported: !(B & 0x40), ready: !(B & 0x04) },
+      { name: 'Catalyseur',          supported: !(C & 0x01), ready: !(D & 0x01) },
+      { name: 'Catalyseur chauffé',  supported: !(C & 0x02), ready: !(D & 0x02) },
+      { name: 'Système évap.',       supported: !(C & 0x04), ready: !(D & 0x04) },
+      { name: 'Air secondaire',      supported: !(C & 0x08), ready: !(D & 0x08) },
+      { name: 'Sonde O2',            supported: !(C & 0x20), ready: !(D & 0x20) },
+      { name: 'Chauffe sonde O2',    supported: !(C & 0x40), ready: !(D & 0x40) },
+      { name: 'Recirculation EGR',   supported: !(C & 0x80), ready: !(D & 0x80) },
+    ]
+
+    return { mil, dtcCount, monitors: monitors.filter(m => m.supported) }
+  } catch { return null }
+}
+
+async function readParameters(send: SendFn, onStep?: (s: string) => void): Promise<OBDParameter[]> {
+  onStep?.('Lecture paramètres temps réel…')
   const results: OBDParameter[] = []
   for (const [, meta] of Object.entries(OBD_PIDS)) {
-    const raw = await send(meta.pid.substring(2)) // strip "01" prefix → just PID hex
+    const pidCmd = meta.pid.substring(2) // strip "01"
+    const raw = await send(pidCmd)
     const value = parsePidValue(meta.pid, raw)
-    results.push({ pid: meta.pid, name: meta.name, value, unit: meta.unit, raw })
+    results.push({ pid: meta.pid, name: meta.name, value, unit: meta.unit, group: meta.group, raw })
   }
   return results
 }
@@ -220,6 +309,41 @@ export function useOBDScanner() {
 
   const setStatus = (patch: Partial<OBDScannerState>) =>
     setState((s) => ({ ...s, ...patch }))
+
+  // ── Common scan runner ──────────────────────────────────────────────────────
+  async function runScan(type: OBDConnectionType, deviceName: string, send: SendFn, setStep: (s: string) => void) {
+    try {
+      // VIN
+      setStep('Lecture VIN…')
+      const vin = await readVIN(send)
+
+      // Readiness monitors
+      setStep('Moniteurs de disponibilité…')
+      const readinessData = await readReadiness(send)
+
+      // DTCs — tous modules
+      const faultCodes = await readDTCs(send, setStep)
+
+      // Paramètres temps réel
+      const parameters = await readParameters(send, setStep)
+
+      const result: OBDScanResult = {
+        timestamp: new Date().toISOString(),
+        connectionType: type,
+        deviceName,
+        faultCodes,
+        parameters,
+        vin: vin ?? undefined,
+        milOn: readinessData?.mil,
+        dtcCount: readinessData?.dtcCount,
+        readiness: readinessData?.monitors,
+        protocolUsed: 'ISO 15765-4 CAN',
+      }
+      setState(prev => ({ ...prev, scanResult: result, isScanning: false, scanStep: undefined }))
+    } catch (err: any) {
+      setState(prev => ({ ...prev, isScanning: false, scanStep: undefined, error: `Erreur scan: ${err?.message}` }))
+    }
+  }
 
   // ── USB / Serial ────────────────────────────────────────────────────────────
   const connectUSB = useCallback(async () => {
@@ -256,8 +380,8 @@ export function useOBDScanner() {
       await initELM327(send)
       const info = await port.getInfo?.() ?? {}
       const deviceName = info.usbVendorId ? `USB (VID:${info.usbVendorId.toString(16)})` : 'ELM327 USB'
-      setStatus({ status: 'connected', deviceName })
-      await runScan('usb', deviceName, send)
+      setStatus({ status: 'connected', deviceName, isScanning: true })
+      await runScan('usb', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
     } catch (err: any) {
       const msg: string = err?.message ?? ''
       if (msg.includes('No port selected') || msg.includes('cancelled') || msg.includes('user')) {
@@ -359,8 +483,8 @@ export function useOBDScanner() {
       }
 
       await initELM327(send)
-      setStatus({ status: 'connected', deviceName })
-      await runScan('bluetooth', deviceName, send)
+      setStatus({ status: 'connected', deviceName, isScanning: true })
+      await runScan('bluetooth', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
     } catch (err: any) {
       setStatus({ status: 'error', error: err?.message ?? 'Erreur connexion Bluetooth' })
     }
@@ -375,34 +499,12 @@ export function useOBDScanner() {
       const send: SendFn = (cmd) => wifiSendCommand(ws, cmd)
       await initELM327(send)
       const deviceName = `ELM327 WiFi (${ip})`
-      setStatus({ status: 'connected', deviceName })
-      await runScan('wifi', deviceName, send)
+      setStatus({ status: 'connected', deviceName, isScanning: true })
+      await runScan('wifi', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
     } catch (err: any) {
       setStatus({ status: 'error', error: err?.message ?? 'Erreur connexion WiFi' })
     }
   }, [])
-
-  // ── Common scan runner ──────────────────────────────────────────────────────
-  async function runScan(type: OBDConnectionType, deviceName: string, send: SendFn) {
-    setStatus({ isScanning: true })
-    try {
-      const [faultCodes, parameters] = await Promise.all([
-        readDTCs(send),
-        readParameters(send),
-      ])
-      const result: OBDScanResult = {
-        timestamp: new Date().toISOString(),
-        connectionType: type,
-        deviceName,
-        faultCodes,
-        parameters,
-        protocolUsed: 'ISO 15765-4 CAN',
-      }
-      setStatus({ scanResult: result, isScanning: false })
-    } catch (err: any) {
-      setStatus({ isScanning: false, error: `Erreur scan: ${err?.message}` })
-    }
-  }
 
   const disconnect = useCallback(async () => {
     try {
@@ -431,23 +533,46 @@ export function useOBDScanner() {
       connectionType: 'wifi',
       deviceName: 'Démo — données simulées',
       protocolUsed: 'ISO 15765-4 CAN (démo)',
+      vin: 'VF1BM0B0H12345678',
+      milOn: true,
+      dtcCount: 4,
       faultCodes: [
         { code: 'P0171', description: 'Système carburant — Mélange trop pauvre (Banc 1)', system: 'powertrain', severity: 'medium' },
         { code: 'P0300', description: 'Ratés d\'allumage aléatoires détectés', system: 'powertrain', severity: 'high' },
-        { code: 'C0035', description: 'Capteur vitesse roue avant droite — Circuit ouvert', system: 'chassis', severity: 'high' },
-        { code: 'C0196', description: 'Capteur taux de lacet / gyroscope (ESP) — Défaut', system: 'chassis', severity: 'high' },
+        { code: 'C0035', description: 'Capteur vitesse roue avant droite — Circuit ouvert', system: 'chassis', severity: 'high', module: 'ABS/ESP' },
+        { code: 'C0196', description: 'Capteur taux de lacet / gyroscope (ESP) — Défaut', system: 'chassis', severity: 'high', module: 'ABS/ESP' },
+      ],
+      readiness: [
+        { name: 'Catalyseur', supported: true, ready: false },
+        { name: 'Sonde O2', supported: true, ready: true },
+        { name: 'Système évap.', supported: true, ready: false },
+        { name: 'Recirculation EGR', supported: true, ready: true },
+        { name: 'Ratés allumage', supported: true, ready: false },
+        { name: 'Système carburant', supported: true, ready: false },
       ],
       parameters: [
-        { pid: '010C', name: 'Régime moteur',          value: 820,  unit: 'tr/min' },
-        { pid: '010D', name: 'Vitesse',                 value: 0,    unit: 'km/h'  },
-        { pid: '0105', name: 'Temp. refroidissement',   value: 88,   unit: '°C'    },
-        { pid: '0104', name: 'Charge moteur',           value: 12.5, unit: '%'     },
-        { pid: '012F', name: 'Niveau carburant',        value: 45,   unit: '%'     },
-        { pid: '0142', name: 'Tension batterie',        value: 13.8, unit: 'V'     },
-        { pid: '010F', name: 'Temp. admission',         value: 24,   unit: '°C'    },
-        { pid: '0111', name: 'Position papillon',       value: 0,    unit: '%'     },
-        { pid: '0110', name: 'Débit air (MAF)',          value: null, unit: 'g/s'  },
-        { pid: '011F', name: 'Temps moteur actif',      value: 1240, unit: 's'     },
+        { pid: '010C', name: 'Régime moteur',              value: 820,   unit: 'tr/min', group: 'engine' },
+        { pid: '010D', name: 'Vitesse',                    value: 0,     unit: 'km/h',   group: 'engine' },
+        { pid: '0105', name: 'Temp. refroidissement',      value: 88,    unit: '°C',     group: 'engine' },
+        { pid: '015C', name: 'Temp. huile moteur',         value: 92,    unit: '°C',     group: 'engine' },
+        { pid: '0104', name: 'Charge moteur',              value: 12.5,  unit: '%',      group: 'engine' },
+        { pid: '010E', name: 'Avance allumage',            value: 8.5,   unit: '°',      group: 'engine' },
+        { pid: '010B', name: 'Pression admission (MAP)',   value: 34,    unit: 'kPa',    group: 'engine' },
+        { pid: '0110', name: 'Débit air (MAF)',            value: 3.21,  unit: 'g/s',    group: 'engine' },
+        { pid: '010F', name: 'Temp. admission',            value: 24,    unit: '°C',     group: 'engine' },
+        { pid: '0146', name: 'Temp. extérieure',           value: 18,    unit: '°C',     group: 'engine' },
+        { pid: '011F', name: 'Temps moteur actif',         value: 1240,  unit: 's',      group: 'engine' },
+        { pid: '0106', name: 'Correction CT carburant B1', value: +14.8, unit: '%',      group: 'fuel' },  // anormal!
+        { pid: '0107', name: 'Correction LT carburant B1', value: +18.0, unit: '%',      group: 'fuel' },  // très anormal!
+        { pid: '012F', name: 'Niveau carburant',           value: 45,    unit: '%',      group: 'fuel' },
+        { pid: '010A', name: 'Pression carburant (rail)',  value: 312,   unit: 'kPa',    group: 'fuel' },
+        { pid: '0111', name: 'Position papillon',          value: 0,     unit: '%',      group: 'electric' },
+        { pid: '0142', name: 'Tension batterie',           value: 13.8,  unit: 'V',      group: 'electric' },
+        { pid: '0133', name: 'Pression atmosphérique',     value: 101,   unit: 'kPa',    group: 'electric' },
+        { pid: '013C', name: 'Temp. catalyseur B1 S1',    value: 420,   unit: '°C',     group: 'exhaust' },
+        { pid: '014D', name: 'Durée voyant MIL allumé',   value: 320,   unit: 'min',    group: 'diag' },
+        { pid: '0121', name: 'Distance avec MIL allumé',  value: 87,    unit: 'km',     group: 'diag' },
+        { pid: '0131', name: 'Distance depuis effacement', value: 342,   unit: 'km',     group: 'diag' },
       ],
     }
     setState({

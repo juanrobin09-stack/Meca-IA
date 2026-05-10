@@ -45,47 +45,126 @@ function buildOBDPrompt(scan: OBDScanResult, vehicle: VehicleInfo): string {
     `Motorisation : ${vehicle.moteur || 'non renseignée'}`,
     `Kilométrage : ${vehicle.kilometrage} km`,
     `Connexion : ${scan.connectionType.toUpperCase()}${scan.deviceName ? ` (${scan.deviceName})` : ''}`,
-    '',
   ]
 
+  if (scan.vin) lines.push(`VIN : ${scan.vin}`)
+  if (scan.milOn !== undefined) lines.push(`Voyant moteur (MIL) : ${scan.milOn ? '🔴 ALLUMÉ' : '🟢 éteint'}${scan.dtcCount ? ` — ${scan.dtcCount} code(s) dans ECM` : ''}`)
+  lines.push('')
+
+  // DTCs par module
   if (scan.faultCodes.length > 0) {
-    lines.push(`=== CODES DÉFAUTS DÉTECTÉS (${scan.faultCodes.length}) ===`)
+    lines.push(`=== CODES DÉFAUTS (${scan.faultCodes.length}) ===`)
+    // Group by module
+    const byModule = new Map<string, typeof scan.faultCodes>()
     for (const dtc of scan.faultCodes) {
-      lines.push(`• ${dtc.code} [${dtc.severity === 'high' ? 'URGENT' : dtc.severity === 'medium' ? 'MOYEN' : 'FAIBLE'}] — ${dtc.description}`)
+      const key = dtc.module ?? 'Moteur (ECM)'
+      if (!byModule.has(key)) byModule.set(key, [])
+      byModule.get(key)!.push(dtc)
+    }
+    for (const [module, codes] of byModule) {
+      lines.push(`\n[${module}]`)
+      for (const dtc of codes) {
+        const urgency = dtc.severity === 'high' ? 'URGENT' : dtc.severity === 'medium' ? 'MOYEN' : 'FAIBLE'
+        const pending = dtc.pending ? ' (en attente)' : ''
+        lines.push(`• ${dtc.code}${pending} [${urgency}] — ${dtc.description}`)
+      }
     }
   } else {
     lines.push('=== CODES DÉFAUTS === Aucun code défaut détecté')
   }
 
-  const validParams = scan.parameters.filter((p) => p.value !== null)
-  if (validParams.length > 0) {
-    lines.push('')
-    lines.push('=== PARAMÈTRES TEMPS RÉEL ===')
-    for (const p of validParams) {
-      const v = typeof p.value === 'number' ? p.value.toFixed(1) : p.value
-      lines.push(`• ${p.name} : ${v} ${p.unit}`)
+  // Paramètres par groupe
+  const groupLabels: Record<string, string> = {
+    engine: 'MOTEUR',
+    fuel: 'CARBURANT',
+    electric: 'ÉLECTRIQUE',
+    exhaust: 'ÉCHAPPEMENT',
+    diag: 'DIAGNOSTIC',
+  }
+
+  const byGroup = new Map<string, typeof scan.parameters>()
+  for (const p of scan.parameters.filter(p => p.value !== null)) {
+    if (!byGroup.has(p.group)) byGroup.set(p.group, [])
+    byGroup.get(p.group)!.push(p)
+  }
+
+  if (byGroup.size > 0) {
+    lines.push('\n=== PARAMÈTRES TEMPS RÉEL ===')
+    for (const [group, params] of byGroup) {
+      lines.push(`\n[${groupLabels[group] ?? group.toUpperCase()}]`)
+      for (const p of params) {
+        const v = typeof p.value === 'number' ? p.value.toFixed(1) : p.value
+        // Flag anomalies
+        let flag = ''
+        if (p.pid === '0106' || p.pid === '0107' || p.pid === '0108' || p.pid === '0109') {
+          const n = Number(p.value)
+          if (Math.abs(n) > 10) flag = n > 0 ? ' ⚠️ MÉLANGE PAUVRE' : ' ⚠️ MÉLANGE RICHE'
+        }
+        if (p.pid === '0142' && Number(p.value) < 12.0) flag = ' ⚠️ BATTERIE FAIBLE'
+        if (p.pid === '0105' && Number(p.value) > 105) flag = ' ⚠️ SURCHAUFFE'
+        if (p.pid === '015C' && Number(p.value) > 130) flag = ' ⚠️ HUILE TROP CHAUDE'
+        lines.push(`• ${p.name} : ${v} ${p.unit}${flag}`)
+      }
+    }
+  }
+
+  // Readiness monitors
+  if (scan.readiness && scan.readiness.length > 0) {
+    lines.push('\n=== MONITEURS CT (CONTRÔLE TECHNIQUE) ===')
+    for (const m of scan.readiness) {
+      lines.push(`• ${m.name} : ${m.ready ? '✅ Prêt' : '❌ Non prêt'}`)
+    }
+    const notReady = scan.readiness.filter(m => !m.ready)
+    if (notReady.length > 0) {
+      lines.push(`→ ${notReady.length} moniteur(s) non prêt(s) — CT refusé si présenté maintenant`)
     }
   }
 
   lines.push('')
   const motorLine = vehicle.moteur ? ` motorisé ${vehicle.moteur}` : ''
   lines.push(
-    `Tu es un expert mécanicien spécialisé sur les véhicules ${vehicle.marque} ${vehicle.modele} (${vehicle.annee})${motorLine} avec ${vehicle.kilometrage} km au compteur.` +
-    ` Connais parfaitement les défauts récurrents, les problèmes connus du constructeur, et les spécificités techniques de ce moteur.` +
-    ` Analyse ces données OBD et donne un diagnostic complet et précis :` +
-    ` 1) causes probables spécifiques à ce modèle/moteur,` +
-    ` 2) défauts connus ou rappels constructeur associés,` +
-    ` 3) pièces et composants à vérifier en priorité,` +
-    ` 4) urgence d'intervention (peut-on rouler ?),` +
-    ` 5) coût estimé de réparation chez un garagiste.`
+    `Tu es un expert mécanicien spécialisé sur les ${vehicle.marque} ${vehicle.modele} (${vehicle.annee})${motorLine} avec ${vehicle.kilometrage} km.` +
+    ` Connais les défauts récurrents et spécificités techniques de ce moteur.` +
+    ` Analyse toutes ces données OBD de manière croisée et donne un diagnostic complet :` +
+    ` 1) Diagnostic probable par ordre de priorité (codes + paramètres corrélés),` +
+    ` 2) Interprétation des corrections carburant STFT/LTFT si présentes,` +
+    ` 3) État des moniteurs CT et si le véhicule est présentable au contrôle technique,` +
+    ` 4) Pièces à vérifier / remplacer avec références si possible,` +
+    ` 5) Urgence d'intervention (peut-on rouler ?),` +
+    ` 6) Coût estimé pièces + main d'œuvre garage indépendant France 2025.`
   )
   return lines.join('\n')
+}
+
+const GROUP_LABELS: Record<string, string> = {
+  engine: 'Moteur',
+  fuel: 'Carburant',
+  electric: 'Électrique',
+  exhaust: 'Échappement',
+  diag: 'Diagnostic',
 }
 
 function ScanSummary({ scan, expanded, onToggle }: { scan: OBDScanResult; expanded: boolean; onToggle: () => void }) {
   const urgent = scan.faultCodes.filter((c) => c.severity === 'high').length
   const medium = scan.faultCodes.filter((c) => c.severity === 'medium').length
   const total = scan.faultCodes.length
+
+  // Group DTCs by module
+  const dtcByModule = new Map<string, typeof scan.faultCodes>()
+  for (const dtc of scan.faultCodes) {
+    const key = dtc.module ?? 'Moteur (ECM)'
+    if (!dtcByModule.has(key)) dtcByModule.set(key, [])
+    dtcByModule.get(key)!.push(dtc)
+  }
+
+  // Group parameters by group
+  const paramByGroup = new Map<string, typeof scan.parameters>()
+  for (const p of scan.parameters.filter(p => p.value !== null)) {
+    if (!paramByGroup.has(p.group)) paramByGroup.set(p.group, [])
+    paramByGroup.get(p.group)!.push(p)
+  }
+
+  const notReadyMonitors = scan.readiness?.filter(m => !m.ready) ?? []
 
   return (
     <Card
@@ -122,6 +201,9 @@ function ScanSummary({ scan, expanded, onToggle }: { scan: OBDScanResult; expand
                     {scan.parameters.filter((p) => p.value !== null).length} paramètres
                   </Badge>
                 )}
+                {notReadyMonitors.length > 0 && (
+                  <Badge variant="warning">{notReadyMonitors.length} moniteur{notReadyMonitors.length > 1 ? 's' : ''} non prêt{notReadyMonitors.length > 1 ? 's' : ''}</Badge>
+                )}
               </div>
             </div>
           </div>
@@ -136,37 +218,93 @@ function ScanSummary({ scan, expanded, onToggle }: { scan: OBDScanResult; expand
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="mt-4 space-y-2 border-t pt-4">
-                {scan.faultCodes.map((dtc) => (
-                  <div key={dtc.code} className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="font-mono font-bold text-sm">{dtc.code}</span>
-                      <p className="text-xs text-muted-foreground">{dtc.description}</p>
-                    </div>
-                    <Badge
-                      variant={
-                        dtc.severity === 'high' ? 'danger' : dtc.severity === 'medium' ? 'warning' : 'success'
-                      }
-                    >
-                      {dtc.severity === 'high' ? 'Urgent' : dtc.severity === 'medium' ? 'Moyen' : 'Faible'}
-                    </Badge>
+              <div className="mt-4 space-y-4 border-t pt-4">
+                {/* MIL status + VIN */}
+                {(scan.milOn !== undefined || scan.vin) && (
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    {scan.milOn !== undefined && (
+                      <span className={`flex items-center gap-1 font-medium ${scan.milOn ? 'text-red-600' : 'text-green-600'}`}>
+                        {scan.milOn ? '🔴 Voyant MIL allumé' : '🟢 Voyant MIL éteint'}
+                        {scan.dtcCount ? ` (${scan.dtcCount} code${scan.dtcCount > 1 ? 's' : ''})` : ''}
+                      </span>
+                    )}
+                    {scan.vin && (
+                      <span className="font-mono text-xs text-muted-foreground">VIN: {scan.vin}</span>
+                    )}
                   </div>
-                ))}
-                {scan.faultCodes.length === 0 && (
-                  <p className="text-sm text-green-600">Aucun code défaut enregistré dans la mémoire du calculateur.</p>
                 )}
-                <div className="border-t pt-3 mt-3 grid grid-cols-2 gap-2">
-                  {scan.parameters
-                    .filter((p) => p.value !== null)
-                    .map((p) => (
-                      <div key={p.pid} className="text-xs">
-                        <span className="text-muted-foreground">{p.name}</span>
-                        <span className="ml-1 font-semibold">
-                          {typeof p.value === 'number' ? p.value.toFixed(1) : p.value} {p.unit}
-                        </span>
+
+                {/* DTCs grouped by module */}
+                {scan.faultCodes.length > 0 ? (
+                  <div className="space-y-3">
+                    {Array.from(dtcByModule.entries()).map(([module, codes]) => (
+                      <div key={module}>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{module}</p>
+                        <div className="space-y-1.5">
+                          {codes.map((dtc) => (
+                            <div key={dtc.code + (dtc.module ?? '')} className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="font-mono font-bold text-sm">{dtc.code}</span>
+                                {dtc.pending && <span className="ml-1 text-xs text-muted-foreground">(en attente)</span>}
+                                <p className="text-xs text-muted-foreground">{dtc.description}</p>
+                              </div>
+                              <Badge
+                                variant={
+                                  dtc.severity === 'high' ? 'danger' : dtc.severity === 'medium' ? 'warning' : 'success'
+                                }
+                              >
+                                {dtc.severity === 'high' ? 'Urgent' : dtc.severity === 'medium' ? 'Moyen' : 'Faible'}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
-                </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-green-600">Aucun code défaut enregistré dans la mémoire du calculateur.</p>
+                )}
+
+                {/* Readiness monitors */}
+                {scan.readiness && scan.readiness.length > 0 && (
+                  <div className="border-t pt-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Moniteurs CT</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {scan.readiness.map((m) => (
+                        <div key={m.name} className="text-xs flex items-center gap-1">
+                          <span>{m.ready ? '✅' : '❌'}</span>
+                          <span className={m.ready ? 'text-muted-foreground' : 'font-medium text-orange-600'}>{m.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                    {notReadyMonitors.length > 0 && (
+                      <p className="text-xs text-orange-600 mt-1 font-medium">
+                        → {notReadyMonitors.length} moniteur{notReadyMonitors.length > 1 ? 's' : ''} non prêt{notReadyMonitors.length > 1 ? 's' : ''} — CT refusé si présenté maintenant
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Parameters grouped by group */}
+                {paramByGroup.size > 0 && (
+                  <div className="border-t pt-3 space-y-3">
+                    {Array.from(paramByGroup.entries()).map(([group, params]) => (
+                      <div key={group}>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">{GROUP_LABELS[group] ?? group}</p>
+                        <div className="grid grid-cols-2 gap-1">
+                          {params.map((p) => (
+                            <div key={p.pid} className="text-xs">
+                              <span className="text-muted-foreground">{p.name}</span>
+                              <span className="ml-1 font-semibold">
+                                {typeof p.value === 'number' ? p.value.toFixed(1) : p.value} {p.unit}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -379,9 +517,17 @@ export default function DiagnosticOBD() {
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <Card className="mb-4">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Connexion à la valise</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      {state.isScanning
+                        ? <><Loader2 className="h-4 w-4 animate-spin text-primary" /> Scan en cours…</>
+                        : 'Connexion à la valise'
+                      }
+                    </CardTitle>
                     <CardDescription>
-                      Port OBD-II situé sous le tableau de bord côté conducteur
+                      {state.scanStep
+                        ? state.scanStep
+                        : 'Port OBD-II situé sous le tableau de bord côté conducteur'
+                      }
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
