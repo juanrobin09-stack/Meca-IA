@@ -71,7 +71,8 @@ export async function* streamMessage(messages: ChatMessage[]): AsyncGenerator<st
     if (done) break
 
     buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
+    // Normalise \r\n to \n so splitting works for both Unix and Windows line-endings
+    const lines = buffer.replace(/\r\n/g, '\n').split('\n')
     buffer = lines.pop() ?? ''
 
     for (const line of lines) {

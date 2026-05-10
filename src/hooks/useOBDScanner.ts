@@ -132,7 +132,7 @@ async function serialSendCommand(
   writer: WritableStreamDefaultWriter<Uint8Array>,
   reader: ReadableStreamDefaultReader<Uint8Array>,
   cmd: string,
-  timeoutMs = 2000
+  timeoutMs = 1500
 ): Promise<string> {
   const encoder = new TextEncoder()
   await writer.write(encoder.encode(cmd + '\r'))
@@ -249,9 +249,16 @@ async function readVIN(send: SendFn): Promise<string | null> {
   try {
     const raw = await send('0902')
     if (!raw || raw.includes('NO DATA') || raw.includes('ERROR')) return null
-    // VIN: réponse 49 02 01 [17 bytes ASCII]
-    const cleaned = raw.toUpperCase().replace(/\s+/g, '')
-    const match = cleaned.match(/4902(?:01)?([0-9A-F]{34})/)
+    // VIN: response 49 02 01 [17 bytes ASCII], may arrive on multiple frames.
+    // ELM327 sometimes prefixes each frame with a line number like "0:" or "1:".
+    // Strip those frame-number prefixes before joining the hex bytes.
+    const stripped = raw
+      .toUpperCase()
+      .replace(/\r?\n/g, ' ')        // normalise newlines
+      .replace(/[0-9A-F]+:/g, ' ')   // strip frame numbers (e.g. "0:" "1:" "2:")
+    const cleaned = stripped.replace(/\s+/g, '')
+    // Match 4902 with optional frame-count byte (01/00) then 34 hex chars (17 bytes)
+    const match = cleaned.match(/4902(?:[0-9A-F]{2})?([0-9A-F]{34})/)
     if (!match) return null
     const hex = match[1]
     let vin = ''
@@ -299,8 +306,10 @@ async function readParameters(send: SendFn, onStep?: (s: string) => void): Promi
   onStep?.('Lecture paramètres temps réel…')
   const results: OBDParameter[] = []
   for (const [, meta] of Object.entries(OBD_PIDS)) {
-    const pidCmd = meta.pid.substring(2) // strip "01"
-    const raw = await send(pidCmd)
+    // Send the full PID (e.g. "010C", "015C") — ELM327 accepts mode+PID directly.
+    // Previously used meta.pid.substring(2) which produced wrong commands like
+    // "5C" instead of "015C" for non-standard PIDs (oil temp, MIL time, etc.).
+    const raw = await send(meta.pid)
     const value = parsePidValue(meta.pid, raw)
     results.push({ pid: meta.pid, name: meta.name, value, unit: meta.unit, group: meta.group, raw })
   }

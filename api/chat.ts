@@ -180,10 +180,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader('Cache-Control', 'no-cache, no-transform')
       res.setHeader('X-Accel-Buffering', 'no')
       res.status(200)
+      // Flush headers immediately so the client receives the SSE handshake
+      // before any content arrives — critical for Vercel streaming to work.
+      res.flushHeaders()
 
       const stream = anthropic.messages.stream({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
+        max_tokens: 1200,
         system: SYSTEM_PROMPT,
         messages: formattedMessages,
       })

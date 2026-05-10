@@ -562,7 +562,12 @@ export default function DiagnosticOBD() {
                     <span className="font-medium">{vehicleInfo.marque} {vehicleInfo.modele} {vehicleInfo.annee}</span>
                     {vehicleInfo.moteur && <span className="text-muted-foreground">— {vehicleInfo.moteur}</span>}
                     {vehicleInfo.kilometrage && <span className="text-muted-foreground">— {vehicleInfo.kilometrage} km</span>}
-                    <button onClick={() => setVehicleConfirmed(false)} className="ml-auto mr-2 text-xs text-muted-foreground underline">Modifier</button>
+                    <button
+                      onClick={() => { setVehicleConfirmed(false); disconnect() }}
+                      className="ml-auto mr-2 text-xs text-muted-foreground underline"
+                    >
+                      Modifier
+                    </button>
                   </div>
 
                   <Card>
