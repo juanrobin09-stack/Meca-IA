@@ -44,34 +44,47 @@ function parsePidValue(pid: string, raw: string): number | null {
 
 function parseDTCResponse(raw: string): OBDFaultCode[] {
   const codes: OBDFaultCode[] = []
-  // Strip ALL whitespace first — ELM327 responses often have spaces between bytes
-  // e.g. "43 01 71 03 00 00 00" becomes "430171030000"
+  // Strip ALL whitespace — ELM327 responses often have spaces between bytes
   const cleaned = raw.toUpperCase().replace(/\s+/g, '')
-  // Mode 03 response: 43 followed by pairs of hex bytes
-  const match = cleaned.match(/43[0-9A-F]{4,}/g)
+  // Match mode 03 (43), mode 07 pending (47), mode 0A permanent (4A)
+  const match = cleaned.match(/(43|47|4A)[0-9A-F]{4,}/g)
   if (!match) return codes
 
   for (const block of match) {
-    const data = block.substring(2) // strip "43"
+    const data = block.substring(2) // strip "43"/"47"/"4A"
     for (let i = 0; i < data.length - 3; i += 4) {
       const word = parseInt(data.substring(i, i + 4), 16)
       if (word === 0) continue
       const systemBits = (word >> 14) & 0x03
-      const prefixes = ['P', 'P', 'C', 'B']
+      const prefixes = ['P', 'C', 'B', 'U']
       const prefix = prefixes[systemBits] ?? 'U'
       const number = (word & 0x3FFF).toString(10).padStart(4, '0')
       const code = `${prefix}${number}`
       const system = DTC_SYSTEM_MAP[prefix] ?? 'powertrain'
       const description = KNOWN_DTC[code] ?? `Code inconnu — ${code}`
       const severity: OBDFaultCode['severity'] =
-        prefix === 'P' && parseInt(number) >= 300 && parseInt(number) <= 399 ? 'high'
-        : prefix === 'P' ? 'medium'
-        : 'low'
+        prefix === 'C' ? 'high'                                                        // ABS/ESP/frein = toujours urgent
+        : prefix === 'B' ? 'medium'
+        : prefix === 'U' ? 'medium'
+        : parseInt(number) >= 300 && parseInt(number) <= 399 ? 'high'                 // ratés allumage
+        : 'medium'
       codes.push({ code, description, system, severity })
     }
   }
   return codes
 }
+
+// Adresses CAN des modules ABS/ESP courants (constructeur → adresse)
+const ABS_ECU_MODULES = [
+  { send: '7B3', recv: '7BB', label: 'ABS/ESP (générique)' },
+  { send: '760', recv: '768', label: 'ABS (Renault/Peugeot/Citroën/Dacia)' },
+  { send: '7A0', recv: '7A8', label: 'ESP/ABS (PSA/Stellantis)' },
+  { send: '7B0', recv: '7B8', label: 'ABS (Ford/Opel)' },
+  { send: '713', recv: '71B', label: 'ABS (Opel/Vauxhall)' },
+  { send: '7A4', recv: '7AC', label: 'ABS (Stellantis 2)' },
+  { send: '740', recv: '748', label: 'ABS (Toyota/Lexus)' },
+  { send: '7B5', recv: '7BD', label: 'ESP (VW/Audi/Seat)' },
+]
 
 // ─── Web Serial API (USB + Bluetooth paired as COM) ──────────────────────────
 
@@ -146,8 +159,43 @@ async function initELM327(send: SendFn): Promise<string> {
 }
 
 async function readDTCs(send: SendFn): Promise<OBDFaultCode[]> {
-  const raw = await send('03')
-  return parseDTCResponse(raw)
+  const seen = new Set<string>()
+  const all: OBDFaultCode[] = []
+
+  function addUnique(codes: OBDFaultCode[]) {
+    for (const c of codes) {
+      if (!seen.has(c.code)) {
+        seen.add(c.code)
+        all.push(c)
+      }
+    }
+  }
+
+  // Mode 03 — codes confirmés (ECM/PCM)
+  addUnique(parseDTCResponse(await send('03')))
+
+  // Mode 07 — codes en attente (même module)
+  addUnique(parseDTCResponse(await send('07')))
+
+  // Scan des modules ABS/ESP par adresse CAN
+  for (const mod of ABS_ECU_MODULES) {
+    try {
+      await send(`AT SH ${mod.send}`)  // cibler ce module
+      await send(`AT CRA ${mod.recv}`) // accepter sa réponse
+      const raw = await send('03')
+      // Ignorer si le module ne répond pas
+      if (!raw || raw.includes('NO DATA') || raw.includes('ERROR') || raw.includes('UNABLE')) continue
+      addUnique(parseDTCResponse(raw))
+    } catch { /* module absent ou non supporté */ }
+  }
+
+  // Remettre l'adressage fonctionnel (broadcast tous modules)
+  try {
+    await send('AT SH 7DF')  // adresse fonctionnelle = broadcast
+    await send('ATE0')       // remettre les options de base
+  } catch { /* ignore */ }
+
+  return all
 }
 
 async function readParameters(send: SendFn): Promise<OBDParameter[]> {
@@ -386,6 +434,8 @@ export function useOBDScanner() {
       faultCodes: [
         { code: 'P0171', description: 'Système carburant — Mélange trop pauvre (Banc 1)', system: 'powertrain', severity: 'medium' },
         { code: 'P0300', description: 'Ratés d\'allumage aléatoires détectés', system: 'powertrain', severity: 'high' },
+        { code: 'C0035', description: 'Capteur vitesse roue avant droite — Circuit ouvert', system: 'chassis', severity: 'high' },
+        { code: 'C0196', description: 'Capteur taux de lacet / gyroscope (ESP) — Défaut', system: 'chassis', severity: 'high' },
       ],
       parameters: [
         { pid: '010C', name: 'Régime moteur',          value: 820,  unit: 'tr/min' },
