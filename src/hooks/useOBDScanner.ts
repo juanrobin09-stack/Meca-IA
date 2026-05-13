@@ -134,7 +134,7 @@ async function serialSendCommand(
   writer: WritableStreamDefaultWriter<Uint8Array>,
   reader: ReadableStreamDefaultReader<Uint8Array>,
   cmd: string,
-  timeoutMs = 1500
+  timeoutMs = 3000
 ): Promise<string> {
   const encoder = new TextEncoder()
   await writer.write(encoder.encode(cmd + '\r'))
@@ -143,16 +143,25 @@ async function serialSendCommand(
   let result = ''
   const deadline = Date.now() + timeoutMs
 
+  // Sentinel distinguishes poll tick from real stream end
+  const TICK = Symbol('tick')
+
   while (Date.now() < deadline) {
-    const { value, done } = await Promise.race([
-      reader.read(),
-      new Promise<{ value: Uint8Array; done: boolean }>((resolve) =>
-        setTimeout(() => resolve({ value: new Uint8Array(), done: true }), 200)
+    const remaining = deadline - Date.now()
+    if (remaining <= 0) break
+
+    const outcome = await Promise.race([
+      reader.read() as Promise<ReadableStreamReadResult<Uint8Array>>,
+      new Promise<typeof TICK>((resolve) =>
+        setTimeout(() => resolve(TICK), Math.min(remaining, 300))
       ),
     ])
-    if (done) break
-    result += decoder.decode(value)
-    if (result.includes('>')) break // ELM327 prompt means response complete
+
+    if (outcome === TICK) continue          // Poll tick — keep waiting for ECU
+    const { value, done } = outcome
+    if (done) break                         // Port closed
+    if (value?.length) result += decoder.decode(value)
+    if (result.includes('>')) break         // ELM327 prompt = response complete
   }
   return result
 }
