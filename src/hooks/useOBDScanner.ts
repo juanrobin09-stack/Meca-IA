@@ -519,7 +519,8 @@ export function useOBDScanner() {
     }
     setStatus({ status: 'connecting', connectionType: 'usb', error: null })
     try {
-      const existingPorts: SerialPort[] = await (navigator as Navigator & { serial: { getPorts: () => Promise<SerialPort[]>; requestPort: () => Promise<SerialPort> } }).serial.getPorts()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const existingPorts: any[] = await (navigator as any).serial.getPorts()
       const port = existingPorts.length > 0
         ? existingPorts[0]
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
