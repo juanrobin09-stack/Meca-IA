@@ -17,17 +17,24 @@ const INITIAL_STATE: OBDScannerState = {
   isScanning: false,
 }
 
-// ─── ELM327 AT command helpers ───────────────────────────────────────────────
+// ─── PID value parser ─────────────────────────────────────────────────────────
 
 function parsePidValue(pid: string, raw: string): number | null {
-  const bytes = raw.trim().replace(/\s/g, '')
-  if (!bytes || bytes.toUpperCase().includes('NODATA') || bytes.toUpperCase().includes('ERROR')) return null
+  if (!raw) return null
+  const cleaned = raw.toUpperCase().replace(/\s+/g, '').replace(/>/g, '')
+  if (
+    cleaned.includes('NODATA') ||
+    cleaned.includes('ERROR') ||
+    cleaned.includes('UNABLE') ||
+    cleaned.includes('STOPPED') ||
+    cleaned === '?'
+  ) return null
 
-  // Strip mode+pid echo (ex: 410C → garde les octets de données)
-  const hex = bytes.replace(/^(41|43)[0-9A-Fa-f]{2}/, '')
-  if (hex.length < 2) return null
-  const A = parseInt(hex.substring(0, 2), 16)
-  const B = hex.length >= 4 ? parseInt(hex.substring(2, 4), 16) : 0
+  // Strip mode-01 response echo: "41XX" at the start
+  const dataHex = cleaned.replace(/^41[0-9A-F]{2}/, '')
+  if (dataHex.length < 2) return null
+  const A = parseInt(dataHex.substring(0, 2), 16)
+  const B = dataHex.length >= 4 ? parseInt(dataHex.substring(2, 4), 16) : 0
 
   switch (pid) {
     case '010C': return Math.round((A * 256 + B) / 4)
@@ -42,7 +49,6 @@ function parsePidValue(pid: string, raw: string): number | null {
     case '0110': return +((A * 256 + B) / 100).toFixed(2)
     case '0143': return Math.round((A * 256 + B) * 100 / 65535)
     case '011F': return A * 256 + B
-    // Fuel trims: (A-128)*100/128
     case '0106': return +((A - 128) * 100 / 128).toFixed(1)
     case '0107': return +((A - 128) * 100 / 128).toFixed(1)
     case '0108': return +((A - 128) * 100 / 128).toFixed(1)
@@ -61,74 +67,80 @@ function parsePidValue(pid: string, raw: string): number | null {
   }
 }
 
+// ─── DTC parser ───────────────────────────────────────────────────────────────
+
 function parseDTCResponse(raw: string): OBDFaultCode[] {
   const codes: OBDFaultCode[] = []
-  // Strip frame numbers (0: 1: 2:) from multi-frame responses, then all whitespace
+  if (!raw) return codes
+
+  // Strip single-digit ISO-TP frame-number prefixes (e.g. "0:" "1:" "2:") then whitespace
   const cleaned = raw.toUpperCase()
-    .replace(/[0-9A-F]+:/g, ' ')  // retire préfixes de frame ISO-TP
-    .replace(/\s+/g, '')           // retire tous les espaces
-  // Match mode 03 (43), mode 07 pending (47), mode 0A permanent (4A)
+    .replace(/\b[0-9A-F]:/g, ' ')
+    .replace(/\s+/g, '')
+
+  // Match mode 03 (43), mode 07 pending (47), mode 0A permanent (4A) responses
   const match = cleaned.match(/(43|47|4A)[0-9A-F]{4,}/g)
   if (!match) return codes
 
   for (const block of match) {
-    const data = block.substring(2) // strip "43"/"47"/"4A"
-    for (let i = 0; i < data.length - 3; i += 4) {
+    const modePrefix = block.substring(0, 2) // "43", "47", or "4A"
+    const isPending = modePrefix === '47'
+    const data = block.substring(2)
+
+    for (let i = 0; i + 4 <= data.length; i += 4) {
       const word = parseInt(data.substring(i, i + 4), 16)
       if (word === 0) continue
+
       const systemBits = (word >> 14) & 0x03
-      const prefixes = ['P', 'C', 'B', 'U']
-      const prefix = prefixes[systemBits] ?? 'U'
-      // Decode each nibble as hex digit (NOT decimal conversion)
-      // P0420 word=0x0420: d1=0 d2=4 d3=2 d4=0 → "0420" ✓
+      const prefix = (['P', 'C', 'B', 'U'] as const)[systemBits] ?? 'U'
+
+      // Decode nibbles as hex digits — NOT decimal
+      // Example: P0420 = 0x0420 → d1=0 d2=4 d3=2 d4=0 → "0420"
       const d1 = (word >> 12) & 0x03
       const d2 = (word >> 8) & 0x0F
       const d3 = (word >> 4) & 0x0F
       const d4 = word & 0x0F
       const number = `${d1}${d2.toString(16)}${d3.toString(16)}${d4.toString(16)}`.toUpperCase()
       const code = `${prefix}${number}`
+
       const system = DTC_SYSTEM_MAP[prefix] ?? 'powertrain'
       const description = KNOWN_DTC[code] ?? `Code inconnu — ${code}`
       const severity: OBDFaultCode['severity'] =
-        prefix === 'C' ? 'high'                                                        // ABS/ESP/frein = toujours urgent
+        prefix === 'C' ? 'high'
         : prefix === 'B' ? 'medium'
         : prefix === 'U' ? 'medium'
-        : parseInt(number) >= 300 && parseInt(number) <= 399 ? 'high'                 // ratés allumage
+        : (parseInt(number, 16) >= 0x300 && parseInt(number, 16) <= 0x3FF) ? 'high'
         : 'medium'
-      codes.push({ code, description, system, severity })
+
+      codes.push({ code, description, system, severity, ...(isPending ? { pending: true } : {}) })
     }
   }
   return codes
 }
 
-// Tous les modules ECU à scanner pour les DTCs
+// ─── ECU modules to scan ──────────────────────────────────────────────────────
+
 const ALL_ECU_MODULES = [
-  // ABS / ESP / Frein
-  { send: '7B3', recv: '7BB', label: 'ABS/ESP' },
-  { send: '760', recv: '768', label: 'ABS (Renault/PSA)' },
-  { send: '7A0', recv: '7A8', label: 'ESP (PSA/Stellantis)' },
-  { send: '7B0', recv: '7B8', label: 'ABS (Ford/Opel)' },
-  { send: '713', recv: '71B', label: 'ABS (Opel)' },
-  { send: '7A4', recv: '7AC', label: 'ABS (Stellantis 2)' },
-  { send: '740', recv: '748', label: 'ABS (Toyota)' },
-  { send: '7B5', recv: '7BD', label: 'ESP (VW/Audi)' },
-  // Boîte de vitesses (TCM)
-  { send: '7E1', recv: '7E9', label: 'Boîte de vitesses (TCM)' },
-  { send: '7A2', recv: '7AA', label: 'TCM (variante)' },
-  // Airbag / SRS
-  { send: '7B8', recv: '7BC', label: 'Airbag/SRS' },
-  { send: '752', recv: '75A', label: 'SRS (Renault/PSA)' },
-  // BSI / BCM (calculateur de confort)
-  { send: '764', recv: '76C', label: 'BSI/BCM (Renault/PSA)' },
-  { send: '7A7', recv: '7AF', label: 'BCM (générique)' },
-  // Climatisation
-  { send: '7A6', recv: '7AE', label: 'Climatisation' },
-  // Direction assistée électrique (EPS)
-  { send: '772', recv: '77A', label: 'Direction assistée (EPS)' },
-  { send: '7A5', recv: '7AD', label: 'EPS (variante)' },
+  { addr: '7B3', label: 'ABS/ESP' },
+  { addr: '760', label: 'ABS (Renault/PSA)' },
+  { addr: '7A0', label: 'ESP (PSA/Stellantis)' },
+  { addr: '7B0', label: 'ABS (Ford/Opel)' },
+  { addr: '713', label: 'ABS (Opel)' },
+  { addr: '7A4', label: 'ABS (Stellantis 2)' },
+  { addr: '740', label: 'ABS (Toyota)' },
+  { addr: '7B5', label: 'ESP (VW/Audi)' },
+  { addr: '7E1', label: 'Boîte de vitesses (TCM)' },
+  { addr: '7A2', label: 'TCM (variante)' },
+  { addr: '7B8', label: 'Airbag/SRS' },
+  { addr: '752', label: 'SRS (Renault/PSA)' },
+  { addr: '764', label: 'BSI/BCM (Renault/PSA)' },
+  { addr: '7A7', label: 'BCM (générique)' },
+  { addr: '7A6', label: 'Climatisation' },
+  { addr: '772', label: 'Direction assistée (EPS)' },
+  { addr: '7A5', label: 'EPS (variante)' },
 ]
 
-// ─── Web Serial API (USB + Bluetooth paired as COM) ──────────────────────────
+// ─── Web Serial (USB/COM) ────────────────────────────────────────────────────
 
 async function serialSendCommand(
   writer: WritableStreamDefaultWriter<Uint8Array>,
@@ -136,14 +148,11 @@ async function serialSendCommand(
   cmd: string,
   timeoutMs = 3000
 ): Promise<string> {
-  const encoder = new TextEncoder()
-  await writer.write(encoder.encode(cmd + '\r'))
+  await writer.write(new TextEncoder().encode(cmd + '\r'))
 
   const decoder = new TextDecoder()
   let result = ''
   const deadline = Date.now() + timeoutMs
-
-  // Sentinel distinguishes poll tick from real stream end
   const TICK = Symbol('tick')
 
   while (Date.now() < deadline) {
@@ -152,38 +161,36 @@ async function serialSendCommand(
 
     const outcome = await Promise.race([
       reader.read() as Promise<ReadableStreamReadResult<Uint8Array>>,
-      new Promise<typeof TICK>((resolve) =>
-        setTimeout(() => resolve(TICK), Math.min(remaining, 300))
-      ),
+      new Promise<typeof TICK>((res) => setTimeout(() => res(TICK), Math.min(remaining, 300))),
     ])
 
-    if (outcome === TICK) continue          // Poll tick — keep waiting for ECU
+    if (outcome === TICK) continue
     const { value, done } = outcome
-    if (done) break                         // Port closed
+    if (done) break
     if (value?.length) result += decoder.decode(value)
-    if (result.includes('>')) break         // ELM327 prompt = response complete
+    if (result.includes('>')) break
   }
   return result
 }
 
-// ─── WiFi WebSocket relay ─────────────────────────────────────────────────────
+// ─── WiFi WebSocket ───────────────────────────────────────────────────────────
 
 function createWifiSocket(ip: string, port: number): Promise<WebSocket> {
   return new Promise((resolve, reject) => {
     const ws = new WebSocket(`ws://${ip}:${port}`)
     ws.binaryType = 'arraybuffer'
-    const timeout = setTimeout(() => { ws.close(); reject(new Error('Timeout de connexion WiFi')) }, 8000)
-    ws.onopen = () => { clearTimeout(timeout); resolve(ws) }
-    ws.onerror = () => { clearTimeout(timeout); reject(new Error(`Impossible de joindre ${ip}:${port}`)) }
+    const t = setTimeout(() => { ws.close(); reject(new Error('Timeout connexion WiFi')) }, 8000)
+    ws.onopen = () => { clearTimeout(t); resolve(ws) }
+    ws.onerror = () => { clearTimeout(t); reject(new Error(`Impossible de joindre ${ip}:${port}`)) }
   })
 }
 
-async function wifiSendCommand(ws: WebSocket, cmd: string, timeoutMs = 2000): Promise<string> {
+async function wifiSendCommand(ws: WebSocket, cmd: string, timeoutMs = 3500): Promise<string> {
   return new Promise((resolve) => {
     let result = ''
     const tid = setTimeout(() => resolve(result), timeoutMs)
     const handler = (ev: MessageEvent) => {
-      const chunk = typeof ev.data === 'string' ? ev.data : new TextDecoder().decode(ev.data)
+      const chunk = typeof ev.data === 'string' ? ev.data : new TextDecoder().decode(ev.data as ArrayBuffer)
       result += chunk
       if (result.includes('>')) {
         clearTimeout(tid)
@@ -200,60 +207,77 @@ async function wifiSendCommand(ws: WebSocket, cmd: string, timeoutMs = 2000): Pr
 
 type SendFn = (cmd: string) => Promise<string>
 
-function normalizeOBD(raw: string) {
+function normalizeOBD(raw: string): string {
   return raw.toUpperCase().replace(/\s+/g, '').replace(/>/g, '')
 }
 
-function hasVehicleData(raw: string): boolean {
-  const cleaned = normalizeOBD(raw)
-  if (!cleaned) return false
-  // Reject known ELM327 error strings
-  if (
-    cleaned.includes('NODATA') ||
-    cleaned.includes('UNABLETOCONNECT') ||
-    cleaned.includes('BUSERROR') ||
-    cleaned.includes('CANERROR') ||
-    cleaned.includes('DATAERROR') ||
-    cleaned.includes('STOPPED') ||
-    cleaned.includes('SEARCHING') && cleaned.length < 20 ||
-    cleaned === '?' ||
-    cleaned.endsWith('?')
-  ) return false
-  // Accept any mode-01 positive reply (41 XX ...) — covers 4100, 4101, 410C, etc.
-  return /41[0-9A-F]{2}/.test(cleaned)
+function isOBDError(raw: string): boolean {
+  const c = normalizeOBD(raw)
+  return (
+    !c ||
+    c.includes('NODATA') ||
+    c.includes('UNABLETOCONNECT') ||
+    c.includes('BUSERROR') ||
+    c.includes('CANERROR') ||
+    c.includes('DATAERROR') ||
+    c.includes('FBERROR') ||
+    c.includes('STOPPED') ||
+    c === '?' ||
+    c.endsWith('?')
+  )
 }
 
-// Resets the ELM327 and configures it — no OBD commands sent here
+function hasVehicleData(raw: string): boolean {
+  if (isOBDError(raw)) return false
+  // SEARCHING... alone is not data; with a valid OBD response appended it is
+  const c = normalizeOBD(raw).replace('SEARCHING...', '')
+  return /41[0-9A-F]{2}/.test(c)
+}
+
+// Returns true if the detected protocol string is CAN-based
+function isCAN(protocol: string): boolean {
+  const p = protocol.toUpperCase()
+  return (
+    p.includes('CAN') ||
+    p.includes('ISO 15765') ||
+    p === '6' || p === '7' || p === '8' || p === '9' ||
+    /^[6-9]$/.test(p.trim())
+  )
+}
+
+// ─── ELM327 init ─────────────────────────────────────────────────────────────
+
 async function initELM327(send: SendFn): Promise<void> {
-  await send('ATZ')      // Reset (waits for '>' prompt up to 3s)
-  await send('ATE0')     // Echo off
-  await send('ATL0')     // Linefeeds off
-  await send('ATS0')     // Spaces off
-  await send('ATH0')     // Headers off
-  await send('ATAL')     // Allow Long messages (multi-frame DTCs)
-  await send('ATSP0')    // Auto protocol — detect on first OBD command
-  // ATST 4B = 0x4B = 75 × 4ms = 300ms per protocol attempt.
-  // With ATSP0 scanning up to 9 protocols, total = ~2.7s which fits our 3s timeout.
-  // (ATST FA = 1000ms would take ~9s and always time out before the car responds.)
+  await send('ATZ')     // Reset — takes up to ~1500ms, waits for '>'
+  await send('ATE0')    // Echo off
+  await send('ATL0')    // Linefeeds off
+  await send('ATS0')    // Spaces off
+  await send('ATH0')    // Headers off
+  await send('ATAL')    // Allow Long messages (multi-frame DTCs)
+  await send('ATSP0')   // Auto protocol — detect on first OBD command
+  // ATST 4B = 0x4B = 75 × 4ms = 300ms per ELM327 protocol attempt.
+  // ATSP0 tries up to 9 protocols × 300ms = 2.7s, which fits our 3s outer timeout.
   await send('ATST 4B')
 }
 
-// Probes the vehicle ECU and returns the detected protocol name
+// ─── Protocol detection ───────────────────────────────────────────────────────
+
 async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Promise<string> {
   onStep?.('Détection du calculateur...')
 
-  // Fast path: ATSP0 auto-detect — ELM327 scans protocols internally, responds when found
+  // Fast path — ATSP0 auto-detects; ECU should answer one of these basic PIDs
   for (const cmd of ['0100', '0101', '010D', '010C']) {
-    const raw = await send(cmd)
-    if (hasVehicleData(raw)) {
-      // Restore a longer timeout now that the protocol is locked in
-      try { await send('ATST C8') } catch { /* 0xC8 = 800ms, optional */ }
-      const dpn = await send('ATDPN')
-      return dpn.trim() || 'Auto'
-    }
+    try {
+      const raw = await send(cmd)
+      if (hasVehicleData(raw)) {
+        try { await send('ATST C8') } catch { /* 0xC8 = 800ms for data reads */ }
+        const dpn = await send('ATDPN')
+        return dpn.trim() || 'Auto'
+      }
+    } catch { /* continue */ }
   }
 
-  // Fallback: force each protocol one by one
+  // Fallback — force each protocol individually
   const protocols = [
     { cmd: 'ATSP6', label: 'CAN 11bit 500k' },
     { cmd: 'ATSP8', label: 'CAN 11bit 250k' },
@@ -277,87 +301,92 @@ async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Prom
           return protocol.label
         }
       }
-    } catch { /* protocole non supporté, essaie le suivant */ }
+    } catch { /* protocole non supporté */ }
   }
 
-  await send('ATSP0')
+  try { await send('ATSP0') } catch { /* ignore */ }
   throw new Error(
     'Valise connectée, mais le calculateur moteur ne répond pas. Vérifie : contact en position ON (tableau de bord allumé), valise bien enfoncée dans la prise OBD. Si le problème persiste, démarre le moteur et réessaie.'
   )
 }
 
-async function readDTCs(send: SendFn, onStep?: (s: string) => void): Promise<OBDFaultCode[]> {
+// ─── DTC reader ───────────────────────────────────────────────────────────────
+
+async function readDTCs(send: SendFn, protocol: string, onStep?: (s: string) => void): Promise<OBDFaultCode[]> {
   const seen = new Set<string>()
   const all: OBDFaultCode[] = []
+  const canMode = isCAN(protocol)
 
   function addUnique(codes: OBDFaultCode[]) {
     for (const c of codes) {
-      if (!seen.has(c.code + (c.module ?? ''))) {
-        seen.add(c.code + (c.module ?? ''))
-        all.push(c)
-      }
+      const key = c.code + (c.module ?? '') + (c.pending ? '_p' : '')
+      if (!seen.has(key)) { seen.add(key); all.push(c) }
     }
   }
 
-  // Adressage fonctionnel (broadcast → tous les ECU répondent au mode 03)
-  await send('AT SH 7DF')
-
-  // Mode 03 — codes confirmés (ECM répond à 7DF)
-  onStep?.('Lecture codes défauts moteur…')
-  addUnique(parseDTCResponse(await send('03')))
-
-  // Mode 07 — codes en attente ECM
-  onStep?.('Codes en attente…')
-  const pending = parseDTCResponse(await send('07')).map(c => ({ ...c, pending: true }))
-  addUnique(pending)
-
-  // Mode 0A — codes permanents (ne s'effacent pas)
-  onStep?.('Codes permanents…')
-  addUnique(parseDTCResponse(await send('0A')))
-
-  // Timeout ELM327 à 320ms pour les modules silencieux (NO DATA en 320ms au lieu de 1500ms)
-  try { await send('ATST 50') } catch { /* ATST non supporté par certains clones */ }
-
-  // Scan de tous les modules ECU par adresse CAN physique
-  for (const mod of ALL_ECU_MODULES) {
-    try {
-      onStep?.(`Scan ${mod.label}…`)
-      await send(`AT SH ${mod.send}`)
-      const raw = await send('03')
-      if (!raw || raw.includes('NO DATA') || raw.includes('ERROR') ||
-          raw.includes('UNABLE') || raw.includes('BUS') || raw.includes('?') ||
-          raw.includes('STOPPED')) continue
-      const codes = parseDTCResponse(raw).map(c => ({ ...c, module: mod.label }))
-      addUnique(codes)
-    } catch { /* module absent ou non supporté */ }
+  // Set functional address for CAN (7DF = broadcast to all ECUs)
+  // For 29-bit CAN the address is 18DB33F1 but most adapters accept 7DF too
+  if (canMode) {
+    try { await send('AT SH 7DF') } catch { /* ignore on non-CAN */ }
   }
 
-  // Remet le timeout par défaut et l'adressage fonctionnel
+  // Mode 03 — confirmed DTCs
+  onStep?.('Lecture codes défauts moteur…')
+  try { addUnique(parseDTCResponse(await send('03'))) } catch { /* ECU busy */ }
+
+  // Mode 07 — pending DTCs
+  onStep?.('Codes en attente…')
   try {
-    await send('ATST FF')
-    await send('AT SH 7DF')
-  } catch { /* ignore */ }
+    const pending = parseDTCResponse(await send('07')).map(c => ({ ...c, pending: true as const }))
+    addUnique(pending)
+  } catch { /* not all ECUs support mode 07 */ }
+
+  // Mode 0A — permanent DTCs
+  onStep?.('Codes permanents…')
+  try { addUnique(parseDTCResponse(await send('0A'))) } catch { /* not all ECUs support 0A */ }
+
+  // Multi-module CAN scan — only on CAN vehicles
+  if (canMode) {
+    // Short timeout so silent modules fail fast (0x50 = 80 × 4ms = 320ms)
+    try { await send('ATST 50') } catch { /* some clones don't support ATST */ }
+
+    for (const mod of ALL_ECU_MODULES) {
+      try {
+        onStep?.(`Scan ${mod.label}…`)
+        await send(`AT SH ${mod.addr}`)
+        const raw = await send('03')
+        if (isOBDError(raw) || !raw) continue
+        const codes = parseDTCResponse(raw).map(c => ({ ...c, module: mod.label }))
+        addUnique(codes)
+      } catch { /* module absent */ }
+    }
+
+    // Restore broadcast address and default timeout
+    try { await send('ATST C8') } catch { /* ignore */ }
+    try { await send('AT SH 7DF') } catch { /* ignore */ }
+  }
 
   return all
 }
 
+// ─── VIN reader ───────────────────────────────────────────────────────────────
+
 async function readVIN(send: SendFn): Promise<string | null> {
   try {
     const raw = await send('0902')
-    if (!raw || raw.includes('NO DATA') || raw.includes('ERROR')) return null
-    // VIN: response 49 02 01 [17 bytes ASCII], may arrive on multiple frames.
-    // ELM327 sometimes prefixes each frame with a line number like "0:" or "1:".
-    // Strip those frame-number prefixes before joining the hex bytes.
-    const stripped = raw
-      .toUpperCase()
-      .replace(/\r?\n/g, ' ')        // normalise newlines
-      .replace(/[0-9A-F]+:/g, ' ')   // strip frame numbers (e.g. "0:" "1:" "2:")
+    if (!raw || isOBDError(raw)) return null
+
+    const stripped = raw.toUpperCase()
+      .replace(/\r?\n/g, ' ')
+      .replace(/\b[0-9A-F]:/g, ' ')  // strip ISO-TP frame prefixes
     const cleaned = stripped.replace(/\s+/g, '')
-    // Match 4902 with optional frame-count byte (01/00) then 34 hex chars (17 bytes)
+
+    // 4902 [optional frame-count byte] [17 bytes = 34 hex chars]
     const match = cleaned.match(/4902(?:[0-9A-F]{2})?([0-9A-F]{34})/)
     if (!match) return null
-    const hex = match[1]
+
     let vin = ''
+    const hex = match[1]
     for (let i = 0; i < hex.length; i += 2) {
       const code = parseInt(hex.substring(i, i + 2), 16)
       if (code > 31 && code < 127) vin += String.fromCharCode(code)
@@ -366,13 +395,17 @@ async function readVIN(send: SendFn): Promise<string | null> {
   } catch { return null }
 }
 
+// ─── Readiness reader ─────────────────────────────────────────────────────────
+
 async function readReadiness(send: SendFn): Promise<{ mil: boolean; dtcCount: number; monitors: import('@/types/obd').ReadinessMonitor[] } | null> {
   try {
     const raw = await send('0101')
-    if (!raw || raw.includes('NO DATA') || raw.includes('ERROR')) return null
-    const cleaned = raw.toUpperCase().replace(/\s+/g, '')
+    if (!raw || isOBDError(raw)) return null
+
+    const cleaned = normalizeOBD(raw)
     const match = cleaned.match(/4101([0-9A-F]{8})/)
     if (!match) return null
+
     const A = parseInt(match[1].substring(0, 2), 16)
     const B = parseInt(match[1].substring(2, 4), 16)
     const C = parseInt(match[1].substring(4, 6), 16)
@@ -382,32 +415,36 @@ async function readReadiness(send: SendFn): Promise<{ mil: boolean; dtcCount: nu
     const dtcCount = A & 0x7F
 
     const monitors: import('@/types/obd').ReadinessMonitor[] = [
-      { name: 'Ratés allumage',      supported: !(B & 0x10), ready: !(B & 0x01) },
-      { name: 'Système carburant',   supported: !(B & 0x20), ready: !(B & 0x02) },
-      { name: 'Composants',          supported: !(B & 0x40), ready: !(B & 0x04) },
-      { name: 'Catalyseur',          supported: !(C & 0x01), ready: !(D & 0x01) },
-      { name: 'Catalyseur chauffé',  supported: !(C & 0x02), ready: !(D & 0x02) },
-      { name: 'Système évap.',       supported: !(C & 0x04), ready: !(D & 0x04) },
-      { name: 'Air secondaire',      supported: !(C & 0x08), ready: !(D & 0x08) },
-      { name: 'Sonde O2',            supported: !(C & 0x20), ready: !(D & 0x20) },
-      { name: 'Chauffe sonde O2',    supported: !(C & 0x40), ready: !(D & 0x40) },
-      { name: 'Recirculation EGR',   supported: !(C & 0x80), ready: !(D & 0x80) },
+      { name: 'Ratés allumage',     supported: !(B & 0x10), ready: !(B & 0x01) },
+      { name: 'Système carburant',  supported: !(B & 0x20), ready: !(B & 0x02) },
+      { name: 'Composants',         supported: !(B & 0x40), ready: !(B & 0x04) },
+      { name: 'Catalyseur',         supported: !(C & 0x01), ready: !(D & 0x01) },
+      { name: 'Catalyseur chauffé', supported: !(C & 0x02), ready: !(D & 0x02) },
+      { name: 'Système évap.',      supported: !(C & 0x04), ready: !(D & 0x04) },
+      { name: 'Air secondaire',     supported: !(C & 0x08), ready: !(D & 0x08) },
+      { name: 'Sonde O2',           supported: !(C & 0x20), ready: !(D & 0x20) },
+      { name: 'Chauffe sonde O2',   supported: !(C & 0x40), ready: !(D & 0x40) },
+      { name: 'Recirculation EGR',  supported: !(C & 0x80), ready: !(D & 0x80) },
     ]
 
     return { mil, dtcCount, monitors: monitors.filter(m => m.supported) }
   } catch { return null }
 }
 
+// ─── Parameters reader ────────────────────────────────────────────────────────
+
 async function readParameters(send: SendFn, onStep?: (s: string) => void): Promise<OBDParameter[]> {
   onStep?.('Lecture paramètres temps réel…')
   const results: OBDParameter[] = []
+
   for (const [, meta] of Object.entries(OBD_PIDS)) {
-    // Send the full PID (e.g. "010C", "015C") — ELM327 accepts mode+PID directly.
-    // Previously used meta.pid.substring(2) which produced wrong commands like
-    // "5C" instead of "015C" for non-standard PIDs (oil temp, MIL time, etc.).
-    const raw = await send(meta.pid)
-    const value = parsePidValue(meta.pid, raw)
-    results.push({ pid: meta.pid, name: meta.name, value, unit: meta.unit, group: meta.group, raw })
+    try {
+      const raw = await send(meta.pid)
+      const value = parsePidValue(meta.pid, raw)
+      results.push({ pid: meta.pid, name: meta.name, value, unit: meta.unit, group: meta.group, raw })
+    } catch {
+      results.push({ pid: meta.pid, name: meta.name, value: null, unit: meta.unit, group: meta.group, raw: '' })
+    }
   }
   return results
 }
@@ -430,23 +467,20 @@ export function useOBDScanner() {
     try {
       const protocolUsed = await probeVehicleECU(send, setStep)
 
-      // VIN
       setStep('Lecture VIN…')
       const vin = await readVIN(send)
 
-      // Readiness monitors
       setStep('Moniteurs de disponibilité…')
       const readinessData = await readReadiness(send)
 
-      // DTCs — tous modules
-      const faultCodes = await readDTCs(send, setStep)
+      const faultCodes = await readDTCs(send, protocolUsed, setStep)
 
-      // Paramètres temps réel
       const parameters = await readParameters(send, setStep)
-      const hasLiveData = parameters.some((param) => param.value !== null)
+
+      const hasLiveData = parameters.some(p => p.value !== null)
       if (!vin && !readinessData && faultCodes.length === 0 && !hasLiveData) {
         throw new Error(
-          'Connexion etablie avec la valise, mais aucune donnee ECU n a ete lue. Verifie que le contact est mis, que le moteur est demarre si besoin, et que la valise est bien enfoncee dans la prise OBD.'
+          'Connexion établie, mais aucune donnée ECU lue. Vérifie que le contact est mis et que la valise est bien enfoncée.'
         )
       }
 
@@ -463,13 +497,14 @@ export function useOBDScanner() {
         protocolUsed,
       }
       setState(prev => ({ ...prev, scanResult: result, isScanning: false, scanStep: undefined, error: null }))
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'lecture OBD impossible'
       setState(prev => ({
         ...prev,
         status: 'error',
         isScanning: false,
         scanStep: undefined,
-        error: `Erreur scan: ${err?.message ?? 'lecture OBD impossible'}`,
+        error: msg,
       }))
     }
   }
@@ -482,99 +517,83 @@ export function useOBDScanner() {
     }
     setStatus({ status: 'connecting', connectionType: 'usb', error: null })
     try {
-      // Essaie d'abord les ports déjà autorisés (reconnexion automatique)
-      const existingPorts: any[] = await (navigator as any).serial.getPorts()
-      // Sans filters → affiche TOUS les ports série (USB, COM Bluetooth, etc.)
+      const existingPorts: SerialPort[] = await (navigator as Navigator & { serial: { getPorts: () => Promise<SerialPort[]>; requestPort: () => Promise<SerialPort> } }).serial.getPorts()
       const port = existingPorts.length > 0
         ? existingPorts[0]
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : await (navigator as any).serial.requestPort()
 
-      // Tente plusieurs débits courants des adaptateurs ELM327
       const baudRates = [38400, 115200, 9600, 57600]
       let opened = false
       for (const baudRate of baudRates) {
-        try {
-          await port.open({ baudRate })
-          opened = true
-          break
-        } catch { /* essaie le débit suivant */ }
+        try { await port.open({ baudRate }); opened = true; break } catch { /* try next */ }
       }
       if (!opened) throw new Error('Impossible d\'ouvrir le port (vérifie qu\'aucun autre programme ne l\'utilise)')
 
       serialPortRef.current = port
-      serialWriterRef.current = port.writable.getWriter()
-      serialReaderRef.current = port.readable.getReader()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      serialWriterRef.current = (port as any).writable.getWriter()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      serialReaderRef.current = (port as any).readable.getReader()
       const send: SendFn = (cmd) =>
         serialSendCommand(serialWriterRef.current!, serialReaderRef.current!, cmd)
+
       await initELM327(send)
-      const info = await port.getInfo?.() ?? {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const info = await (port as any).getInfo?.() ?? {}
       const deviceName = info.usbVendorId ? `USB (VID:${info.usbVendorId.toString(16)})` : 'ELM327 USB'
       setStatus({ status: 'connected', deviceName, isScanning: true })
       await runScan('usb', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
-    } catch (err: any) {
-      const msg: string = err?.message ?? ''
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : ''
       if (msg.includes('No port selected') || msg.includes('cancelled') || msg.includes('user')) {
-        setStatus({
-          status: 'error',
-          error: 'Aucun port sélectionné. Branche ta valise USB, puis clique à nouveau et sélectionne le port COM dans la liste.',
-        })
+        setStatus({ status: 'error', error: 'Aucun port sélectionné. Branche ta valise USB puis clique à nouveau.' })
       } else {
-        setStatus({ status: 'error', error: msg || 'Erreur connexion USB. Vérife que la valise est branchée et qu\'aucun autre logiciel ne l\'utilise.' })
+        setStatus({ status: 'error', error: msg || 'Erreur connexion USB. Vérifie que la valise est branchée.' })
       }
     }
   }, [])
 
-  // ── Bluetooth ───────────────────────────────────────────────────────────────
+  // ── Bluetooth (BLE only) ────────────────────────────────────────────────────
   const connectBluetooth = useCallback(async () => {
     if (!('bluetooth' in navigator)) {
-      setStatus({
-        status: 'error',
-        error: 'Web Bluetooth non supporté sur ce navigateur. Utilise Chrome (pas Firefox ni Safari).',
-      })
+      setStatus({ status: 'error', error: 'Web Bluetooth non supporté. Utilise Chrome.' })
       return
     }
-    // Avertissement : la Web Bluetooth API ne supporte que le BLE, pas le Bluetooth classique (SPP)
-    // Les valises ELM327 bon marché utilisent le Bluetooth classique → incompatibles
     setStatus({ status: 'connecting', connectionType: 'bluetooth', error: null })
     try {
-      // BLE OBD adapters (ELM327 BLE) expose Nordic UART Service or custom GATT
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const device = await (navigator as any).bluetooth.requestDevice({
         filters: [
-          { namePrefix: 'ELM' },
-          { namePrefix: 'OBD' },
-          { namePrefix: 'OBDII' },
-          { namePrefix: 'Vgate' },
-          { namePrefix: 'Konnwei' },
-          { namePrefix: 'VEEPEAK' },
+          { namePrefix: 'ELM' }, { namePrefix: 'OBD' }, { namePrefix: 'OBDII' },
+          { namePrefix: 'Vgate' }, { namePrefix: 'Konnwei' }, { namePrefix: 'VEEPEAK' },
         ],
         optionalServices: [
-          '0000fff0-0000-1000-8000-00805f9b34fb', // common OBD BLE service
-          '00001101-0000-1000-8000-00805f9b34fb', // SPP
-          'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Vgate iCar Pro
+          '0000fff0-0000-1000-8000-00805f9b34fb',
+          '00001101-0000-1000-8000-00805f9b34fb',
+          'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
         ],
       })
-      const server = await device.gatt.connect()
-      const deviceName = device.name ?? 'ELM327 Bluetooth'
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const server = await (device as any).gatt.connect()
+      const deviceName: string = device.name ?? 'ELM327 Bluetooth'
 
-      // Try to find writable characteristic
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let writeChar: any = null
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let notifyChar: any = null
 
-      const serviceUUIDs = [
-        '0000fff0-0000-1000-8000-00805f9b34fb',
-        'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-      ]
-
-      for (const uuid of serviceUUIDs) {
+      for (const uuid of ['0000fff0-0000-1000-8000-00805f9b34fb', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2']) {
         try {
           const service = await server.getPrimaryService(uuid)
-          const chars = await service.getCharacteristics()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const chars: any[] = await service.getCharacteristics()
           for (const c of chars) {
             if (c.properties.writeWithoutResponse || c.properties.write) writeChar = c
             if (c.properties.notify) notifyChar = c
           }
           if (writeChar) break
-        } catch { /* try next */ }
+        } catch { /* try next UUID */ }
       }
 
       if (!writeChar || !notifyChar) throw new Error('Caractéristiques BLE OBD introuvables')
@@ -583,9 +602,9 @@ export function useOBDScanner() {
       const responseQueue: Array<(v: string) => void> = []
 
       await notifyChar.startNotifications()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       notifyChar.addEventListener('characteristicvaluechanged', (ev: any) => {
-        const chunk = new TextDecoder().decode(ev.target.value)
-        responseBuffer += chunk
+        responseBuffer += new TextDecoder().decode(ev.target.value)
         if (responseBuffer.includes('>') && responseQueue.length > 0) {
           const resolve = responseQueue.shift()!
           const val = responseBuffer
@@ -594,28 +613,29 @@ export function useOBDScanner() {
         }
       })
 
-      const send: SendFn = (cmd) => {
-        return new Promise((resolve) => {
+      const send: SendFn = (cmd) =>
+        new Promise((resolve) => {
           responseQueue.push(resolve)
           const encoded = new TextEncoder().encode(cmd + '\r')
           writeChar.writeValueWithoutResponse
             ? writeChar.writeValueWithoutResponse(encoded)
             : writeChar.writeValue(encoded)
+          // BLE timeout — 3500ms for protocol detection, adequate for data
           setTimeout(() => {
-            if (responseQueue.includes(resolve)) {
-              responseQueue.splice(responseQueue.indexOf(resolve), 1)
+            const idx = responseQueue.indexOf(resolve)
+            if (idx !== -1) {
+              responseQueue.splice(idx, 1)
               resolve(responseBuffer || 'NO DATA')
               responseBuffer = ''
             }
-          }, 3000)
+          }, 3500)
         })
-      }
 
       await initELM327(send)
       setStatus({ status: 'connected', deviceName, isScanning: true })
       await runScan('bluetooth', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
-    } catch (err: any) {
-      setStatus({ status: 'error', error: err?.message ?? 'Erreur connexion Bluetooth' })
+    } catch (err: unknown) {
+      setStatus({ status: 'error', error: err instanceof Error ? err.message : 'Erreur connexion Bluetooth' })
     }
   }, [])
 
@@ -630,17 +650,15 @@ export function useOBDScanner() {
       const deviceName = `ELM327 WiFi (${ip})`
       setStatus({ status: 'connected', deviceName, isScanning: true })
       await runScan('wifi', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
-    } catch (err: any) {
-      setStatus({ status: 'error', error: err?.message ?? 'Erreur connexion WiFi' })
+    } catch (err: unknown) {
+      setStatus({ status: 'error', error: err instanceof Error ? err.message : 'Erreur connexion WiFi' })
     }
   }, [])
 
   const disconnect = useCallback(async () => {
-    try {
-      serialReaderRef.current?.releaseLock()
-      serialWriterRef.current?.releaseLock()
-      await serialPortRef.current?.close()
-    } catch { /* ignore */ }
+    try { serialReaderRef.current?.releaseLock() } catch { /* ignore */ }
+    try { serialWriterRef.current?.releaseLock() } catch { /* ignore */ }
+    try { await serialPortRef.current?.close() } catch { /* ignore */ }
     wsRef.current?.close()
     serialPortRef.current = null
     serialWriterRef.current = null
@@ -651,11 +669,10 @@ export function useOBDScanner() {
 
   const rescan = useCallback(async () => {
     if (state.status !== 'connected') return
-    setStatus({ scanResult: null })
-    setStatus({ status: 'disconnected', error: 'Reconnecte-toi pour relancer un scan.' })
+    setStatus({ scanResult: null, status: 'disconnected', error: 'Reconnecte-toi pour relancer un scan.' })
   }, [state.status])
 
-  // ── Mode démo ─────────────────────────────────────────────────────────────────
+  // ── Demo mode ─────────────────────────────────────────────────────────────────
   const connectDemo = useCallback(() => {
     const demoResult: OBDScanResult = {
       timestamp: new Date().toISOString(),
@@ -680,47 +697,30 @@ export function useOBDScanner() {
         { name: 'Système carburant', supported: true, ready: false },
       ],
       parameters: [
-        { pid: '010C', name: 'Régime moteur',              value: 820,   unit: 'tr/min', group: 'engine' },
-        { pid: '010D', name: 'Vitesse',                    value: 0,     unit: 'km/h',   group: 'engine' },
-        { pid: '0105', name: 'Temp. refroidissement',      value: 88,    unit: '°C',     group: 'engine' },
-        { pid: '015C', name: 'Temp. huile moteur',         value: 92,    unit: '°C',     group: 'engine' },
-        { pid: '0104', name: 'Charge moteur',              value: 12.5,  unit: '%',      group: 'engine' },
-        { pid: '010E', name: 'Avance allumage',            value: 8.5,   unit: '°',      group: 'engine' },
-        { pid: '010B', name: 'Pression admission (MAP)',   value: 34,    unit: 'kPa',    group: 'engine' },
-        { pid: '0110', name: 'Débit air (MAF)',            value: 3.21,  unit: 'g/s',    group: 'engine' },
-        { pid: '010F', name: 'Temp. admission',            value: 24,    unit: '°C',     group: 'engine' },
-        { pid: '0146', name: 'Temp. extérieure',           value: 18,    unit: '°C',     group: 'engine' },
-        { pid: '011F', name: 'Temps moteur actif',         value: 1240,  unit: 's',      group: 'engine' },
-        { pid: '0106', name: 'Correction CT carburant B1', value: +14.8, unit: '%',      group: 'fuel' },  // anormal!
-        { pid: '0107', name: 'Correction LT carburant B1', value: +18.0, unit: '%',      group: 'fuel' },  // très anormal!
-        { pid: '012F', name: 'Niveau carburant',           value: 45,    unit: '%',      group: 'fuel' },
-        { pid: '010A', name: 'Pression carburant (rail)',  value: 312,   unit: 'kPa',    group: 'fuel' },
-        { pid: '0111', name: 'Position papillon',          value: 0,     unit: '%',      group: 'electric' },
-        { pid: '0142', name: 'Tension batterie',           value: 13.8,  unit: 'V',      group: 'electric' },
-        { pid: '0133', name: 'Pression atmosphérique',     value: 101,   unit: 'kPa',    group: 'electric' },
-        { pid: '013C', name: 'Temp. catalyseur B1 S1',    value: 420,   unit: '°C',     group: 'exhaust' },
-        { pid: '014D', name: 'Durée voyant MIL allumé',   value: 320,   unit: 'min',    group: 'diag' },
-        { pid: '0121', name: 'Distance avec MIL allumé',  value: 87,    unit: 'km',     group: 'diag' },
-        { pid: '0131', name: 'Distance depuis effacement', value: 342,   unit: 'km',     group: 'diag' },
+        { pid: '010C', name: 'Régime moteur',              value: 820,   unit: 'tr/min', group: 'engine', raw: '' },
+        { pid: '010D', name: 'Vitesse',                    value: 0,     unit: 'km/h',   group: 'engine', raw: '' },
+        { pid: '0105', name: 'Temp. refroidissement',      value: 88,    unit: '°C',     group: 'engine', raw: '' },
+        { pid: '015C', name: 'Temp. huile moteur',         value: 92,    unit: '°C',     group: 'engine', raw: '' },
+        { pid: '0104', name: 'Charge moteur',              value: 12.5,  unit: '%',      group: 'engine', raw: '' },
+        { pid: '010E', name: 'Avance allumage',            value: 8.5,   unit: '°',      group: 'engine', raw: '' },
+        { pid: '010B', name: 'Pression admission (MAP)',   value: 34,    unit: 'kPa',    group: 'engine', raw: '' },
+        { pid: '0110', name: 'Débit air (MAF)',            value: 3.21,  unit: 'g/s',    group: 'engine', raw: '' },
+        { pid: '010F', name: 'Temp. admission',            value: 24,    unit: '°C',     group: 'engine', raw: '' },
+        { pid: '0146', name: 'Temp. extérieure',           value: 18,    unit: '°C',     group: 'engine', raw: '' },
+        { pid: '011F', name: 'Temps moteur actif',         value: 1240,  unit: 's',      group: 'engine', raw: '' },
+        { pid: '0106', name: 'Correction CT carburant B1', value: +14.8, unit: '%',      group: 'fuel',   raw: '' },
+        { pid: '0107', name: 'Correction LT carburant B1', value: +18.0, unit: '%',      group: 'fuel',   raw: '' },
+        { pid: '012F', name: 'Niveau carburant',           value: 45,    unit: '%',      group: 'fuel',   raw: '' },
+        { pid: '010A', name: 'Pression carburant (rail)',  value: 312,   unit: 'kPa',    group: 'fuel',   raw: '' },
+        { pid: '0111', name: 'Position papillon',          value: 0,     unit: '%',      group: 'electric', raw: '' },
+        { pid: '0142', name: 'Tension batterie',           value: 13.8,  unit: 'V',      group: 'electric', raw: '' },
+        { pid: '013C', name: 'Temp. catalyseur B1S1',      value: 420,   unit: '°C',     group: 'exhaust', raw: '' },
+        { pid: '0131', name: 'Distance depuis reset',      value: 42,    unit: 'km',     group: 'diag',   raw: '' },
+        { pid: '014D', name: 'Temps MIL allumé',           value: 12,    unit: 'min',    group: 'diag',   raw: '' },
       ],
     }
-    setState({
-      status: 'connected',
-      connectionType: 'wifi',
-      deviceName: 'Démo — données simulées',
-      error: null,
-      scanResult: demoResult,
-      isScanning: false,
-    })
+    setState(prev => ({ ...prev, status: 'connected', deviceName: 'Démo', isScanning: false, scanResult: demoResult, error: null }))
   }, [])
 
-  return {
-    state,
-    connectUSB,
-    connectBluetooth,
-    connectWifi,
-    connectDemo,
-    disconnect,
-    rescan,
-  }
+  return { state, connectUSB, connectBluetooth, connectWifi, connectDemo, disconnect, rescan }
 }
