@@ -153,19 +153,25 @@ async function serialSendCommand(
   const decoder = new TextDecoder()
   let result = ''
   const deadline = Date.now() + timeoutMs
-  const TICK = Symbol('tick')
 
+  // CRITICAL: only ONE reader.read() can be in flight at a time. Calling read()
+  // again before the previous resolves queues a second read that consumes the
+  // NEXT chunk — meanwhile the first read's chunk is orphaned by Promise.race
+  // and effectively lost. So we race a single read against the remaining time.
   while (Date.now() < deadline) {
     const remaining = deadline - Date.now()
     if (remaining <= 0) break
 
-    const outcome = await Promise.race([
-      reader.read() as Promise<ReadableStreamReadResult<Uint8Array>>,
-      new Promise<typeof TICK>((res) => setTimeout(() => res(TICK), Math.min(remaining, 300))),
+    const readPromise = reader.read() as Promise<ReadableStreamReadResult<Uint8Array>>
+    let timerId: ReturnType<typeof setTimeout> | undefined
+    const timedOut = await Promise.race([
+      readPromise.then(() => false),
+      new Promise<boolean>((res) => { timerId = setTimeout(() => res(true), remaining) }),
     ])
+    if (timerId) clearTimeout(timerId)
+    if (timedOut) break
 
-    if (outcome === TICK) continue
-    const { value, done } = outcome
+    const { value, done } = await readPromise
     if (done) break
     if (value?.length) result += decoder.decode(value)
     if (result.includes('>')) break
@@ -188,15 +194,19 @@ function createWifiSocket(ip: string, port: number): Promise<WebSocket> {
 async function wifiSendCommand(ws: WebSocket, cmd: string, timeoutMs = 3500): Promise<string> {
   return new Promise((resolve) => {
     let result = ''
-    const tid = setTimeout(() => resolve(result), timeoutMs)
+    let settled = false
+    const finish = (val: string) => {
+      if (settled) return
+      settled = true
+      clearTimeout(tid)
+      ws.removeEventListener('message', handler)
+      resolve(val)
+    }
+    const tid = setTimeout(() => finish(result), timeoutMs)
     const handler = (ev: MessageEvent) => {
       const chunk = typeof ev.data === 'string' ? ev.data : new TextDecoder().decode(ev.data as ArrayBuffer)
       result += chunk
-      if (result.includes('>')) {
-        clearTimeout(tid)
-        ws.removeEventListener('message', handler)
-        resolve(result)
-      }
+      if (result.includes('>')) finish(result)
     }
     ws.addEventListener('message', handler)
     ws.send(cmd + '\r')
@@ -248,16 +258,15 @@ function isCAN(protocol: string): boolean {
 // ─── ELM327 init ─────────────────────────────────────────────────────────────
 
 async function initELM327(send: SendFn): Promise<void> {
-  await send('ATZ')     // Reset — takes up to ~1500ms, waits for '>'
-  await send('ATE0')    // Echo off
-  await send('ATL0')    // Linefeeds off
-  await send('ATS0')    // Spaces off
-  await send('ATH0')    // Headers off
-  await send('ATAL')    // Allow Long messages (multi-frame DTCs)
-  await send('ATSP0')   // Auto protocol — detect on first OBD command
-  // ATST 4B = 0x4B = 75 × 4ms = 300ms per ELM327 protocol attempt.
-  // ATSP0 tries up to 9 protocols × 300ms = 2.7s, which fits our 3s outer timeout.
-  await send('ATST 4B')
+  await send('ATZ', 5000)   // Reset takes 1-2s on some clones, give it 5s
+  await send('ATE0', 1000)  // Echo off
+  await send('ATL0', 1000)  // Linefeeds off
+  await send('ATS0', 1000)  // Spaces off
+  await send('ATH0', 1000)  // Headers off
+  await send('ATAL', 1000)  // Allow Long messages (multi-frame DTCs)
+  await send('ATSP0', 1000) // Auto protocol — detect on first OBD command
+  // ATST 4B = 0x4B = 75 × 4ms = 300ms per ELM327 internal protocol attempt
+  await send('ATST 4B', 1000)
 }
 
 // ─── Protocol detection ───────────────────────────────────────────────────────
