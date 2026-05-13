@@ -204,62 +204,80 @@ function normalizeOBD(raw: string) {
   return raw.toUpperCase().replace(/\s+/g, '').replace(/>/g, '')
 }
 
-function hasVehicleData(raw: string) {
+function hasVehicleData(raw: string): boolean {
   const cleaned = normalizeOBD(raw)
-  if (!cleaned || cleaned.includes('NODATA') || cleaned.includes('UNABLETOCONNECT') || cleaned.includes('BUSERROR') || cleaned.includes('ERROR') || cleaned.includes('?')) {
-    return false
-  }
-  return /(4100|4101|410C|410D|4105|43[0-9A-F]{4}|47[0-9A-F]{4}|4902)/.test(cleaned)
+  if (!cleaned) return false
+  // Reject known ELM327 error strings
+  if (
+    cleaned.includes('NODATA') ||
+    cleaned.includes('UNABLETOCONNECT') ||
+    cleaned.includes('BUSERROR') ||
+    cleaned.includes('CANERROR') ||
+    cleaned.includes('DATAERROR') ||
+    cleaned.includes('STOPPED') ||
+    cleaned.includes('SEARCHING') && cleaned.length < 20 ||
+    cleaned === '?' ||
+    cleaned.endsWith('?')
+  ) return false
+  // Accept any mode-01 positive reply (41 XX ...) — covers 4100, 4101, 410C, etc.
+  return /41[0-9A-F]{2}/.test(cleaned)
 }
 
-async function initELM327(send: SendFn): Promise<string> {
-  await send('ATZ')       // Reset
-  await send('ATE0')      // Echo off
-  await send('ATL0')      // Linefeeds off
-  await send('ATS0')      // Spaces off
-  await send('ATH0')      // Headers off
-  await send('ATAL')      // Allow Long messages — crucial pour DTCs multi-frame
-  await send('ATCAF1')    // Auto formatting
-  await send('ATAT1')     // Adaptive timing
-  await send('ATST 96')   // Longer timeout while the ECU wakes up
-  await send('ATSP0')     // Auto protocol
-  await send('0100')      // Force protocol discovery on a basic OBD query
-  const proto = await send('ATDPN')
-  return proto.trim()
+// Resets the ELM327 and configures it — no OBD commands sent here
+async function initELM327(send: SendFn): Promise<void> {
+  await send('ATZ')      // Reset
+  await send('ATE0')     // Echo off
+  await send('ATL0')     // Linefeeds off
+  await send('ATS0')     // Spaces off
+  await send('ATH0')     // Headers off
+  await send('ATAL')     // Allow Long messages (multi-frame DTCs)
+  await send('ATSP0')    // Auto protocol — detect on first OBD command
+  // ATST FA = 0xFA = 250 × 4ms = 1000ms — gives slow ECUs (KWP/ISO) time to respond
+  await send('ATST FA')
 }
 
+// Probes the vehicle ECU across all protocols and returns the detected protocol name
 async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Promise<string> {
-  onStep?.('Test communication calculateur...')
+  onStep?.('Détection du calculateur...')
 
-  for (const cmd of ['0100', '0101', '010C']) {
+  // Fast path: ATSP0 auto-detect (works for 95% of CAN vehicles)
+  for (const cmd of ['0100', '0101', '010D', '010C']) {
     const raw = await send(cmd)
-    if (hasVehicleData(raw)) return 'Auto'
+    if (hasVehicleData(raw)) {
+      const dpn = await send('ATDPN')
+      return dpn.trim() || 'Auto'
+    }
   }
 
+  // Fallback: force each protocol and retry
   const protocols = [
     { cmd: 'ATSP6', label: 'CAN 11bit 500k' },
-    { cmd: 'ATSP7', label: 'CAN 29bit 500k' },
     { cmd: 'ATSP8', label: 'CAN 11bit 250k' },
+    { cmd: 'ATSP7', label: 'CAN 29bit 500k' },
     { cmd: 'ATSP9', label: 'CAN 29bit 250k' },
     { cmd: 'ATSP5', label: 'KWP fast init' },
     { cmd: 'ATSP4', label: 'KWP 5 baud' },
+    { cmd: 'ATSP3', label: 'ISO 9141-2' },
+    { cmd: 'ATSP2', label: 'ISO 9141 5-baud' },
+    { cmd: 'ATSP1', label: 'SAE J1850 PWM' },
   ]
 
   for (const protocol of protocols) {
     try {
-      onStep?.(`Essai protocole ${protocol.label}...`)
+      onStep?.(`Essai ${protocol.label}...`)
       await send(protocol.cmd)
-      await send('0100')
-      for (const cmd of ['0101', '010C']) {
+      // 0100 wakes the ECU on this protocol; check 0100 + 010D + 010C
+      for (const cmd of ['0100', '010D', '010C', '0101']) {
         const raw = await send(cmd)
         if (hasVehicleData(raw)) return protocol.label
       }
-    } catch { /* try next protocol */ }
+    } catch { /* protocole non supporté, essaie le suivant */ }
   }
 
+  // Nothing worked — restore auto and throw
   await send('ATSP0')
   throw new Error(
-    'La valise repond, mais aucun calculateur moteur ne repond. Mets le contact en position ON, demarre le moteur si possible, verifie que la valise est bien enfoncee, puis reessaie. Si tu es en WiFi ELM327, le navigateur ne sait pas parler au TCP brut de certaines valises: utilise plutot USB/port COM ou un pont WebSocket compatible.'
+    'Valise connectée, mais le calculateur moteur ne répond pas. Vérifie : contact en position ON (tableau de bord allumé), valise bien enfoncée dans la prise OBD. Si le problème persiste, démarre le moteur et réessaie.'
   )
 }
 
