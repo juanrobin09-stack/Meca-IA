@@ -225,31 +225,35 @@ function hasVehicleData(raw: string): boolean {
 
 // Resets the ELM327 and configures it — no OBD commands sent here
 async function initELM327(send: SendFn): Promise<void> {
-  await send('ATZ')      // Reset
+  await send('ATZ')      // Reset (waits for '>' prompt up to 3s)
   await send('ATE0')     // Echo off
   await send('ATL0')     // Linefeeds off
   await send('ATS0')     // Spaces off
   await send('ATH0')     // Headers off
   await send('ATAL')     // Allow Long messages (multi-frame DTCs)
   await send('ATSP0')    // Auto protocol — detect on first OBD command
-  // ATST FA = 0xFA = 250 × 4ms = 1000ms — gives slow ECUs (KWP/ISO) time to respond
-  await send('ATST FA')
+  // ATST 4B = 0x4B = 75 × 4ms = 300ms per protocol attempt.
+  // With ATSP0 scanning up to 9 protocols, total = ~2.7s which fits our 3s timeout.
+  // (ATST FA = 1000ms would take ~9s and always time out before the car responds.)
+  await send('ATST 4B')
 }
 
-// Probes the vehicle ECU across all protocols and returns the detected protocol name
+// Probes the vehicle ECU and returns the detected protocol name
 async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Promise<string> {
   onStep?.('Détection du calculateur...')
 
-  // Fast path: ATSP0 auto-detect (works for 95% of CAN vehicles)
+  // Fast path: ATSP0 auto-detect — ELM327 scans protocols internally, responds when found
   for (const cmd of ['0100', '0101', '010D', '010C']) {
     const raw = await send(cmd)
     if (hasVehicleData(raw)) {
+      // Restore a longer timeout now that the protocol is locked in
+      try { await send('ATST C8') } catch { /* 0xC8 = 800ms, optional */ }
       const dpn = await send('ATDPN')
       return dpn.trim() || 'Auto'
     }
   }
 
-  // Fallback: force each protocol and retry
+  // Fallback: force each protocol one by one
   const protocols = [
     { cmd: 'ATSP6', label: 'CAN 11bit 500k' },
     { cmd: 'ATSP8', label: 'CAN 11bit 250k' },
@@ -266,15 +270,16 @@ async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Prom
     try {
       onStep?.(`Essai ${protocol.label}...`)
       await send(protocol.cmd)
-      // 0100 wakes the ECU on this protocol; check 0100 + 010D + 010C
       for (const cmd of ['0100', '010D', '010C', '0101']) {
         const raw = await send(cmd)
-        if (hasVehicleData(raw)) return protocol.label
+        if (hasVehicleData(raw)) {
+          try { await send('ATST C8') } catch { /* ignore */ }
+          return protocol.label
+        }
       }
     } catch { /* protocole non supporté, essaie le suivant */ }
   }
 
-  // Nothing worked — restore auto and throw
   await send('ATSP0')
   throw new Error(
     'Valise connectée, mais le calculateur moteur ne répond pas. Vérifie : contact en position ON (tableau de bord allumé), valise bien enfoncée dans la prise OBD. Si le problème persiste, démarre le moteur et réessaie.'
