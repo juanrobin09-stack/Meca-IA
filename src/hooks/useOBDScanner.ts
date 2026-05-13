@@ -205,7 +205,7 @@ async function wifiSendCommand(ws: WebSocket, cmd: string, timeoutMs = 3500): Pr
 
 // ─── Scan orchestration ───────────────────────────────────────────────────────
 
-type SendFn = (cmd: string) => Promise<string>
+type SendFn = (cmd: string, timeoutMs?: number) => Promise<string>
 
 function normalizeOBD(raw: string): string {
   return raw.toUpperCase().replace(/\s+/g, '').replace(/>/g, '')
@@ -265,19 +265,21 @@ async function initELM327(send: SendFn): Promise<void> {
 async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Promise<string> {
   onStep?.('Détection du calculateur...')
 
-  // Fast path — ATSP0 auto-detects; ECU should answer one of these basic PIDs
+  // Fast path — ATSP0 lets the ELM327 scan all protocols internally.
+  // We use 8000ms so it has plenty of time to finish (9 protocols × 300ms = 2.7s).
   for (const cmd of ['0100', '0101', '010D', '010C']) {
     try {
-      const raw = await send(cmd)
+      const raw = await send(cmd, 8000)
       if (hasVehicleData(raw)) {
-        try { await send('ATST C8') } catch { /* 0xC8 = 800ms for data reads */ }
-        const dpn = await send('ATDPN')
+        // Restore longer per-command timeout for data reads
+        try { await send('ATST C8', 1000) } catch { /* ignore */ }
+        const dpn = await send('ATDPN', 1000)
         return dpn.trim() || 'Auto'
       }
-    } catch { /* continue */ }
+    } catch { /* continue to next cmd */ }
   }
 
-  // Fallback — force each protocol individually
+  // Fallback — force each protocol one by one (1500ms each, fast for CAN)
   const protocols = [
     { cmd: 'ATSP6', label: 'CAN 11bit 500k' },
     { cmd: 'ATSP8', label: 'CAN 11bit 250k' },
@@ -293,18 +295,18 @@ async function probeVehicleECU(send: SendFn, onStep?: (s: string) => void): Prom
   for (const protocol of protocols) {
     try {
       onStep?.(`Essai ${protocol.label}...`)
-      await send(protocol.cmd)
+      await send(protocol.cmd, 1000)           // AT command — fast
       for (const cmd of ['0100', '010D', '010C', '0101']) {
-        const raw = await send(cmd)
+        const raw = await send(cmd, 1500)       // OBD probe — 1500ms per protocol
         if (hasVehicleData(raw)) {
-          try { await send('ATST C8') } catch { /* ignore */ }
+          try { await send('ATST C8', 1000) } catch { /* ignore */ }
           return protocol.label
         }
       }
     } catch { /* protocole non supporté */ }
   }
 
-  try { await send('ATSP0') } catch { /* ignore */ }
+  try { await send('ATSP0', 1000) } catch { /* ignore */ }
   throw new Error(
     'Valise connectée, mais le calculateur moteur ne répond pas. Vérifie : contact en position ON (tableau de bord allumé), valise bien enfoncée dans la prise OBD. Si le problème persiste, démarre le moteur et réessaie.'
   )
@@ -535,8 +537,8 @@ export function useOBDScanner() {
       serialWriterRef.current = (port as any).writable.getWriter()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       serialReaderRef.current = (port as any).readable.getReader()
-      const send: SendFn = (cmd) =>
-        serialSendCommand(serialWriterRef.current!, serialReaderRef.current!, cmd)
+      const send: SendFn = (cmd, timeoutMs?) =>
+        serialSendCommand(serialWriterRef.current!, serialReaderRef.current!, cmd, timeoutMs)
 
       await initELM327(send)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -613,14 +615,13 @@ export function useOBDScanner() {
         }
       })
 
-      const send: SendFn = (cmd) =>
+      const send: SendFn = (cmd, timeoutMs = 3500) =>
         new Promise((resolve) => {
           responseQueue.push(resolve)
           const encoded = new TextEncoder().encode(cmd + '\r')
           writeChar.writeValueWithoutResponse
             ? writeChar.writeValueWithoutResponse(encoded)
             : writeChar.writeValue(encoded)
-          // BLE timeout — 3500ms for protocol detection, adequate for data
           setTimeout(() => {
             const idx = responseQueue.indexOf(resolve)
             if (idx !== -1) {
@@ -628,7 +629,7 @@ export function useOBDScanner() {
               resolve(responseBuffer || 'NO DATA')
               responseBuffer = ''
             }
-          }, 3500)
+          }, timeoutMs)
         })
 
       await initELM327(send)
@@ -645,7 +646,7 @@ export function useOBDScanner() {
     try {
       const ws = await createWifiSocket(ip, port)
       wsRef.current = ws
-      const send: SendFn = (cmd) => wifiSendCommand(ws, cmd)
+      const send: SendFn = (cmd, timeoutMs?) => wifiSendCommand(ws, cmd, timeoutMs)
       await initELM327(send)
       const deviceName = `ELM327 WiFi (${ip})`
       setStatus({ status: 'connected', deviceName, isScanning: true })
