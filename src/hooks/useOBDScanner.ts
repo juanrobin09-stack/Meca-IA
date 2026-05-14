@@ -257,9 +257,20 @@ function isCAN(protocol: string): boolean {
 
 // ─── ELM327 init ─────────────────────────────────────────────────────────────
 
+// Validates ATZ response — proves the adapter is actually talking on this baud rate
+async function pingELM327(send: SendFn): Promise<boolean> {
+  try {
+    const reset = await send('ATZ', 5000)
+    if (!reset) return false
+    const c = reset.toUpperCase()
+    // Accept any sign of life from the adapter — version banner, OK, or just '>'
+    return c.includes('ELM') || c.includes('OK') || c.includes('V1.') || c.includes('V2.') || c.includes('>')
+  } catch { return false }
+}
+
 async function initELM327(send: SendFn): Promise<void> {
-  await send('ATZ', 5000)   // Reset takes 1-2s on some clones, give it 5s
-  await send('ATE0', 1000)  // Echo off
+  // ATZ already done by pingELM327 caller — reset state then configure
+  await send('ATE0', 1500)  // Echo off
   await send('ATL0', 1000)  // Linefeeds off
   await send('ATS0', 1000)  // Spaces off
   await send('ATH0', 1000)  // Headers off
@@ -527,6 +538,15 @@ export function useOBDScanner() {
       return
     }
     setStatus({ status: 'connecting', connectionType: 'usb', error: null })
+
+    // Helper: fully release a port (reader, writer, close) — ignores errors
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const releasePort = async (p: any, r: any, w: any) => {
+      try { r?.releaseLock() } catch { /* ignore */ }
+      try { w?.releaseLock() } catch { /* ignore */ }
+      try { await p?.close() } catch { /* ignore */ }
+    }
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const existingPorts: any[] = await (navigator as any).serial.getPorts()
@@ -535,25 +555,60 @@ export function useOBDScanner() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : await (navigator as any).serial.requestPort()
 
-      const baudRates = [38400, 115200, 9600, 57600]
-      let opened = false
-      for (const baudRate of baudRates) {
-        try { await port.open({ baudRate }); opened = true; break } catch { /* try next */ }
-      }
-      if (!opened) throw new Error('Impossible d\'ouvrir le port (vérifie qu\'aucun autre programme ne l\'utilise)')
+      // Try each baud rate and verify communication actually works with ATZ.
+      // Many ELM327 clones are FIXED at 9600 or 115200 — port.open() succeeds
+      // at the wrong baud, but no data flows. Must verify with a real command.
+      const baudRates = [38400, 9600, 115200, 57600]
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let workingPort: any = null
+      let workingReader: ReadableStreamDefaultReader<Uint8Array> | null = null
+      let workingWriter: WritableStreamDefaultWriter<Uint8Array> | null = null
+      let workingBaud = 0
 
-      serialPortRef.current = port
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      serialWriterRef.current = (port as any).writable.getWriter()
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      serialReaderRef.current = (port as any).readable.getReader()
+      for (const baudRate of baudRates) {
+        try {
+          await port.open({ baudRate })
+          const writer = port.writable.getWriter()
+          const reader = port.readable.getReader()
+          const testSend: SendFn = (cmd, t) =>
+            serialSendCommand(writer, reader, cmd, t)
+
+          if (await pingELM327(testSend)) {
+            workingPort = port
+            workingReader = reader
+            workingWriter = writer
+            workingBaud = baudRate
+            break
+          }
+          // ATZ failed at this baud — release and try next
+          await releasePort(port, reader, writer)
+        } catch {
+          // port.open() failed (already open, in use, etc.) — release & try next
+          await releasePort(port, null, null)
+        }
+      }
+
+      if (!workingPort || !workingReader || !workingWriter) {
+        throw new Error(
+          'La valise ne répond à aucun débit série (9600/38400/115200). ' +
+          'Vérifie qu\'elle est bien branchée, qu\'aucun autre logiciel ne l\'utilise, ' +
+          'et que tu as sélectionné le bon port COM.'
+        )
+      }
+
+      serialPortRef.current = workingPort
+      serialWriterRef.current = workingWriter
+      serialReaderRef.current = workingReader
       const send: SendFn = (cmd, timeoutMs?) =>
         serialSendCommand(serialWriterRef.current!, serialReaderRef.current!, cmd, timeoutMs)
 
+      // ATZ already validated by pingELM327 — now configure
       await initELM327(send)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const info = await (port as any).getInfo?.() ?? {}
-      const deviceName = info.usbVendorId ? `USB (VID:${info.usbVendorId.toString(16)})` : 'ELM327 USB'
+
+      const info = await workingPort.getInfo?.() ?? {}
+      const deviceName = info.usbVendorId
+        ? `ELM327 USB (${workingBaud} baud, VID:${info.usbVendorId.toString(16)})`
+        : `ELM327 USB (${workingBaud} baud)`
       setStatus({ status: 'connected', deviceName, isScanning: true })
       await runScan('usb', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
     } catch (err: unknown) {
@@ -642,6 +697,9 @@ export function useOBDScanner() {
           }, timeoutMs)
         })
 
+      if (!(await pingELM327(send))) {
+        throw new Error('La valise Bluetooth ne répond pas à ATZ. Vérifie qu\'elle est sous tension et appairée.')
+      }
       await initELM327(send)
       setStatus({ status: 'connected', deviceName, isScanning: true })
       await runScan('bluetooth', deviceName, send, step => setState(prev => ({ ...prev, scanStep: step })))
@@ -657,6 +715,12 @@ export function useOBDScanner() {
       const ws = await createWifiSocket(ip, port)
       wsRef.current = ws
       const send: SendFn = (cmd, timeoutMs?) => wifiSendCommand(ws, cmd, timeoutMs)
+      if (!(await pingELM327(send))) {
+        throw new Error(
+          'La valise WiFi ne répond pas à ATZ. La plupart des ELM327 WiFi parlent TCP brut, ' +
+          'pas WebSocket — le navigateur ne peut pas s\'y connecter directement. Utilise plutôt USB.'
+        )
+      }
       await initELM327(send)
       const deviceName = `ELM327 WiFi (${ip})`
       setStatus({ status: 'connected', deviceName, isScanning: true })
