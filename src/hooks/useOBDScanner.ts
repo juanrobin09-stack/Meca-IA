@@ -30,40 +30,103 @@ function parsePidValue(pid: string, raw: string): number | null {
     cleaned === '?'
   ) return null
 
-  // Strip mode-01 response echo: "41XX" at the start
-  const dataHex = cleaned.replace(/^41[0-9A-F]{2}/, '')
+  // Find the mode-01 echo "41XX" ANYWHERE in the response (handles leftover
+  // command echo, frame prefixes, SEARCHING... etc). Match the exact PID byte.
+  const pidByte = pid.substring(2) // "0C" for "010C"
+  const re = new RegExp(`41${pidByte}([0-9A-F]+)`)
+  const match = cleaned.match(re)
+  if (!match) return null
+
+  const dataHex = match[1]
   if (dataHex.length < 2) return null
   const A = parseInt(dataHex.substring(0, 2), 16)
   const B = dataHex.length >= 4 ? parseInt(dataHex.substring(2, 4), 16) : 0
+  const C = dataHex.length >= 6 ? parseInt(dataHex.substring(4, 6), 16) : 0
+  const D = dataHex.length >= 8 ? parseInt(dataHex.substring(6, 8), 16) : 0
 
   switch (pid) {
-    case '010C': return Math.round((A * 256 + B) / 4)
-    case '010D': return A
-    case '0104': return Math.round(A * 100 / 255)
-    case '0105': return A - 40
-    case '015C': return A - 40
-    case '010F': return A - 40
-    case '0146': return A - 40
-    case '010E': return +(A / 2 - 64).toFixed(1)
-    case '010B': return A
-    case '0110': return +((A * 256 + B) / 100).toFixed(2)
-    case '0143': return Math.round((A * 256 + B) * 100 / 65535)
-    case '011F': return A * 256 + B
-    case '0106': return +((A - 128) * 100 / 128).toFixed(1)
-    case '0107': return +((A - 128) * 100 / 128).toFixed(1)
-    case '0108': return +((A - 128) * 100 / 128).toFixed(1)
-    case '0109': return +((A - 128) * 100 / 128).toFixed(1)
-    case '010A': return A * 3
-    case '012F': return Math.round(A * 100 / 255)
-    case '015E': return +((A * 256 + B) / 20).toFixed(1)
-    case '0111': return Math.round(A * 100 / 255)
-    case '0142': return +((A * 256 + B) / 1000).toFixed(2)
-    case '0133': return A
-    case '013C': return +((A * 256 + B) / 10 - 40).toFixed(0)
-    case '014D': return A * 256 + B
-    case '0121': return A * 256 + B
-    case '0131': return A * 256 + B
-    default: return A
+    // ── Moteur ──────────────────────────────────────────────────────────────
+    case '010C': return Math.round((A * 256 + B) / 4)             // RPM
+    case '010D': return A                                          // Vitesse
+    case '0104': return Math.round(A * 100 / 255)                  // Charge
+    case '0143': return Math.round((A * 256 + B) * 100 / 65535)    // Charge absolue
+    case '0105': return A - 40                                     // LDR temp
+    case '015C': return A - 40                                     // Huile temp
+    case '010F': return A - 40                                     // Admission temp
+    case '0146': return A - 40                                     // Ambiant temp
+    case '010E': return +(A / 2 - 64).toFixed(1)                   // Avance allumage
+    case '010B': return A                                          // MAP
+    case '0110': return +((A * 256 + B) / 100).toFixed(2)          // MAF
+    case '011F': return A * 256 + B                                // Temps moteur actif
+    case '0145': return Math.round(A * 100 / 255)                  // Throttle relative
+    case '0147': return Math.round(A * 100 / 255)                  // Throttle B
+    case '0149': return Math.round(A * 100 / 255)                  // Accel pedal D
+    case '014A': return Math.round(A * 100 / 255)                  // Accel pedal E
+    case '014C': return Math.round(A * 100 / 255)                  // Commanded throttle
+    case '0161': return A - 125                                    // Driver demand torque %
+    case '0162': return A - 125                                    // Actual engine torque %
+    case '0163': return A * 256 + B                                // Reference torque Nm
+    case '0164': return A - 125                                    // Engine % torque
+
+    // ── Carburant ───────────────────────────────────────────────────────────
+    case '0106': return +((A - 128) * 100 / 128).toFixed(1)        // STFT B1
+    case '0107': return +((A - 128) * 100 / 128).toFixed(1)        // LTFT B1
+    case '0108': return +((A - 128) * 100 / 128).toFixed(1)        // STFT B2
+    case '0109': return +((A - 128) * 100 / 128).toFixed(1)        // LTFT B2
+    case '010A': return A * 3                                      // Fuel pressure
+    case '0123': return (A * 256 + B) * 10                         // Rail abs pressure (kPa)
+    case '012F': return Math.round(A * 100 / 255)                  // Fuel level
+    case '015E': return +((A * 256 + B) / 20).toFixed(1)           // Fuel rate
+    case '0151': return A                                          // Fuel type (code)
+    case '0152': return +((A * 100) / 255).toFixed(1)              // Ethanol %
+    case '0144': return +(((A * 256 + B) / 32768)).toFixed(3)      // Eq ratio
+    case '0103': return A                                          // Fuel system status (code)
+
+    // ── Turbo ───────────────────────────────────────────────────────────────
+    case '0170': return A * 256 + B                                // Boost (manuf-spec)
+    case '0172': return A * 256 + B                                // Boost commanded
+    case '0174': return A - 40                                     // Turbo inlet temp
+    case '0175': return A - 40                                     // Turbo outlet temp
+    case '0176': return A * 256 + B                                // Turbo RPM
+    case '0177': return A - 40                                     // Charge air temp
+
+    // ── Électrique ──────────────────────────────────────────────────────────
+    case '0111': return Math.round(A * 100 / 255)                  // Throttle
+    case '0142': return +((A * 256 + B) / 1000).toFixed(2)         // Battery 12V
+    case '0133': return A                                          // Baro
+
+    // ── Échappement / Émissions ─────────────────────────────────────────────
+    case '0114': return +(A / 200).toFixed(3)                      // O2 voltage B1S1
+    case '0115': return +(A / 200).toFixed(3)                      // O2 voltage B1S2
+    case '0118': return +(A / 200).toFixed(3)                      // O2 voltage B2S1
+    case '0119': return +(A / 200).toFixed(3)                      // O2 voltage B2S2
+    case '0134': return +(((A * 256 + B) / 32768)).toFixed(3)      // Wide-band lambda
+    case '013C': return +((A * 256 + B) / 10 - 40).toFixed(0)      // Catalyst temp B1
+    case '013D': return +((A * 256 + B) / 10 - 40).toFixed(0)      // Catalyst temp B2
+    case '012C': return Math.round(A * 100 / 255)                  // Commanded EGR
+    case '012D': return +((A - 128) * 100 / 128).toFixed(1)        // EGR error
+    case '012E': return Math.round(A * 100 / 255)                  // Commanded purge
+    case '0132': return Math.round(((A * 256 + B) / 4) - 8192)     // EVAP pressure (Pa)
+    case '017C': return A * 256 + B - 40                           // DPF inlet temp
+    case '017A': return +((A * 256 + B) / 100).toFixed(2)          // DPF differential
+    case '0183': return A * 256 + B                                // NOx pre-SCR
+    case '019B': return Math.round(A * 100 / 255)                  // AdBlue level
+
+    // ── Hybride ─────────────────────────────────────────────────────────────
+    case '015B': return Math.round(A * 100 / 255)                  // HV battery remaining
+
+    // ── Diagnostic ──────────────────────────────────────────────────────────
+    case '014D': return A * 256 + B                                // MIL time
+    case '0121': return A * 256 + B                                // Distance MIL
+    case '0131': return A * 256 + B                                // Distance since clear
+    case '0130': return A                                          // Warmups since clear
+    case '014E': return A * 256 + B                                // Time since clear
+
+    default:
+      // Multi-byte values that we don't have a formula for: return raw uint32
+      if (dataHex.length >= 8) return (A << 24) | (B << 16) | (C << 8) | D
+      if (dataHex.length >= 4) return A * 256 + B
+      return A
   }
 }
 
@@ -322,9 +385,26 @@ function isCAN(protocol: string): boolean {
   return (
     p.includes('CAN') ||
     p.includes('ISO 15765') ||
-    p === '6' || p === '7' || p === '8' || p === '9' ||
-    /^[6-9]$/.test(p.trim())
+    /^[6-9A-B]$/.test(p.trim())  // ATDPN codes: 6=CAN 11/500, 7=CAN 29/500, 8=CAN 11/250, 9=CAN 29/250
   )
+}
+
+// Returns true if the protocol uses 29-bit CAN addressing (ATSP7 or ATSP9)
+function isCAN29Bit(protocol: string): boolean {
+  const p = protocol.toUpperCase()
+  return (
+    p.includes('29BIT') ||
+    p.includes('29 BIT') ||
+    p.includes('29-BIT') ||
+    p === '7' || p === '9'
+  )
+}
+
+// Returns the OBD-II functional broadcast address for the given CAN protocol
+function broadcastAddr(protocol: string): string {
+  // 29-bit CAN uses 18DB33F1 (ISO 15765-4 functional addressing)
+  // 11-bit CAN uses 7DF
+  return isCAN29Bit(protocol) ? '18DB33F1' : '7DF'
 }
 
 // ─── ELM327 init ─────────────────────────────────────────────────────────────
@@ -410,6 +490,7 @@ async function readDTCs(send: SendFn, protocol: string, onStep?: (s: string) => 
   const seen = new Set<string>()
   const all: OBDFaultCode[] = []
   const canMode = isCAN(protocol)
+  const broadcast = broadcastAddr(protocol) // "7DF" or "18DB33F1"
 
   function addUnique(codes: OBDFaultCode[]) {
     for (const c of codes) {
@@ -418,46 +499,47 @@ async function readDTCs(send: SendFn, protocol: string, onStep?: (s: string) => 
     }
   }
 
-  // Set functional address for CAN (7DF = broadcast to all ECUs)
-  // For 29-bit CAN the address is 18DB33F1 but most adapters accept 7DF too
+  // Set functional broadcast address for CAN (7DF for 11-bit, 18DB33F1 for 29-bit)
   if (canMode) {
-    try { await send('AT SH 7DF') } catch { /* ignore on non-CAN */ }
+    try { await send(`AT SH ${broadcast}`, 1000) } catch { /* ignore */ }
   }
 
-  // Mode 03 — confirmed DTCs
+  // Mode 03 — confirmed DTCs (ECM + all ECUs that respond to broadcast)
   onStep?.('Lecture codes défauts moteur…')
-  try { addUnique(parseDTCResponse(await send('03'))) } catch { /* ECU busy */ }
+  try { addUnique(parseDTCResponse(await send('03', 2500))) } catch { /* ECU busy */ }
 
   // Mode 07 — pending DTCs
   onStep?.('Codes en attente…')
   try {
-    const pending = parseDTCResponse(await send('07')).map(c => ({ ...c, pending: true as const }))
+    const pending = parseDTCResponse(await send('07', 2000)).map(c => ({ ...c, pending: true as const }))
     addUnique(pending)
   } catch { /* not all ECUs support mode 07 */ }
 
-  // Mode 0A — permanent DTCs
+  // Mode 0A — permanent DTCs (won't clear on reset)
   onStep?.('Codes permanents…')
-  try { addUnique(parseDTCResponse(await send('0A'))) } catch { /* not all ECUs support 0A */ }
+  try { addUnique(parseDTCResponse(await send('0A', 2000))) } catch { /* not all ECUs support 0A */ }
 
-  // Multi-module CAN scan — only on CAN vehicles
-  if (canMode) {
-    // Short timeout so silent modules fail fast (0x50 = 80 × 4ms = 320ms)
-    try { await send('ATST 50') } catch { /* some clones don't support ATST */ }
+  // Multi-module CAN scan — only on CAN vehicles, 11-bit addressing
+  // (29-bit per-module scan would need different addresses — skip to avoid errors)
+  if (canMode && !isCAN29Bit(protocol)) {
+    // Short ELM327 internal timeout for fast NO DATA from silent modules
+    // ATST 32 = 0x32 = 50 × 4ms = 200ms per module attempt
+    try { await send('ATST 32', 800) } catch { /* clone may not support */ }
 
     for (const mod of ALL_ECU_MODULES) {
       try {
         onStep?.(`Scan ${mod.label}…`)
-        await send(`AT SH ${mod.addr}`)
-        const raw = await send('03')
+        await send(`AT SH ${mod.addr}`, 600)
+        const raw = await send('03', 800) // 800ms outer per module
         if (isOBDError(raw) || !raw) continue
         const codes = parseDTCResponse(raw).map(c => ({ ...c, module: mod.label }))
         addUnique(codes)
       } catch { /* module absent */ }
     }
 
-    // Restore broadcast address and default timeout
-    try { await send('ATST C8') } catch { /* ignore */ }
-    try { await send('AT SH 7DF') } catch { /* ignore */ }
+    // Restore default timeout and broadcast address
+    try { await send('ATST C8', 800) } catch { /* ignore */ }
+    try { await send(`AT SH ${broadcast}`, 800) } catch { /* ignore */ }
   }
 
   return all
@@ -467,7 +549,8 @@ async function readDTCs(send: SendFn, protocol: string, onStep?: (s: string) => 
 
 async function readVIN(send: SendFn): Promise<string | null> {
   try {
-    const raw = await send('0902')
+    // VIN is multi-frame on CAN — give it 4s to fully transfer all chunks
+    const raw = await send('0902', 4000)
     if (!raw || isOBDError(raw)) return null
 
     const stripped = raw.toUpperCase()
