@@ -15,6 +15,13 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   getBrand,
   getBrandNames,
   getEngineOptions,
@@ -429,62 +436,88 @@ function VehicleForm({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
+          {/* Marque */}
           <div className="space-y-1.5">
-            <Label htmlFor="marque">Marque *</Label>
-            <select
-              id="marque"
-              value={manualBrand ? MANUAL_OPTION : value.marque}
-              onChange={(e) => selectBrand(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            <Label htmlFor="marque" className="text-blue-700 dark:text-blue-300 font-medium">Marque *</Label>
+            <Select
+              value={manualBrand ? MANUAL_OPTION : (value.marque || undefined)}
+              onValueChange={selectBrand}
             >
-              <option value="">Selectionner</option>
-              {brandOptions.map((brand) => (
-                <option key={brand} value={brand}>{brand}</option>
-              ))}
-            </select>
+              <SelectTrigger
+                id="marque"
+                className="border-blue-200 bg-blue-50/30 hover:bg-blue-50 focus:ring-blue-400 dark:border-blue-900 dark:bg-blue-950/20"
+              >
+                <SelectValue placeholder="Sélectionner" />
+              </SelectTrigger>
+              <SelectContent side="bottom" sideOffset={4} avoidCollisions={false} className="max-h-72">
+                {brandOptions.map((brand) => (
+                  <SelectItem key={brand} value={brand} className="text-blue-900 dark:text-blue-100 focus:bg-blue-100 dark:focus:bg-blue-900/40">
+                    {brand}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {manualBrand && (
               <Input
                 placeholder="ex: Seat"
                 value={value.marque}
                 onChange={(e) => set('marque', e.target.value)}
+                className="border-blue-200 focus-visible:ring-blue-400"
               />
             )}
           </div>
+
+          {/* Modèle */}
           <div className="space-y-1.5">
-            <Label htmlFor="modele">Modèle *</Label>
-            <select
-              id="modele"
-              value={manualModel ? MANUAL_OPTION : value.modele}
-              onChange={(e) => selectModel(e.target.value)}
+            <Label htmlFor="modele" className="text-blue-700 dark:text-blue-300 font-medium">Modèle *</Label>
+            <Select
+              value={manualModel ? MANUAL_OPTION : (value.modele || undefined)}
+              onValueChange={selectModel}
               disabled={!getBrand(value.marque)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
             >
-              <option value="">Selectionner</option>
-              {modelOptions.map((model) => (
-                <option key={model} value={model}>{model}</option>
-              ))}
-            </select>
+              <SelectTrigger
+                id="modele"
+                className="border-blue-200 bg-blue-50/30 hover:bg-blue-50 focus:ring-blue-400 disabled:opacity-50 dark:border-blue-900 dark:bg-blue-950/20"
+              >
+                <SelectValue placeholder="Sélectionner" />
+              </SelectTrigger>
+              <SelectContent side="bottom" sideOffset={4} avoidCollisions={false} className="max-h-72">
+                {modelOptions.map((model) => (
+                  <SelectItem key={model} value={model} className="text-blue-900 dark:text-blue-100 focus:bg-blue-100 dark:focus:bg-blue-900/40">
+                    {model}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {(manualBrand || manualModel) && (
               <Input
                 placeholder="ex: Ibiza, Clio 4..."
                 value={value.modele}
                 onChange={(e) => set('modele', e.target.value)}
+                className="border-blue-200 focus-visible:ring-blue-400"
               />
             )}
           </div>
+
+          {/* Année */}
           <div className="space-y-1.5">
-            <Label htmlFor="annee">Année *</Label>
+            <Label htmlFor="annee" className="text-blue-700 dark:text-blue-300 font-medium">Année *</Label>
             {getModel(value.marque, value.modele) ? (
-              <select
-                id="annee"
-                value={value.annee}
-                onChange={(e) => set('annee', e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                {yearOptions.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+              <Select value={value.annee || undefined} onValueChange={(v) => set('annee', v)}>
+                <SelectTrigger
+                  id="annee"
+                  className="border-blue-200 bg-blue-50/30 hover:bg-blue-50 focus:ring-blue-400 dark:border-blue-900 dark:bg-blue-950/20"
+                >
+                  <SelectValue placeholder="Année" />
+                </SelectTrigger>
+                <SelectContent side="bottom" sideOffset={4} avoidCollisions={false} className="max-h-72">
+                  {yearOptions.map((year) => (
+                    <SelectItem key={year} value={year.toString()} className="text-blue-900 dark:text-blue-100 focus:bg-blue-100 dark:focus:bg-blue-900/40">
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             ) : (
               <Input
                 id="annee"
@@ -494,11 +527,14 @@ function VehicleForm({
                 max="2030"
                 value={value.annee}
                 onChange={(e) => set('annee', e.target.value)}
+                className="border-blue-200 focus-visible:ring-blue-400"
               />
             )}
           </div>
+
+          {/* Kilométrage */}
           <div className="space-y-1.5">
-            <Label htmlFor="km">Kilométrage</Label>
+            <Label htmlFor="km" className="text-blue-700 dark:text-blue-300 font-medium">Kilométrage</Label>
             <Input
               id="km"
               placeholder="ex: 95000"
@@ -506,29 +542,40 @@ function VehicleForm({
               min="0"
               value={value.kilometrage}
               onChange={(e) => set('kilometrage', e.target.value)}
+              className="border-blue-200 focus-visible:ring-blue-400"
             />
           </div>
+
+          {/* Motorisation */}
           <div className="col-span-2 space-y-1.5">
-            <Label htmlFor="moteur">Motorisation</Label>
+            <Label htmlFor="moteur" className="text-blue-700 dark:text-blue-300 font-medium">Motorisation</Label>
             {getBrand(value.marque) && getModel(value.marque, value.modele) && (
-              <select
-                value={manualEngine ? MANUAL_OPTION : value.moteur || UNKNOWN_ENGINE}
-                onChange={(e) => selectEngine(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              <Select
+                value={manualEngine ? MANUAL_OPTION : (value.moteur || UNKNOWN_ENGINE)}
+                onValueChange={selectEngine}
               >
-                {engineOptions.map((engine) => {
-                  const fuel = getFuelForEngine(value.marque, value.modele, engine)
-                  return (
-                    <option key={engine} value={engine}>
-                      {fuel ? `${engine} - ${fuel}` : engine}
-                    </option>
-                  )
-                })}
-              </select>
+                <SelectTrigger className="border-blue-200 bg-blue-50/30 hover:bg-blue-50 focus:ring-blue-400 dark:border-blue-900 dark:bg-blue-950/20">
+                  <SelectValue placeholder="Sélectionner motorisation" />
+                </SelectTrigger>
+                <SelectContent side="bottom" sideOffset={4} avoidCollisions={false} className="max-h-80">
+                  {engineOptions.map((engine) => {
+                    const fuel = getFuelForEngine(value.marque, value.modele, engine)
+                    return (
+                      <SelectItem key={engine} value={engine} className="text-blue-900 dark:text-blue-100 focus:bg-blue-100 dark:focus:bg-blue-900/40">
+                        {fuel ? `${engine} — ${fuel}` : engine}
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
             )}
             <Input
               id="moteur"
-              className={getModel(value.marque, value.modele) && !manualEngine ? 'hidden' : undefined}
+              className={
+                getModel(value.marque, value.modele) && !manualEngine
+                  ? 'hidden'
+                  : 'border-blue-200 focus-visible:ring-blue-400'
+              }
               placeholder="ex: 1.5 dCi 90ch, 1.2 TCe 120ch, 2.0 TDI 150ch…"
               value={value.moteur}
               onChange={(e) => set('moteur', e.target.value)}
