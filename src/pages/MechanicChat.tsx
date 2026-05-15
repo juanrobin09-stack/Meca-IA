@@ -329,49 +329,50 @@ export default function MechanicChat() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-muted/40">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40 dark:from-slate-950 dark:via-blue-950/20 dark:to-indigo-950/30">
         <Sidebar />
 
         <main className="md:pl-64 pb-20 md:pb-0">
           <div className="h-screen md:h-[calc(100vh-0px)] flex flex-col">
-            {/* Header */}
-            <div className="border-b bg-background p-3 sm:p-4">
+            {/* Header — glassmorphism */}
+            <div className="border-b border-blue-100/60 dark:border-blue-900/40 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl p-3 sm:p-4 sticky top-0 z-10">
               <div className="container mx-auto max-w-4xl">
-                {/* Mobile: Stacked layout */}
                 <div className="flex items-center justify-between gap-2 sm:gap-4">
                   <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center text-lg sm:text-xl shrink-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-lg sm:text-xl shrink-0 shadow-lg shadow-blue-500/30">
                       🤖
                     </div>
                     <div className="min-w-0">
                       <h1 className="font-bold text-base sm:text-lg flex items-center gap-2 truncate">
-                        <span className="truncate">MECAI</span>
+                        <span className="truncate bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">MECAI</span>
                         {isPremium && (
-                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-[10px] sm:text-xs shrink-0">
-                            Premium
+                          <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 text-[10px] sm:text-xs shrink-0 shadow-md">
+                            ✨ Premium
                           </Badge>
                         )}
                       </h1>
-                      <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600">
-                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-500 animate-pulse" />
-                        En ligne 24/7
+                      <div className="flex items-center gap-1.5 text-xs sm:text-sm text-emerald-600 dark:text-emerald-400">
+                        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse shadow-md shadow-emerald-500/50" />
+                        <span className="font-medium">En ligne 24/7</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                    {/* Conversations toggle */}
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => setShowConversations(!showConversations)}
-                      className="h-9 w-9 sm:h-10 sm:w-10"
+                      className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl border-blue-200 dark:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:border-blue-400 transition-all"
                     >
                       <MessageSquare className="h-4 w-4" />
                     </Button>
 
-                    {/* New chat button */}
-                    <Button onClick={createNewConversation} size="sm" className="h-9 sm:h-10 px-2.5 sm:px-4">
+                    <Button
+                      onClick={createNewConversation}
+                      size="sm"
+                      className="h-9 sm:h-10 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/20 transition-all"
+                    >
                       <Plus className="h-4 w-4 sm:mr-2" />
                       <span className="hidden sm:inline">Nouveau</span>
                     </Button>
@@ -380,17 +381,23 @@ export default function MechanicChat() {
 
                 {/* Vehicle selector - Full width on mobile */}
                 <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
-                  <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
-                    <SelectTrigger className="w-full sm:w-[200px] h-10">
+                  <Select
+                    value={selectedVehicleId || '__none__'}
+                    onValueChange={(v) => setSelectedVehicleId(v === '__none__' ? '' : v)}
+                  >
+                    <SelectTrigger className="w-full sm:w-[220px] h-10 bg-background/80 backdrop-blur-sm border-blue-200 dark:border-blue-900 hover:border-blue-400 dark:hover:border-blue-700 transition-colors">
                       <SelectValue placeholder="Sélectionner véhicule..." />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Aucun véhicule</SelectItem>
+                    <SelectContent side="bottom" sideOffset={4} avoidCollisions={false}>
+                      <SelectItem value="__none__" className="text-muted-foreground italic">
+                        Aucun véhicule sélectionné
+                      </SelectItem>
                       {vehicles.map(v => (
                         <SelectItem key={v.id} value={v.id}>
                           <div className="flex items-center gap-2">
-                            <Car className="h-4 w-4" />
-                            {v.brand} {v.model} ({v.year})
+                            <Car className="h-4 w-4 text-blue-600" />
+                            <span className="font-medium">{v.brand} {v.model}</span>
+                            <span className="text-muted-foreground text-xs">({v.year})</span>
                           </div>
                         </SelectItem>
                       ))}

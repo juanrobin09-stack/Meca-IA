@@ -323,9 +323,30 @@ export default function Landing() {
           </motion.div>
           <div className="grid md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto">
             {[
-              { icon: Gauge, title: 'Diagnostic rapide', desc: 'Résultat en 2 minutes avec causes probables', color: 'blue' },
-              { icon: Euro, title: 'Prix réels français', desc: 'Estimations basées sur les garages en France', color: 'emerald' },
-              { icon: Shield, title: 'Fini les arnaques', desc: 'Détecte les prix gonflés et travaux inutiles', color: 'amber' },
+              {
+                icon: Gauge,
+                title: 'Diagnostic rapide',
+                desc: 'Résultat en 2 minutes avec causes probables',
+                bgClass: 'bg-blue-100 dark:bg-blue-900/30',
+                iconClass: 'text-blue-600',
+                glowClass: 'group-hover:shadow-blue-500/20',
+              },
+              {
+                icon: Euro,
+                title: 'Prix réels français',
+                desc: 'Estimations basées sur les garages en France',
+                bgClass: 'bg-emerald-100 dark:bg-emerald-900/30',
+                iconClass: 'text-emerald-600',
+                glowClass: 'group-hover:shadow-emerald-500/20',
+              },
+              {
+                icon: Shield,
+                title: 'Fini les arnaques',
+                desc: 'Détecte les prix gonflés et travaux inutiles',
+                bgClass: 'bg-amber-100 dark:bg-amber-900/30',
+                iconClass: 'text-amber-600',
+                glowClass: 'group-hover:shadow-amber-500/20',
+              },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -333,14 +354,16 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+                className="group"
               >
-                <Card className="h-full border-0 shadow-lg shadow-gray-200/50 dark:shadow-none bg-white dark:bg-gray-800 hover:shadow-xl transition-shadow">
+                <Card className={`h-full border border-gray-100 dark:border-gray-800 rounded-2xl shadow-md hover:shadow-2xl ${item.glowClass} bg-white dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-300`}>
                   <CardHeader>
-                    <div className={`h-12 w-12 rounded-2xl bg-${item.color}-100 dark:bg-${item.color}-900/30 flex items-center justify-center mb-4`}>
-                      <item.icon className={`h-6 w-6 text-${item.color}-600`} />
+                    <div className={`h-14 w-14 rounded-2xl ${item.bgClass} flex items-center justify-center mb-4 shadow-inner`}>
+                      <item.icon className={`h-7 w-7 ${item.iconClass}`} />
                     </div>
-                    <CardTitle className="text-lg">{item.title}</CardTitle>
-                    <CardDescription>{item.desc}</CardDescription>
+                    <CardTitle className="text-lg font-bold">{item.title}</CardTitle>
+                    <CardDescription className="text-sm">{item.desc}</CardDescription>
                   </CardHeader>
                 </Card>
               </motion.div>
@@ -367,11 +390,12 @@ export default function Landing() {
           </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-5xl mx-auto">
             {[
-              { icon: MessageSquare, title: "Diagnostic IA", desc: "Décris ton problème, l'IA analyse", color: "blue" },
-              { icon: FileText, title: "Analyse de devis", desc: "Vérifie si ton devis est honnête", color: "emerald" },
-              { icon: Car, title: "Mes véhicules", desc: "Enregistre tes voitures", color: "violet" },
-              { icon: MapPin, title: "Trouver un garage", desc: "Garages de confiance près de toi", color: "rose" },
-              { icon: ShoppingCart, title: "Comparer les pièces", desc: "Meilleurs prix Oscaro, Yakarouler", color: "cyan" },
+              { icon: MessageSquare, title: 'Diagnostic IA', desc: "Décris ton problème, l'IA analyse", bgClass: 'bg-blue-100 dark:bg-blue-900/30', iconClass: 'text-blue-600' },
+              { icon: FileText, title: 'Analyse de devis', desc: 'Vérifie si ton devis est honnête', bgClass: 'bg-emerald-100 dark:bg-emerald-900/30', iconClass: 'text-emerald-600' },
+              { icon: Car, title: 'Mes véhicules', desc: 'Enregistre tes voitures', bgClass: 'bg-violet-100 dark:bg-violet-900/30', iconClass: 'text-violet-600' },
+              { icon: MapPin, title: 'Trouver un garage', desc: 'Garages de confiance près de toi', bgClass: 'bg-rose-100 dark:bg-rose-900/30', iconClass: 'text-rose-600' },
+              { icon: ShoppingCart, title: 'Comparer les pièces', desc: 'Meilleurs prix Oscaro, Yakarouler', bgClass: 'bg-cyan-100 dark:bg-cyan-900/30', iconClass: 'text-cyan-600' },
+              { icon: Gauge, title: 'Scan OBD-II', desc: 'Lis les codes défauts directement', bgClass: 'bg-indigo-100 dark:bg-indigo-900/30', iconClass: 'text-indigo-600' },
             ].map((feature, i) => (
               <motion.div
                 key={i}
@@ -380,14 +404,14 @@ export default function Landing() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ scale: 1.02, y: -2 }}
-                className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-default"
+                className="group flex items-start gap-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800 hover:shadow-lg hover:shadow-blue-500/5 transition-all cursor-default"
               >
-                <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-${feature.color}-100 dark:bg-${feature.color}-900/30 flex items-center justify-center shrink-0`}>
-                  <feature.icon className={`h-5 w-5 text-${feature.color}-600`} />
+                <div className={`h-11 w-11 sm:h-12 sm:w-12 rounded-xl ${feature.bgClass} flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform`}>
+                  <feature.icon className={`h-5 w-5 sm:h-6 sm:w-6 ${feature.iconClass}`} />
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base mb-1">{feature.title}</h3>
-                  <p className="text-xs sm:text-sm text-gray-500">{feature.desc}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{feature.desc}</p>
                 </div>
               </motion.div>
             ))}

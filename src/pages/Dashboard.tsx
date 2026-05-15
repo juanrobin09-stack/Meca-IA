@@ -38,8 +38,8 @@ export default function Dashboard() {
       title: 'Analyseur de Devis',
       description: 'Détecte les arnaques et prix excessifs sur tes devis garage.',
       badge: '🔍 Anti-arnaque',
-      color: 'bg-blue-500/10',
-      iconColor: 'text-blue-600',
+      gradient: 'from-blue-500 to-cyan-500',
+      shadow: 'shadow-blue-500/30',
     },
     {
       href: '/app/diagnostic-video',
@@ -47,8 +47,8 @@ export default function Dashboard() {
       title: 'Diagnostic Vidéo',
       description: "Filme ton problème, l'IA analyse visuellement et auditivement.",
       badge: '🎥 IA Vision',
-      color: 'bg-purple-500/10',
-      iconColor: 'text-purple-600',
+      gradient: 'from-purple-500 to-pink-500',
+      shadow: 'shadow-purple-500/30',
     },
     {
       href: '/app/prevision-pannes',
@@ -56,8 +56,8 @@ export default function Dashboard() {
       title: 'Prévision de Pannes',
       description: 'Anticipe les réparations et planifie ton budget auto.',
       badge: '🔮 Prédictif',
-      color: 'bg-amber-500/10',
-      iconColor: 'text-amber-600',
+      gradient: 'from-amber-500 to-orange-500',
+      shadow: 'shadow-amber-500/30',
     },
     {
       href: '/app/mechanic-chat',
@@ -65,14 +65,14 @@ export default function Dashboard() {
       title: 'Chat Mécanicien 24/7',
       description: 'Pose toutes tes questions auto, je suis dispo 24h/24.',
       badge: '💬 Illimité',
-      color: 'bg-green-500/10',
-      iconColor: 'text-green-600',
+      gradient: 'from-emerald-500 to-teal-500',
+      shadow: 'shadow-emerald-500/30',
     },
   ]
 
   return (
     <PageTransition>
-    <div className="min-h-screen bg-muted/40">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 dark:from-slate-950 dark:via-blue-950/20 dark:to-indigo-950/30">
       <Sidebar />
 
       <main className="md:pl-64 pb-24 md:pb-0">
@@ -84,8 +84,8 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
-              Salut {displayName} !
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
+              Salut <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{displayName}</span> 👋
             </h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               Bienvenue sur MECAI, ton assistant diagnostic auto.
@@ -94,16 +94,21 @@ export default function Dashboard() {
 
           {/* Status Card for Free Users */}
           {!isPremium && (
-            <Card className="mb-6 sm:mb-8 border-primary/20 bg-primary/5">
+            <Card className="mb-6 sm:mb-8 border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 shadow-lg shadow-blue-500/5">
               <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 sm:p-6 gap-3 sm:gap-4">
-                <div>
-                  <h3 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Tu es en version gratuite</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    Il te reste {diagnosticsRemaining} diagnostic{diagnosticsRemaining !== 1 ? 's' : ''} ce mois-ci.
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
+                    <Sparkles className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm sm:text-base mb-0.5 sm:mb-1">Tu es en version gratuite</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Il te reste <span className="font-bold text-blue-600 dark:text-blue-400">{diagnosticsRemaining}</span> diagnostic{diagnosticsRemaining !== 1 ? 's' : ''} ce mois-ci.
+                    </p>
+                  </div>
                 </div>
                 <Link to="/pricing" className="w-full sm:w-auto">
-                  <Button className="w-full sm:w-auto h-10 sm:h-auto">
+                  <Button className="w-full sm:w-auto h-10 sm:h-11 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30">
                     <Sparkles className="h-4 w-4 mr-2" />
                     Passer Premium
                   </Button>
@@ -133,15 +138,15 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <Link to="/app/chat">
               <motion.div whileHover={{ scale: 1.02, y: -4 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full active:bg-muted/50">
-                  <CardHeader className="p-4 sm:p-6">
+                <Card className="group hover:shadow-2xl hover:shadow-blue-500/10 transition-all cursor-pointer h-full border border-blue-100 dark:border-blue-900/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+                  <CardHeader className="p-5 sm:p-6">
                     <motion.div
-                      className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4"
+                      className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-3 sm:mb-4 shadow-lg shadow-blue-500/30 group-hover:scale-110 transition-transform"
                       whileHover={{ rotate: 10 }}
                     >
-                      <MessageSquarePlus className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                      <MessageSquarePlus className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                     </motion.div>
-                    <CardTitle className="text-base sm:text-lg">Nouveau diagnostic</CardTitle>
+                    <CardTitle className="text-base sm:text-lg font-bold">Nouveau diagnostic</CardTitle>
                     <CardDescription className="text-xs sm:text-sm">
                       Décris ton problème et obtiens un diagnostic expert.
                     </CardDescription>
@@ -152,15 +157,15 @@ export default function Dashboard() {
 
             <Link to="/app/history">
               <motion.div whileHover={{ scale: 1.02, y: -4 }} whileTap={{ scale: 0.98 }} transition={{ type: 'spring', stiffness: 300 }}>
-                <Card className="hover:border-primary hover:shadow-lg transition-all cursor-pointer h-full active:bg-muted/50">
-                  <CardHeader className="p-4 sm:p-6">
+                <Card className="group hover:shadow-2xl hover:shadow-purple-500/10 transition-all cursor-pointer h-full border border-purple-100 dark:border-purple-900/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl overflow-hidden">
+                  <CardHeader className="p-5 sm:p-6">
                     <motion.div
-                      className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-3 sm:mb-4"
+                      className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-3 sm:mb-4 shadow-lg shadow-purple-500/30 group-hover:scale-110 transition-transform"
                       whileHover={{ rotate: -10 }}
                     >
-                      <History className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                      <History className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                     </motion.div>
-                    <CardTitle className="text-base sm:text-lg">Historique</CardTitle>
+                    <CardTitle className="text-base sm:text-lg font-bold">Historique</CardTitle>
                     <CardDescription className="text-xs sm:text-sm">
                       Retrouve tes diagnostics passés.
                     </CardDescription>
@@ -190,22 +195,22 @@ export default function Dashboard() {
                     whileHover={{ scale: 1.02, y: -4 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Card className={`h-full transition-all cursor-pointer active:bg-muted/50 ${
+                    <Card className={`group h-full transition-all cursor-pointer rounded-2xl border bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm overflow-hidden ${
                       isPremium
-                        ? 'hover:border-primary hover:shadow-lg'
-                        : 'opacity-75 hover:opacity-100'
+                        ? 'border-gray-200 dark:border-gray-800 hover:shadow-xl ' + feature.shadow
+                        : 'border-gray-200 dark:border-gray-800 opacity-80 hover:opacity-100'
                     }`}>
                       <CardHeader className="p-3 sm:pb-3 sm:p-4">
-                        <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-lg ${feature.color} flex items-center justify-center mb-2 sm:mb-3`}>
-                          <feature.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${feature.iconColor}`} />
+                        <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-2 sm:mb-3 shadow-lg ${feature.shadow} group-hover:scale-110 transition-transform`}>
+                          <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         </div>
-                        <CardTitle className="text-sm sm:text-base leading-tight">{feature.title}</CardTitle>
+                        <CardTitle className="text-sm sm:text-base leading-tight font-bold">{feature.title}</CardTitle>
                         <CardDescription className="text-[10px] sm:text-xs line-clamp-2">
                           {feature.description}
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0 p-3 sm:p-4 sm:pt-0">
-                        <Badge variant="secondary" className="text-[9px] sm:text-[10px]">
+                        <Badge variant="secondary" className="text-[9px] sm:text-[10px] bg-gradient-to-r from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900">
                           {feature.badge}
                         </Badge>
                       </CardContent>
