@@ -120,24 +120,96 @@ function parseDTCResponse(raw: string): OBDFaultCode[] {
 
 // ─── ECU modules to scan ──────────────────────────────────────────────────────
 
+// Couverture complète : 50+ adresses CAN 11-bit couvrant tous les calculateurs
+// embarqués sur les véhicules modernes (essence/diesel/hybride/EV) toutes marques.
 const ALL_ECU_MODULES = [
+  // ── Powertrain (7E0-7E7) ─────────────────────────────────────────────────────
+  { addr: '7E1', label: 'Boîte de vitesses (TCM)' },
+  { addr: '7E2', label: 'Unité hybride / Inverter' },
+  { addr: '7E3', label: 'Calculateur batterie HV (hybride/EV)' },
+  { addr: '7E4', label: 'Moteur électrique / Inverter (EV)' },
+  { addr: '7E5', label: 'Chargeur embarqué (EV)' },
+  { addr: '7E6', label: 'DC-DC / Auxiliaire' },
+  { addr: '7E7', label: 'Module auxiliaire 2' },
+
+  // ── ABS / ESP / Freinage ─────────────────────────────────────────────────────
   { addr: '7B3', label: 'ABS/ESP' },
   { addr: '760', label: 'ABS (Renault/PSA)' },
   { addr: '7A0', label: 'ESP (PSA/Stellantis)' },
   { addr: '7B0', label: 'ABS (Ford/Opel)' },
-  { addr: '713', label: 'ABS (Opel)' },
+  { addr: '713', label: 'ABS (Opel/GM)' },
   { addr: '7A4', label: 'ABS (Stellantis 2)' },
-  { addr: '740', label: 'ABS (Toyota)' },
+  { addr: '740', label: 'ABS (Toyota/Lexus)' },
   { addr: '7B5', label: 'ESP (VW/Audi)' },
-  { addr: '7E1', label: 'Boîte de vitesses (TCM)' },
-  { addr: '7A2', label: 'TCM (variante)' },
+  { addr: '741', label: 'ABS (Honda)' },
+  { addr: '736', label: 'ABS (Hyundai/Kia)' },
+  { addr: '7C5', label: 'Frein de stationnement électrique' },
+
+  // ── Direction assistée (EPS) ─────────────────────────────────────────────────
+  { addr: '772', label: 'EPS direction assistée' },
+  { addr: '7A5', label: 'EPS variante' },
+  { addr: '730', label: 'EPS (Toyota/Honda)' },
+  { addr: '742', label: 'Capteur angle de volant' },
+
+  // ── Airbag / SRS / sécurité ──────────────────────────────────────────────────
   { addr: '7B8', label: 'Airbag/SRS' },
   { addr: '752', label: 'SRS (Renault/PSA)' },
+  { addr: '758', label: 'Airbag (Toyota)' },
+  { addr: '731', label: 'Airbag (Hyundai/Kia)' },
+  { addr: '7BC', label: 'Module collision (frontal)' },
+
+  // ── Carrosserie / Confort (BSI/BCM) ──────────────────────────────────────────
   { addr: '764', label: 'BSI/BCM (Renault/PSA)' },
-  { addr: '7A7', label: 'BCM (générique)' },
+  { addr: '7A7', label: 'BCM générique' },
+  { addr: '744', label: 'Body Computer (Stellantis)' },
+  { addr: '720', label: 'BCM (Toyota)' },
+  { addr: '770', label: 'Module confort (verrouillage, vitres)' },
+  { addr: '745', label: 'Module confort variante' },
+
+  // ── Climatisation ────────────────────────────────────────────────────────────
   { addr: '7A6', label: 'Climatisation' },
-  { addr: '772', label: 'Direction assistée (EPS)' },
-  { addr: '7A5', label: 'EPS (variante)' },
+  { addr: '769', label: 'Clim variante' },
+  { addr: '7C4', label: 'Clim (Toyota/Lexus)' },
+
+  // ── Tableau de bord / Combiné instrument ─────────────────────────────────────
+  { addr: '743', label: 'Tableau de bord (cluster)' },
+  { addr: '7C0', label: 'Combiné instrument variante' },
+  { addr: '746', label: 'Cluster Stellantis' },
+
+  // ── ADAS / Aides à la conduite ───────────────────────────────────────────────
+  { addr: '754', label: 'Aide au stationnement' },
+  { addr: '776', label: 'Capteurs recul' },
+  { addr: '757', label: 'Régulateur adaptatif (radar)' },
+  { addr: '778', label: 'Caméra frontale' },
+  { addr: '779', label: 'Assistant maintien voie' },
+  { addr: '7C8', label: 'Détection angle mort' },
+
+  // ── TPMS / Pression pneus ────────────────────────────────────────────────────
+  { addr: '775', label: 'TPMS pression pneus' },
+  { addr: '7B9', label: 'TPMS variante' },
+
+  // ── Gateway / Réseau ─────────────────────────────────────────────────────────
+  { addr: '710', label: 'Passerelle CAN (gateway)' },
+  { addr: '711', label: 'Gateway variante' },
+
+  // ── Multimédia / Télématique ─────────────────────────────────────────────────
+  { addr: '7BC', label: 'Télématique / eCall' },
+  { addr: '714', label: 'Module radio/audio' },
+
+  // ── Suspension / Châssis actif ───────────────────────────────────────────────
+  { addr: '76A', label: 'Suspension active/pilotée' },
+
+  // ── Éclairage / Phares ───────────────────────────────────────────────────────
+  { addr: '7A3', label: 'Phares adaptatifs/AFS' },
+  { addr: '715', label: 'Module éclairage extérieur' },
+
+  // ── Spécifique diesel ────────────────────────────────────────────────────────
+  { addr: '74B', label: 'Préchauffage bougies (diesel)' },
+  { addr: '7C3', label: 'AdBlue / SCR (diesel)' },
+
+  // ── Hayon / portes électriques ───────────────────────────────────────────────
+  { addr: '732', label: 'Hayon électrique' },
+  { addr: '774', label: 'Module portes' },
 ]
 
 // ─── Web Serial (USB/COM) ────────────────────────────────────────────────────
