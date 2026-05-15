@@ -409,14 +409,39 @@ function broadcastAddr(protocol: string): string {
 
 // ─── ELM327 init ─────────────────────────────────────────────────────────────
 
-// Validates ATZ response — proves the adapter is actually talking on this baud rate
+// Validates that the adapter is actually talking on this baud rate.
+// Strategy: try ATI first (fast info command, no reset, ~1.5s).
+// If ATI works, the baud rate is correct. Then ATZ for full state reset.
+function isAdapterResponse(raw: string): boolean {
+  if (!raw) return false
+  const c = raw.toUpperCase()
+  // Any of these indicate the adapter is alive and decoding our bytes correctly:
+  return (
+    c.includes('ELM') ||
+    c.includes('OK') ||
+    c.includes('V1.') || c.includes('V2.') || c.includes('V0.') ||
+    c.includes('STN') ||         // STN1110/STN2120 (genuine OBDLink)
+    c.includes('OBDII') ||
+    c.includes('OBD2') ||
+    /\?\s*$|>\s*$/.test(raw)     // ELM327 prompt at end of response
+  )
+}
+
 async function pingELM327(send: SendFn): Promise<boolean> {
+  // Try ATI (Identify) first — instant response, no reset, ~200ms typical
+  try {
+    const info = await send('ATI', 1500)
+    if (isAdapterResponse(info)) {
+      // Confirmed alive — now do full reset for clean state
+      try { await send('ATZ', 5000) } catch { /* ignore */ }
+      return true
+    }
+  } catch { /* continue to ATZ fallback */ }
+
+  // Some weird clones don't respond to ATI — try ATZ directly
   try {
     const reset = await send('ATZ', 5000)
-    if (!reset) return false
-    const c = reset.toUpperCase()
-    // Accept any sign of life from the adapter — version banner, OK, or just '>'
-    return c.includes('ELM') || c.includes('OK') || c.includes('V1.') || c.includes('V2.') || c.includes('>')
+    return isAdapterResponse(reset)
   } catch { return false }
 }
 
@@ -702,6 +727,18 @@ export function useOBDScanner() {
       try { await p?.close() } catch { /* ignore */ }
     }
 
+    // CRITICAL: clean up any leftover state from a previous failed attempt.
+    // Without this, the port stays opened and all subsequent port.open() calls
+    // fail with 'Port is already open', making the retry button useless.
+    try {
+      if (serialReaderRef.current) { try { serialReaderRef.current.releaseLock() } catch {/**/} }
+      if (serialWriterRef.current) { try { serialWriterRef.current.releaseLock() } catch {/**/} }
+      if (serialPortRef.current)   { try { await serialPortRef.current.close() } catch {/**/} }
+    } catch { /* ignore */ }
+    serialPortRef.current = null
+    serialWriterRef.current = null
+    serialReaderRef.current = null
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const existingPorts: any[] = await (navigator as any).serial.getPorts()
@@ -710,7 +747,10 @@ export function useOBDScanner() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         : await (navigator as any).serial.requestPort()
 
-      // Try each baud rate and verify communication actually works with ATZ.
+      // Also force-close this specific port in case it was left open elsewhere
+      try { await port.close() } catch { /* not open, ignore */ }
+
+      // Try each baud rate and verify communication actually works with ATI/ATZ.
       // Many ELM327 clones are FIXED at 9600 or 115200 — port.open() succeeds
       // at the wrong baud, but no data flows. Must verify with a real command.
       const baudRates = [38400, 9600, 115200, 57600]
@@ -721,12 +761,18 @@ export function useOBDScanner() {
       let workingBaud = 0
 
       for (const baudRate of baudRates) {
+        let writer: WritableStreamDefaultWriter<Uint8Array> | null = null
+        let reader: ReadableStreamDefaultReader<Uint8Array> | null = null
         try {
           await port.open({ baudRate })
-          const writer = port.writable.getWriter()
-          const reader = port.readable.getReader()
+          // Small warmup delay — some adapters need ~200ms after open before
+          // they're ready to accept commands (USB-Serial chip stabilization)
+          await new Promise(r => setTimeout(r, 200))
+
+          writer = port.writable.getWriter()
+          reader = port.readable.getReader()
           const testSend: SendFn = (cmd, t) =>
-            serialSendCommand(writer, reader, cmd, t)
+            serialSendCommand(writer!, reader!, cmd, t)
 
           if (await pingELM327(testSend)) {
             workingPort = port
@@ -735,19 +781,23 @@ export function useOBDScanner() {
             workingBaud = baudRate
             break
           }
-          // ATZ failed at this baud — release and try next
+          // ATI/ATZ failed at this baud — release everything and try next baud
           await releasePort(port, reader, writer)
+          // Brief pause between baud rates to let driver settle
+          await new Promise(r => setTimeout(r, 150))
         } catch {
-          // port.open() failed (already open, in use, etc.) — release & try next
-          await releasePort(port, null, null)
+          // port.open() or read/write setup failed — release & try next baud
+          await releasePort(port, reader, writer)
+          await new Promise(r => setTimeout(r, 150))
         }
       }
 
       if (!workingPort || !workingReader || !workingWriter) {
         throw new Error(
-          'La valise ne répond à aucun débit série (9600/38400/115200). ' +
-          'Vérifie qu\'elle est bien branchée, qu\'aucun autre logiciel ne l\'utilise, ' +
-          'et que tu as sélectionné le bon port COM.'
+          'La valise ne répond à aucun débit série (9600/38400/57600/115200). ' +
+          'Trois choses à vérifier : (1) clé de contact en position II (tableau de bord allumé), ' +
+          '(2) aucun autre logiciel n\'utilise le port COM (ferme Torque/OBDLink/etc.), ' +
+          '(3) si Bluetooth : appaire d\'abord la valise dans Windows, puis utilise le port COM virtuel ici.'
         )
       }
 
@@ -777,9 +827,17 @@ export function useOBDScanner() {
   }, [])
 
   // ── Bluetooth (BLE only) ────────────────────────────────────────────────────
+  // IMPORTANT: Web Bluetooth ne supporte QUE le BLE. Les ELM327 bon marché
+  // utilisent Bluetooth Classic (SPP) → IMPOSSIBLE depuis un navigateur.
+  // Pour Bluetooth Classic: appairer la valise dans Windows, puis utiliser
+  // le port COM virtuel via le bouton USB.
   const connectBluetooth = useCallback(async () => {
     if (!('bluetooth' in navigator)) {
-      setStatus({ status: 'error', error: 'Web Bluetooth non supporté. Utilise Chrome.' })
+      setStatus({
+        status: 'error',
+        error: 'Web Bluetooth non supporté. Utilise Chrome ou Edge sur PC/Android. ' +
+               'Sur iPhone, le navigateur ne supporte pas Bluetooth — utilise USB.',
+      })
       return
     }
     setStatus({ status: 'connecting', connectionType: 'bluetooth', error: null })
@@ -789,11 +847,15 @@ export function useOBDScanner() {
         filters: [
           { namePrefix: 'ELM' }, { namePrefix: 'OBD' }, { namePrefix: 'OBDII' },
           { namePrefix: 'Vgate' }, { namePrefix: 'Konnwei' }, { namePrefix: 'VEEPEAK' },
+          { namePrefix: 'iCar' }, { namePrefix: 'BAFX' }, { namePrefix: 'Carista' },
+          { namePrefix: 'OBDLink' }, { namePrefix: 'BlueDriver' }, { namePrefix: 'Topdon' },
         ],
         optionalServices: [
-          '0000fff0-0000-1000-8000-00805f9b34fb',
-          '00001101-0000-1000-8000-00805f9b34fb',
-          'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+          '0000fff0-0000-1000-8000-00805f9b34fb',  // Common OBD BLE
+          '00001101-0000-1000-8000-00805f9b34fb',  // SPP (won't work in browser but listed)
+          'e7810a71-73ae-499d-8c15-faa9aef0c3f2',  // Vgate iCar Pro
+          '0000ffe0-0000-1000-8000-00805f9b34fb',  // Generic UART BLE
+          '6e400001-b5a3-f393-e0a9-e50e24dcca9e',  // Nordic UART Service
         ],
       })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -818,7 +880,13 @@ export function useOBDScanner() {
         } catch { /* try next UUID */ }
       }
 
-      if (!writeChar || !notifyChar) throw new Error('Caractéristiques BLE OBD introuvables')
+      if (!writeChar || !notifyChar) {
+        throw new Error(
+          'Caractéristiques BLE OBD introuvables. Ta valise utilise probablement Bluetooth Classic (SPP) ' +
+          'qui n\'est PAS supporté par les navigateurs. Solution : appaire la valise dans Windows ' +
+          '(Paramètres > Bluetooth), elle apparaîtra comme port COM virtuel — utilise alors le bouton USB ici.'
+        )
+      }
 
       let responseBuffer = ''
       const responseQueue: Array<(v: string) => void> = []
@@ -853,7 +921,11 @@ export function useOBDScanner() {
         })
 
       if (!(await pingELM327(send))) {
-        throw new Error('La valise Bluetooth ne répond pas à ATZ. Vérifie qu\'elle est sous tension et appairée.')
+        throw new Error(
+          'La valise Bluetooth est connectée mais ne répond pas. ' +
+          'Si c\'est une valise Bluetooth Classic (la plupart des modèles <30€), elle est incompatible ' +
+          'avec le navigateur — appaire-la dans Windows et utilise le port COM via le bouton USB.'
+        )
       }
       await initELM327(send)
       setStatus({ status: 'connected', deviceName, isScanning: true })
