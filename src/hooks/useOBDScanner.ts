@@ -836,9 +836,11 @@ export function useOBDScanner() {
         new Promise((resolve) => {
           responseQueue.push(resolve)
           const encoded = new TextEncoder().encode(cmd + '\r')
-          writeChar.writeValueWithoutResponse
-            ? writeChar.writeValueWithoutResponse(encoded)
-            : writeChar.writeValue(encoded)
+          if (writeChar.writeValueWithoutResponse) {
+            writeChar.writeValueWithoutResponse(encoded)
+          } else {
+            writeChar.writeValue(encoded)
+          }
           setTimeout(() => {
             const idx = responseQueue.indexOf(resolve)
             if (idx !== -1) {
