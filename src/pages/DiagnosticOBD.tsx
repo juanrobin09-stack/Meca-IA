@@ -532,20 +532,6 @@ function VehicleForm({
             )}
           </div>
 
-          {/* Kilométrage */}
-          <div className="space-y-1.5">
-            <Label htmlFor="km" className="text-blue-700 dark:text-blue-300 font-medium">Kilométrage</Label>
-            <Input
-              id="km"
-              placeholder="ex: 95000"
-              type="number"
-              min="0"
-              value={value.kilometrage}
-              onChange={(e) => set('kilometrage', e.target.value)}
-              className="border-blue-200 focus-visible:ring-blue-400"
-            />
-          </div>
-
           {/* Motorisation */}
           <div className="col-span-2 space-y-1.5">
             <Label htmlFor="moteur" className="text-blue-700 dark:text-blue-300 font-medium">Motorisation</Label>
