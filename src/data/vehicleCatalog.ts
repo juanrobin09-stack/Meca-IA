@@ -103,10 +103,18 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: '308',
         years: range(2007, 2026),
         engines: [
+          // 308 Phase 1 (2007-2013)
+          { label: '1.4 VTi 95ch (308 I)', fuel: 'Essence', years: range(2007, 2013) },
+          { label: '1.6 VTi 120ch (308 I)', fuel: 'Essence', years: range(2007, 2013) },
+          { label: '1.6 THP 150/175/200ch (308 I)', fuel: 'Essence', years: range(2007, 2013) },
+          { label: '1.6 HDi 90/110ch (308 I)', fuel: 'Diesel', years: range(2007, 2013) },
+          { label: '2.0 HDi 136/140/163ch (308 I)', fuel: 'Diesel', years: range(2007, 2013) },
+          // 308 II (2013-2021)
           { label: '1.2 PureTech 110/130ch', fuel: 'Essence', years: range(2014, 2026) },
           { label: '1.6 THP 125/156ch', fuel: 'Essence', years: range(2007, 2017) },
           { label: '1.5 BlueHDi 100/130ch', fuel: 'Diesel', years: range(2017, 2025) },
           { label: '2.0 BlueHDi 150/180ch', fuel: 'Diesel', years: range(2013, 2021) },
+          // 308 III (2021+)
           { label: 'Hybrid 180/225ch', fuel: 'Hybride', years: range(2021, 2026) },
           { label: 'e-308 électrique', fuel: 'Electrique', years: range(2023, 2026) },
         ],
@@ -177,6 +185,15 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'Twingo',
         years: range(1993, 2026),
         engines: [
+          // Twingo 1 (1993-2007)
+          { label: '1.2 8v 55/60ch (Twingo 1)', fuel: 'Essence', years: range(1993, 2007) },
+          { label: '1.2 16v 75ch (Twingo 1)', fuel: 'Essence', years: range(2000, 2007) },
+          // Twingo 2 (2007-2014)
+          { label: '1.2 16v 60/75ch (Twingo 2)', fuel: 'Essence', years: range(2007, 2014) },
+          { label: '1.2 TCe 100ch (Twingo 2)', fuel: 'Essence', years: range(2007, 2014) },
+          { label: '1.6 16v RS 133ch (Twingo 2)', fuel: 'Essence', years: range(2008, 2013) },
+          { label: '1.5 dCi 65/85ch (Twingo 2)', fuel: 'Diesel', years: range(2007, 2014) },
+          // Twingo 3 (2014-2026)
           { label: '1.0 SCe 65/70ch', fuel: 'Essence', years: range(2014, 2026) },
           { label: '0.9 TCe 90ch', fuel: 'Essence', years: range(2014, 2022) },
           { label: 'Z.E. électrique 82ch', fuel: 'Electrique', years: range(2020, 2026) },
@@ -186,30 +203,81 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'Clio',
         years: range(1990, 2026),
         engines: [
+          // Clio 1 (1990-1998)
+          { label: '1.2 60ch (Clio 1)', fuel: 'Essence', years: range(1990, 1998) },
+          { label: '1.4 75/80ch (Clio 1)', fuel: 'Essence', years: range(1990, 1998) },
+          { label: '1.8 16v 135ch (Clio 1 Williams)', fuel: 'Essence', years: range(1993, 1996) },
+          { label: '1.9 D 64ch (Clio 1)', fuel: 'Diesel', years: range(1991, 1998) },
+          // Clio 2 (1998-2012)
+          { label: '1.2 8v/16v 60/75ch (Clio 2)', fuel: 'Essence', years: range(1998, 2012) },
+          { label: '1.4 16v 98ch (Clio 2)', fuel: 'Essence', years: range(1998, 2008) },
+          { label: '1.6 16v 110ch (Clio 2 RS)', fuel: 'Essence', years: range(1999, 2008) },
+          { label: '2.0 16v 172/182ch (Clio 2 RS)', fuel: 'Essence', years: range(2000, 2006) },
+          { label: '1.5 dCi 65/80/100ch (Clio 2)', fuel: 'Diesel', years: range(2001, 2012) },
+          // Clio 3 (2005-2014)
+          { label: '1.2 16v 75ch (Clio 3)', fuel: 'Essence', years: range(2005, 2014) },
+          { label: '1.2 TCe 100ch (Clio 3)', fuel: 'Essence', years: range(2007, 2014) },
+          { label: '1.6 16v 110ch (Clio 3)', fuel: 'Essence', years: range(2005, 2014) },
+          { label: '2.0 16v 200ch (Clio 3 RS)', fuel: 'Essence', years: range(2006, 2014) },
+          { label: '1.5 dCi 70/85/105ch (Clio 3)', fuel: 'Diesel', years: range(2005, 2014) },
+          // Clio 4 (2012-2019) + Clio 5 (2019-2026)
           { label: '0.9 TCe 90ch', fuel: 'Essence', years: range(2012, 2019) },
           { label: '1.0 TCe 90/100ch', fuel: 'Essence', years: range(2019, 2026) },
-          { label: '1.5 dCi 75/90/110ch', fuel: 'Diesel', years: range(2005, 2020) },
+          { label: '1.5 dCi 75/90/110ch', fuel: 'Diesel', years: range(2012, 2020) },
           { label: 'E-Tech Hybrid 140/145ch', fuel: 'Hybride', years: range(2020, 2026) },
         ],
       },
       {
         name: 'Megane',
-        years: range(1995, 2025),
+        years: range(1995, 2026),
         engines: [
+          // Megane 1 (1995-2002)
+          { label: '1.4 8v 75ch (Megane 1)', fuel: 'Essence', years: range(1995, 2002) },
+          { label: '1.6 16v 110ch (Megane 1)', fuel: 'Essence', years: range(1996, 2002) },
+          { label: '2.0 16v 140ch (Megane 1 Coupé)', fuel: 'Essence', years: range(1996, 2002) },
+          { label: '1.9 D / dTi 65/100ch (Megane 1)', fuel: 'Diesel', years: range(1995, 2002) },
+          // Megane 2 (2002-2009)
+          { label: '1.4 16v 98ch (Megane 2)', fuel: 'Essence', years: range(2002, 2009) },
+          { label: '1.6 16v 113ch (Megane 2)', fuel: 'Essence', years: range(2002, 2009) },
+          { label: '2.0 16v 135/165ch (Megane 2)', fuel: 'Essence', years: range(2002, 2009) },
+          { label: '2.0 16v Turbo 224/230ch (Megane 2 RS)', fuel: 'Essence', years: range(2004, 2009) },
+          { label: '1.5 dCi 80/100/105ch (Megane 2)', fuel: 'Diesel', years: range(2002, 2009) },
+          { label: '1.9 dCi 110/120ch (Megane 2)', fuel: 'Diesel', years: range(2002, 2009) },
+          { label: '2.0 dCi 150ch (Megane 2)', fuel: 'Diesel', years: range(2005, 2009) },
+          // Megane 3 (2008-2016)
+          { label: '1.6 16v 100/110ch (Megane 3)', fuel: 'Essence', years: range(2008, 2016) },
           { label: '1.2 TCe 115/130ch', fuel: 'Essence', years: range(2012, 2018) },
+          { label: '2.0 16v Turbo 250/265ch (Megane 3 RS)', fuel: 'Essence', years: range(2009, 2016) },
+          { label: '1.5 dCi 90/105/110ch (Megane 3)', fuel: 'Diesel', years: range(2008, 2016) },
+          { label: '1.9 / 2.0 dCi 130/160ch (Megane 3)', fuel: 'Diesel', years: range(2008, 2016) },
+          // Megane 4 (2016-2024) + Megane E-Tech (2022+)
           { label: '1.3 TCe 115/140/160ch', fuel: 'Essence', years: range(2018, 2024) },
-          { label: '1.5 dCi / Blue dCi 95/115ch', fuel: 'Diesel', years: range(2012, 2023) },
+          { label: '1.5 dCi / Blue dCi 95/115ch', fuel: 'Diesel', years: range(2016, 2023) },
           { label: 'E-Tech Plug-in 160ch', fuel: 'Hybride', years: range(2020, 2024) },
           { label: 'Megane E-Tech électrique 130/218ch', fuel: 'Electrique', years: range(2022, 2026) },
         ],
       },
       {
         name: 'Scenic',
-        years: range(1996, 2024),
+        years: range(1996, 2026),
         engines: [
+          // Scenic 1 (1996-2003)
+          { label: '1.6 16v 110ch (Scenic 1)', fuel: 'Essence', years: range(1996, 2003) },
+          { label: '2.0 16v 140ch (Scenic 1)', fuel: 'Essence', years: range(1996, 2003) },
+          { label: '1.9 dTi / dCi 100/105ch (Scenic 1)', fuel: 'Diesel', years: range(1999, 2003) },
+          // Scenic 2 (2003-2009)
+          { label: '1.6 16v 115ch (Scenic 2)', fuel: 'Essence', years: range(2003, 2009) },
+          { label: '2.0 16v 135ch (Scenic 2)', fuel: 'Essence', years: range(2003, 2009) },
+          { label: '1.5 dCi 85/100/105ch (Scenic 2)', fuel: 'Diesel', years: range(2003, 2009) },
+          { label: '1.9 / 2.0 dCi 130/150ch (Scenic 2)', fuel: 'Diesel', years: range(2003, 2009) },
+          // Scenic 3 (2009-2016)
+          { label: '1.6 16v 110ch (Scenic 3)', fuel: 'Essence', years: range(2009, 2016) },
           { label: '1.2 TCe 115/130ch', fuel: 'Essence', years: range(2013, 2022) },
+          { label: '1.5 dCi 95/110ch (Scenic 3)', fuel: 'Diesel', years: range(2009, 2016) },
+          { label: '1.9 dCi 130ch (Scenic 3)', fuel: 'Diesel', years: range(2009, 2014) },
+          // Scenic 4 (2016-2022) + Scenic E-Tech (2023+)
           { label: '1.3 TCe 115/140ch', fuel: 'Essence', years: range(2018, 2022) },
-          { label: '1.5 dCi / Blue dCi 110/115ch', fuel: 'Diesel', years: range(2003, 2022) },
+          { label: '1.5 dCi / Blue dCi 110/115ch', fuel: 'Diesel', years: range(2016, 2022) },
           { label: 'E-Tech Hybrid 170ch', fuel: 'Hybride', years: range(2023, 2026) },
         ],
       },
@@ -300,6 +368,18 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'C3',
         years: range(2002, 2026),
         engines: [
+          // C3 I (2002-2009)
+          { label: '1.1 60ch (C3 I)', fuel: 'Essence', years: range(2002, 2009) },
+          { label: '1.4 8v/16v 73/90ch (C3 I)', fuel: 'Essence', years: range(2002, 2009) },
+          { label: '1.6 16v 110ch (C3 I)', fuel: 'Essence', years: range(2002, 2009) },
+          { label: '1.4 HDi 70/90ch (C3 I)', fuel: 'Diesel', years: range(2002, 2009) },
+          { label: '1.6 HDi 90/110ch (C3 I)', fuel: 'Diesel', years: range(2005, 2009) },
+          // C3 II (2009-2016)
+          { label: '1.1 60ch (C3 II)', fuel: 'Essence', years: range(2009, 2013) },
+          { label: '1.4 VTi 95ch (C3 II)', fuel: 'Essence', years: range(2009, 2016) },
+          { label: '1.6 VTi 120ch (C3 II)', fuel: 'Essence', years: range(2009, 2016) },
+          { label: '1.4 / 1.6 HDi 70/90/110ch (C3 II)', fuel: 'Diesel', years: range(2009, 2016) },
+          // C3 III (2016+) + ë-C3
           { label: '1.2 PureTech 82/110ch', fuel: 'Essence', years: range(2013, 2026) },
           { label: '1.5 BlueHDi 100/102ch', fuel: 'Diesel', years: range(2016, 2024) },
           { label: 'ë-C3 électrique 113ch', fuel: 'Electrique', years: range(2024, 2026) },
@@ -315,8 +395,21 @@ export const VEHICLE_CATALOG: BrandOption[] = [
       },
       {
         name: 'C4',
-        years: range(2010, 2026),
+        years: range(2004, 2026),
         engines: [
+          // C4 I (2004-2010)
+          { label: '1.4 16v 90ch (C4 I)', fuel: 'Essence', years: range(2004, 2010) },
+          { label: '1.6 16v 110ch (C4 I)', fuel: 'Essence', years: range(2004, 2010) },
+          { label: '2.0 16v 138ch (C4 I)', fuel: 'Essence', years: range(2004, 2010) },
+          { label: '1.6 HDi 90/110ch (C4 I)', fuel: 'Diesel', years: range(2004, 2010) },
+          { label: '2.0 HDi 138ch (C4 I)', fuel: 'Diesel', years: range(2004, 2010) },
+          // C4 II (2010-2018)
+          { label: '1.4 VTi 95ch (C4 II)', fuel: 'Essence', years: range(2010, 2018) },
+          { label: '1.6 VTi 120ch (C4 II)', fuel: 'Essence', years: range(2010, 2018) },
+          { label: '1.6 THP 150/156ch (C4 II)', fuel: 'Essence', years: range(2010, 2018) },
+          { label: '1.6 HDi 90/110/115ch (C4 II)', fuel: 'Diesel', years: range(2010, 2018) },
+          { label: '2.0 HDi 150/163ch (C4 II)', fuel: 'Diesel', years: range(2010, 2018) },
+          // C4 III (2020+)
           { label: '1.2 PureTech 100/130ch', fuel: 'Essence', years: range(2014, 2026) },
           { label: '1.5 BlueHDi 110/130ch', fuel: 'Diesel', years: range(2016, 2025) },
           { label: 'ë-C4 électrique 136/156ch', fuel: 'Electrique', years: range(2020, 2026) },
@@ -470,22 +563,67 @@ export const VEHICLE_CATALOG: BrandOption[] = [
     models: [
       {
         name: 'Polo',
-        years: range(2001, 2026),
+        years: range(1994, 2026),
         engines: [
+          // Polo III (6N, 1994-2001)
+          { label: '1.0 8v 50ch (Polo III)', fuel: 'Essence', years: range(1994, 2001) },
+          { label: '1.4 8v 60ch (Polo III)', fuel: 'Essence', years: range(1994, 2001) },
+          { label: '1.6 8v 75/100ch (Polo III)', fuel: 'Essence', years: range(1994, 2001) },
+          { label: '1.9 SDi/D 64ch (Polo III)', fuel: 'Diesel', years: range(1994, 2001) },
+          // Polo IV (9N, 2001-2009)
+          { label: '1.2 12v 55/64ch (Polo IV)', fuel: 'Essence', years: range(2001, 2009) },
+          { label: '1.4 16v 75ch (Polo IV)', fuel: 'Essence', years: range(2001, 2009) },
+          { label: '1.6 16v 105ch (Polo IV)', fuel: 'Essence', years: range(2001, 2009) },
+          { label: '1.4 / 1.9 TDI 75/100/130ch (Polo IV)', fuel: 'Diesel', years: range(2001, 2009) },
+          // Polo V (6R/6C, 2009-2017)
+          { label: '1.2 12v 60/70ch (Polo V)', fuel: 'Essence', years: range(2009, 2014) },
+          { label: '1.2 TSI 90/105ch (Polo V)', fuel: 'Essence', years: range(2009, 2014) },
+          { label: '1.4 16v 85ch (Polo V)', fuel: 'Essence', years: range(2009, 2014) },
+          { label: '1.4 TSI 140/180ch (Polo V GTI)', fuel: 'Essence', years: range(2010, 2017) },
+          { label: '1.6 / 1.9 TDI 75/90/105ch (Polo V)', fuel: 'Diesel', years: range(2009, 2017) },
+          // Polo VI (AW, 2017+)
           { label: '1.0 MPI 65/75/80ch', fuel: 'Essence', years: range(2014, 2026) },
           { label: '1.0 TSI 95/110/115ch', fuel: 'Essence', years: range(2014, 2026) },
           { label: '1.4 / 1.6 TDI 80/95ch', fuel: 'Diesel', years: range(2009, 2021) },
+          { label: '2.0 TSI GTI 200/207ch (Polo VI GTI)', fuel: 'Essence', years: range(2017, 2026) },
         ],
       },
       {
         name: 'Golf',
-        years: range(1998, 2026),
+        years: range(1991, 2026),
         engines: [
+          // Golf 3 (1991-1997)
+          { label: '1.4 8v 60ch (Golf 3)', fuel: 'Essence', years: range(1991, 1997) },
+          { label: '1.6 8v 75ch (Golf 3)', fuel: 'Essence', years: range(1991, 1997) },
+          { label: '1.8 8v 90ch (Golf 3)', fuel: 'Essence', years: range(1991, 1997) },
+          { label: '2.0 GTI 16v 150ch (Golf 3)', fuel: 'Essence', years: range(1992, 1997) },
+          { label: '1.9 D / TDI 64/90ch (Golf 3)', fuel: 'Diesel', years: range(1991, 1997) },
+          // Golf 4 (1997-2004)
+          { label: '1.4 16v 75ch (Golf 4)', fuel: 'Essence', years: range(1997, 2004) },
+          { label: '1.6 16v 100/105ch (Golf 4)', fuel: 'Essence', years: range(1997, 2004) },
+          { label: '1.8 T 150/180ch (Golf 4 GTI)', fuel: 'Essence', years: range(1997, 2004) },
+          { label: '1.9 SDI 68ch (Golf 4)', fuel: 'Diesel', years: range(1997, 2004) },
+          { label: '1.9 TDI 90/100/115/130ch (Golf 4)', fuel: 'Diesel', years: range(1997, 2004) },
+          // Golf 5 (2003-2009)
+          { label: '1.4 16v / FSI 75/90ch (Golf 5)', fuel: 'Essence', years: range(2003, 2009) },
+          { label: '1.4 TSI 122/170ch (Golf 5)', fuel: 'Essence', years: range(2007, 2009) },
+          { label: '1.6 FSI / MPI 102/115ch (Golf 5)', fuel: 'Essence', years: range(2003, 2009) },
+          { label: '2.0 TSI GTI 200/230ch (Golf 5)', fuel: 'Essence', years: range(2004, 2009) },
+          { label: '1.9 TDI 90/105ch (Golf 5)', fuel: 'Diesel', years: range(2003, 2009) },
+          { label: '2.0 TDI 140/170ch (Golf 5)', fuel: 'Diesel', years: range(2003, 2009) },
+          // Golf 6 (2008-2012)
+          { label: '1.2 TSI 85/105ch (Golf 6)', fuel: 'Essence', years: range(2008, 2012) },
+          { label: '1.4 TSI 122/160ch (Golf 6)', fuel: 'Essence', years: range(2008, 2012) },
+          { label: '2.0 TSI GTI 210ch (Golf 6 GTI)', fuel: 'Essence', years: range(2008, 2012) },
+          { label: '1.6 TDI 90/105ch (Golf 6)', fuel: 'Diesel', years: range(2008, 2012) },
+          { label: '2.0 TDI 140/170ch (Golf 6)', fuel: 'Diesel', years: range(2008, 2012) },
+          // Golf 7 (2012-2020)
           { label: '1.0 TSI 110ch', fuel: 'Essence', years: range(2016, 2026) },
           { label: '1.4 TSI / eTSI 125/150ch', fuel: 'Essence', years: range(2012, 2026) },
           { label: '1.5 TSI / eTSI 130/150ch', fuel: 'Essence', years: range(2017, 2026) },
           { label: '1.6 TDI 90/105/115ch', fuel: 'Diesel', years: range(2009, 2020) },
           { label: '2.0 TDI 115/150ch', fuel: 'Diesel', years: range(2012, 2026) },
+          // Golf 8 + variantes électrifiées
           { label: 'GTE Plug-in Hybrid 245ch', fuel: 'Hybride', years: range(2014, 2026) },
           { label: 'e-Golf électrique', fuel: 'Electrique', years: range(2014, 2020) },
         ],
@@ -736,11 +874,23 @@ export const VEHICLE_CATALOG: BrandOption[] = [
       },
       {
         name: 'A3',
-        years: range(2003, 2026),
+        years: range(1996, 2026),
         engines: [
+          // A3 8L (1996-2003)
+          { label: '1.6 8v 101ch (A3 8L)', fuel: 'Essence', years: range(1996, 2003) },
+          { label: '1.8 / 1.8T 125/150/180ch (A3 8L)', fuel: 'Essence', years: range(1996, 2003) },
+          { label: '1.9 TDI 90/110/130ch (A3 8L)', fuel: 'Diesel', years: range(1996, 2003) },
+          // A3 8P (2003-2013)
+          { label: '1.4 TFSI 125ch (A3 8P)', fuel: 'Essence', years: range(2007, 2013) },
+          { label: '1.6 FSI / MPI 102/115ch (A3 8P)', fuel: 'Essence', years: range(2003, 2013) },
+          { label: '1.8 / 2.0 TFSI 160/200/265ch (A3 8P)', fuel: 'Essence', years: range(2003, 2013) },
+          { label: '1.6 TDI 90/105ch (A3 8P)', fuel: 'Diesel', years: range(2009, 2013) },
+          { label: '1.9 / 2.0 TDI 105/140/170ch (A3 8P)', fuel: 'Diesel', years: range(2003, 2013) },
+          // A3 8V (2012-2020) + A3 8Y (2020+)
           { label: '1.0 / 1.4 / 1.5 TFSI 116/150ch', fuel: 'Essence', years: range(2012, 2026) },
           { label: '2.0 TFSI 190/230ch', fuel: 'Essence', years: range(2012, 2026) },
           { label: '1.6 / 2.0 TDI 90/116/150ch', fuel: 'Diesel', years: range(2012, 2025) },
+          { label: 'S3 2.0 TFSI 300/310ch', fuel: 'Essence', years: range(2013, 2026) },
           { label: '40 TFSI e Plug-in Hybrid', fuel: 'Hybride', years: range(2019, 2026) },
           { label: 'e-tron électrique', fuel: 'Electrique', years: range(2021, 2026) },
         ],
