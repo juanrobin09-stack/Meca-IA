@@ -1070,20 +1070,54 @@ export const VEHICLE_CATALOG: BrandOption[] = [
       },
       {
         name: 'Serie 3',
-        years: range(1998, 2026),
+        years: range(1990, 2026),
         engines: [
-          { label: '318i / 320i 136/184ch', fuel: 'Essence', years: range(2005, 2026) },
-          { label: '330i 258ch', fuel: 'Essence', years: range(2015, 2026) },
-          { label: '318d / 320d 150/190ch', fuel: 'Diesel', years: range(2005, 2025) },
+          // E36 (1990-2000)
+          { label: '316i / 318i / 320i (E36)', fuel: 'Essence', years: range(1990, 2000) },
+          { label: '325i / 328i / M3 (E36)', fuel: 'Essence', years: range(1990, 2000) },
+          { label: '318tds / 325td / 325tds (E36)', fuel: 'Diesel', years: range(1991, 2000) },
+          // E46 (1998-2007)
+          { label: '316i / 318i / 320i (E46)', fuel: 'Essence', years: range(1998, 2007) },
+          { label: '323i / 325i / 328i / 330i (E46)', fuel: 'Essence', years: range(1998, 2007) },
+          { label: 'M3 3.2 343ch (E46)', fuel: 'Essence', years: range(2000, 2007) },
+          { label: '318d / 320d / 330d (E46)', fuel: 'Diesel', years: range(1998, 2007) },
+          // E90/E91/E92/E93 (2005-2013)
+          { label: '316i / 318i / 320i (E90)', fuel: 'Essence', years: range(2005, 2013) },
+          { label: '325i / 328i / 330i / 335i (E90)', fuel: 'Essence', years: range(2005, 2013) },
+          { label: 'M3 4.0 V8 420ch (E90/92)', fuel: 'Essence', years: range(2007, 2013) },
+          { label: '316d / 318d / 320d / 325d / 330d (E90)', fuel: 'Diesel', years: range(2005, 2013) },
+          // F30/F31/F34 (2012-2019)
+          { label: '316i / 318i / 320i / 328i / 330i (F30)', fuel: 'Essence', years: range(2012, 2019) },
+          { label: 'M3 3.0 BiTurbo 431ch (F80)', fuel: 'Essence', years: range(2014, 2018) },
+          { label: '316d / 318d / 320d / 330d (F30)', fuel: 'Diesel', years: range(2012, 2019) },
+          // G20 (2019+) — engines déjà en place
+          { label: '318i / 320i 136/184ch', fuel: 'Essence', years: range(2019, 2026) },
+          { label: '330i 258ch', fuel: 'Essence', years: range(2019, 2026) },
+          { label: 'M3 3.0 BiTurbo 480/510ch (G80)', fuel: 'Essence', years: range(2020, 2026) },
+          { label: '318d / 320d / 330d 150/190/286ch', fuel: 'Diesel', years: range(2019, 2025) },
           { label: '330e Plug-in Hybrid', fuel: 'Hybride', years: range(2016, 2026) },
         ],
       },
       {
         name: 'Serie 5',
-        years: range(2003, 2026),
+        years: range(1995, 2026),
         engines: [
-          { label: '520i / 523i / 530i', fuel: 'Essence', years: range(2003, 2026) },
-          { label: '520d / 525d / 530d', fuel: 'Diesel', years: range(2003, 2025) },
+          // E39 (1995-2003)
+          { label: '520i / 523i / 528i / 530i / 540i (E39)', fuel: 'Essence', years: range(1995, 2003) },
+          { label: 'M5 4.9 V8 400ch (E39)', fuel: 'Essence', years: range(1998, 2003) },
+          { label: '520d / 525d / 530d (E39)', fuel: 'Diesel', years: range(1995, 2003) },
+          // E60/E61 (2003-2010)
+          { label: '520i / 523i / 525i / 530i / 540i / 550i (E60)', fuel: 'Essence', years: range(2003, 2010) },
+          { label: 'M5 5.0 V10 507ch (E60)', fuel: 'Essence', years: range(2005, 2010) },
+          { label: '520d / 525d / 530d / 535d (E60)', fuel: 'Diesel', years: range(2003, 2010) },
+          // F10/F11 (2010-2017)
+          { label: '520i / 528i / 535i (F10)', fuel: 'Essence', years: range(2010, 2017) },
+          { label: 'M5 4.4 V8 560ch (F10)', fuel: 'Essence', years: range(2011, 2017) },
+          { label: '518d / 520d / 525d / 530d / 535d (F10)', fuel: 'Diesel', years: range(2010, 2017) },
+          // G30/G31 (2017+)
+          { label: '520i / 523i / 530i', fuel: 'Essence', years: range(2017, 2026) },
+          { label: 'M5 4.4 V8 600/625ch (F90)', fuel: 'Essence', years: range(2017, 2025) },
+          { label: '520d / 525d / 530d', fuel: 'Diesel', years: range(2017, 2025) },
           { label: '530e / 545e Plug-in Hybrid', fuel: 'Hybride', years: range(2017, 2026) },
           { label: 'i5 électrique 250/340ch', fuel: 'Electrique', years: range(2023, 2026) },
         ],
@@ -1124,6 +1158,115 @@ export const VEHICLE_CATALOG: BrandOption[] = [
           { label: 'Électrique 60/94Ah 170/184ch', fuel: 'Electrique', years: range(2013, 2022) },
         ],
       },
+      {
+        name: 'Serie 4',
+        years: range(2013, 2026),
+        engines: [
+          { label: '420i / 430i 184/258ch', fuel: 'Essence', years: range(2013, 2026) },
+          { label: '440i / M4 3.0 BiTurbo 326/431/510ch', fuel: 'Essence', years: range(2014, 2026) },
+          { label: '418d / 420d / 430d / 435d', fuel: 'Diesel', years: range(2013, 2025) },
+        ],
+      },
+      {
+        name: 'Serie 6',
+        years: range(2003, 2019),
+        engines: [
+          { label: '630i / 645i / 650i (E63/F12)', fuel: 'Essence', years: range(2003, 2019) },
+          { label: 'M6 5.0 V10 / 4.4 V8 507/560ch', fuel: 'Essence', years: range(2005, 2018) },
+          { label: '635d / 640d 3.0 TwinTurbo', fuel: 'Diesel', years: range(2007, 2018) },
+        ],
+      },
+      {
+        name: 'Serie 7',
+        years: range(2001, 2026),
+        engines: [
+          { label: '730i / 740i / 750i / 760i (E65/F01/G11)', fuel: 'Essence', years: range(2001, 2026) },
+          { label: 'M760Li 6.6 V12 610ch (G11)', fuel: 'Essence', years: range(2016, 2022) },
+          { label: '730d / 740d / 750d / M50d 3.0 TriTurbo', fuel: 'Diesel', years: range(2002, 2025) },
+          { label: '745e / 750e Plug-in Hybrid', fuel: 'Hybride', years: range(2019, 2026) },
+          { label: 'i7 électrique 544ch', fuel: 'Electrique', years: range(2022, 2026) },
+        ],
+      },
+      {
+        name: 'Serie 8',
+        years: range(1990, 2026),
+        engines: [
+          { label: '840i / 850i / 850CSi (E31)', fuel: 'Essence', years: range(1990, 1999) },
+          { label: '840i / M850i 4.4 V8 530ch (G14/G15)', fuel: 'Essence', years: range(2018, 2026) },
+          { label: 'M8 4.4 V8 BiTurbo 625ch (G15)', fuel: 'Essence', years: range(2019, 2026) },
+          { label: '840d 3.0 TwinTurbo 320ch (G14)', fuel: 'Diesel', years: range(2018, 2025) },
+        ],
+      },
+      {
+        name: 'X2',
+        years: range(2018, 2026),
+        engines: [
+          { label: 'sDrive18i / xDrive20i 140/192ch', fuel: 'Essence', years: range(2018, 2026) },
+          { label: 'M35i 2.0 BiTurbo 306ch', fuel: 'Essence', years: range(2019, 2026) },
+          { label: 'sDrive18d / xDrive20d / 25d 150/190/231ch', fuel: 'Diesel', years: range(2018, 2025) },
+          { label: 'iX2 électrique 313ch', fuel: 'Electrique', years: range(2023, 2026) },
+        ],
+      },
+      {
+        name: 'X4',
+        years: range(2014, 2026),
+        engines: [
+          { label: 'xDrive20i / 30i / M40i 184/252/360ch', fuel: 'Essence', years: range(2014, 2026) },
+          { label: 'M / M Competition 3.0 BiTurbo 480/510ch', fuel: 'Essence', years: range(2019, 2026) },
+          { label: 'xDrive20d / 30d / M40d 190/265/326ch', fuel: 'Diesel', years: range(2014, 2025) },
+        ],
+      },
+      {
+        name: 'X6',
+        years: range(2007, 2026),
+        engines: [
+          { label: 'xDrive35i / 50i (E71/F16/G06)', fuel: 'Essence', years: range(2007, 2026) },
+          { label: 'X6 M 4.4 V8 BiTurbo 575/625ch', fuel: 'Essence', years: range(2009, 2026) },
+          { label: 'xDrive30d / 40d / 50d 3.0 TriTurbo', fuel: 'Diesel', years: range(2008, 2025) },
+        ],
+      },
+      {
+        name: 'X7',
+        years: range(2019, 2026),
+        engines: [
+          { label: 'xDrive40i / 50i / M50i 333/523ch', fuel: 'Essence', years: range(2019, 2026) },
+          { label: 'xDrive40d / M50d 3.0 TriTurbo 340/400ch', fuel: 'Diesel', years: range(2019, 2025) },
+        ],
+      },
+      {
+        name: 'Z3',
+        years: range(1995, 2002),
+        engines: [
+          { label: '1.8i / 1.9i / 2.0i / 2.2i / 2.8i / 3.0i', fuel: 'Essence', years: range(1995, 2002) },
+          { label: 'M Coupe / Roadster 3.2 S54 325ch', fuel: 'Essence', years: range(1998, 2002) },
+        ],
+      },
+      {
+        name: 'Z4',
+        years: range(2002, 2026),
+        engines: [
+          { label: '2.0i / 2.5i / 3.0i (E85/E89)', fuel: 'Essence', years: range(2002, 2016) },
+          { label: 'M Roadster / Coupe 3.2 S54 343ch (E86)', fuel: 'Essence', years: range(2006, 2009) },
+          { label: 'sDrive20i / 30i / M40i 197/258/340ch (G29)', fuel: 'Essence', years: range(2019, 2026) },
+        ],
+      },
+      {
+        name: 'i4',
+        years: range(2022, 2026),
+        engines: [
+          { label: 'eDrive35 / 40 électrique 286/340ch', fuel: 'Electrique', years: range(2022, 2026) },
+          { label: 'M50 quadri-moteur 544ch', fuel: 'Electrique', years: range(2022, 2026) },
+        ],
+      },
+      {
+        name: 'iX',
+        years: range(2021, 2026),
+        engines: [
+          { label: 'iX xDrive40 326ch', fuel: 'Electrique', years: range(2021, 2026) },
+          { label: 'iX xDrive50 523ch', fuel: 'Electrique', years: range(2021, 2026) },
+          { label: 'iX M60 619ch', fuel: 'Electrique', years: range(2022, 2026) },
+        ],
+      },
     ],
   },
 
@@ -1151,19 +1294,44 @@ export const VEHICLE_CATALOG: BrandOption[] = [
       },
       {
         name: 'Classe C',
-        years: range(2000, 2026),
+        years: range(1993, 2026),
         engines: [
-          { label: 'C180 / C200 / C300 essence', fuel: 'Essence', years: range(2007, 2026) },
-          { label: 'C200d / C220d diesel', fuel: 'Diesel', years: range(2007, 2025) },
+          // W202 (1993-2000)
+          { label: 'C180 / C200 / C220 / C230 (W202)', fuel: 'Essence', years: range(1993, 2000) },
+          { label: 'C200 CDI / C220 CDI (W202)', fuel: 'Diesel', years: range(1996, 2000) },
+          // W203 (2000-2007)
+          { label: 'C180 / C200K / C230 / C240 / C320 (W203)', fuel: 'Essence', years: range(2000, 2007) },
+          { label: 'C200 CDI / C220 CDI / C270 CDI / C30 AMG (W203)', fuel: 'Diesel', years: range(2000, 2007) },
+          // W204 (2007-2014)
+          { label: 'C180 / C200 / C250 / C300 / C350 (W204)', fuel: 'Essence', years: range(2007, 2014) },
+          { label: 'C63 AMG 6.3 V8 457ch (W204)', fuel: 'Essence', years: range(2008, 2014) },
+          { label: 'C200 CDI / C220 CDI / C250 CDI (W204)', fuel: 'Diesel', years: range(2007, 2014) },
+          // W205 (2014-2021)
+          { label: 'C180 / C200 / C300 essence', fuel: 'Essence', years: range(2014, 2026) },
+          { label: 'C63 AMG 4.0 V8 476ch (W205)', fuel: 'Essence', years: range(2015, 2021) },
+          { label: 'C200d / C220d diesel', fuel: 'Diesel', years: range(2014, 2025) },
           { label: 'C300e / C300de Hybrid', fuel: 'Hybride', years: range(2019, 2026) },
         ],
       },
       {
         name: 'Classe E',
-        years: range(2002, 2026),
+        years: range(1995, 2026),
         engines: [
-          { label: 'E200 / E220 / E300 essence', fuel: 'Essence', years: range(2009, 2026) },
-          { label: 'E200d / E220d / E300d diesel', fuel: 'Diesel', years: range(2009, 2025) },
+          // W210 (1995-2002)
+          { label: 'E200 / E230 / E240 / E280 / E320 (W210)', fuel: 'Essence', years: range(1995, 2002) },
+          { label: 'E200 CDI / E220 CDI / E270 CDI / E320 CDI (W210)', fuel: 'Diesel', years: range(1998, 2002) },
+          // W211 (2002-2009)
+          { label: 'E200K / E280 / E320 / E500 / E55 AMG (W211)', fuel: 'Essence', years: range(2002, 2009) },
+          { label: 'E63 AMG 6.3 V8 514ch (W211)', fuel: 'Essence', years: range(2006, 2009) },
+          { label: 'E200 CDI / E220 CDI / E280 CDI / E320 CDI (W211)', fuel: 'Diesel', years: range(2002, 2009) },
+          // W212 (2009-2016)
+          { label: 'E200 / E250 / E300 / E350 (W212)', fuel: 'Essence', years: range(2009, 2016) },
+          { label: 'E63 AMG (W212)', fuel: 'Essence', years: range(2009, 2016) },
+          { label: 'E200 CDI / E220 CDI / E250 CDI / E350 CDI (W212)', fuel: 'Diesel', years: range(2009, 2016) },
+          // W213 (2016+)
+          { label: 'E200 / E220 / E300 essence', fuel: 'Essence', years: range(2016, 2026) },
+          { label: 'E63 AMG 4.0 V8 612ch (W213)', fuel: 'Essence', years: range(2017, 2026) },
+          { label: 'E200d / E220d / E300d diesel', fuel: 'Diesel', years: range(2016, 2025) },
           { label: 'E300e / E300de Hybrid', fuel: 'Hybride', years: range(2019, 2026) },
         ],
       },
@@ -1191,8 +1359,134 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'Vito',
         years: range(2003, 2026),
         engines: [
-          { label: '119 CDI / 116 CDI diesel', fuel: 'Diesel', years: range(2003, 2026) },
+          { label: '111 / 113 / 115 / 119 CDI (Vito W639)', fuel: 'Diesel', years: range(2003, 2014) },
+          { label: '109 / 110 / 111 / 114 / 116 / 119 CDI (W447)', fuel: 'Diesel', years: range(2014, 2026) },
           { label: 'eVito électrique', fuel: 'Electrique', years: range(2019, 2026) },
+        ],
+      },
+      {
+        name: 'CLA',
+        years: range(2013, 2026),
+        engines: [
+          { label: 'CLA180 / CLA200 / CLA250 essence', fuel: 'Essence', years: range(2013, 2026) },
+          { label: 'CLA35 / CLA45 AMG 306/421ch', fuel: 'Essence', years: range(2014, 2026) },
+          { label: 'CLA180d / CLA200d / CLA220d diesel', fuel: 'Diesel', years: range(2013, 2025) },
+          { label: 'CLA250e Plug-in Hybrid', fuel: 'Hybride', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'CLS',
+        years: range(2004, 2024),
+        engines: [
+          { label: 'CLS350 / CLS500 / CLS550 (C219/C218)', fuel: 'Essence', years: range(2004, 2018) },
+          { label: 'CLS400 / CLS450 / CLS53 AMG (C257)', fuel: 'Essence', years: range(2018, 2024) },
+          { label: 'CLS63 AMG 5.5 V8 / 4.0 V8 BiTurbo', fuel: 'Essence', years: range(2007, 2018) },
+          { label: 'CLS320 CDI / CLS350 CDI / CLS400d', fuel: 'Diesel', years: range(2005, 2024) },
+        ],
+      },
+      {
+        name: 'GLB',
+        years: range(2019, 2026),
+        engines: [
+          { label: 'GLB180 / GLB200 / GLB250 essence', fuel: 'Essence', years: range(2019, 2026) },
+          { label: 'GLB35 AMG 306ch', fuel: 'Essence', years: range(2020, 2026) },
+          { label: 'GLB180d / GLB200d / GLB220d diesel', fuel: 'Diesel', years: range(2019, 2025) },
+          { label: 'EQB 250/300/350 électrique', fuel: 'Electrique', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: 'GLE',
+        years: range(2015, 2026),
+        engines: [
+          { label: 'GLE350 / GLE400 / GLE450 essence', fuel: 'Essence', years: range(2015, 2026) },
+          { label: 'GLE53 / GLE63 AMG V8', fuel: 'Essence', years: range(2015, 2026) },
+          { label: 'GLE250d / GLE300d / GLE350d / GLE400d diesel', fuel: 'Diesel', years: range(2015, 2025) },
+          { label: 'GLE350de / GLE450e Plug-in Hybrid', fuel: 'Hybride', years: range(2019, 2026) },
+        ],
+      },
+      {
+        name: 'GLS',
+        years: range(2006, 2026),
+        engines: [
+          { label: 'GLS400 / GLS450 / GLS500 / GLS580 essence', fuel: 'Essence', years: range(2015, 2026) },
+          { label: 'ML350 / ML500 (ML W164/W166)', fuel: 'Essence', years: range(2006, 2015) },
+          { label: 'GLS63 AMG / ML63 AMG V8 BiTurbo', fuel: 'Essence', years: range(2007, 2026) },
+          { label: 'GLS350d / GLS400d / ML280-350 CDI', fuel: 'Diesel', years: range(2006, 2025) },
+        ],
+      },
+      {
+        name: 'Classe S',
+        years: range(1998, 2026),
+        engines: [
+          { label: 'S320 / S350 / S400 / S500 / S600 (W220)', fuel: 'Essence', years: range(1998, 2005) },
+          { label: 'S320 / S350 / S450 / S500 / S600 (W221)', fuel: 'Essence', years: range(2005, 2013) },
+          { label: 'S350 / S400 / S500 / S550 / S560 / S680 (W222/W223)', fuel: 'Essence', years: range(2013, 2026) },
+          { label: 'S63 AMG / S65 AMG V12 / Maybach S680', fuel: 'Essence', years: range(2005, 2026) },
+          { label: 'S320 CDI / S350 BlueTEC / S400d / S350d', fuel: 'Diesel', years: range(2000, 2025) },
+          { label: 'S400h / S500e / S560e / S580e Plug-in Hybrid', fuel: 'Hybride', years: range(2014, 2026) },
+        ],
+      },
+      {
+        name: 'Classe G',
+        years: range(1990, 2026),
+        engines: [
+          { label: 'G500 / G550 / G55 AMG (W463)', fuel: 'Essence', years: range(1998, 2018) },
+          { label: 'G500 / G550 / G63 AMG (W463 2018+)', fuel: 'Essence', years: range(2018, 2026) },
+          { label: 'G300 CDI / G320 CDI / G350 CDI / G350d', fuel: 'Diesel', years: range(1998, 2026) },
+          { label: 'EQG électrique', fuel: 'Electrique', years: range(2024, 2026) },
+        ],
+      },
+      {
+        name: 'Sprinter',
+        years: range(1995, 2026),
+        engines: [
+          { label: '208/210/213/216/308/310/313/316 CDI', fuel: 'Diesel', years: range(2000, 2026) },
+          { label: '519 CDI 190ch 3.0 V6', fuel: 'Diesel', years: range(2006, 2018) },
+          { label: 'eSprinter électrique', fuel: 'Electrique', years: range(2019, 2026) },
+        ],
+      },
+      {
+        name: 'Citan',
+        years: range(2012, 2026),
+        engines: [
+          { label: '109 / 111 CDI 90/110ch', fuel: 'Diesel', years: range(2012, 2026) },
+          { label: 'eCitan électrique', fuel: 'Electrique', years: range(2022, 2026) },
+        ],
+      },
+      {
+        name: 'Classe V',
+        years: range(2014, 2026),
+        engines: [
+          { label: 'V200d / V220d / V250d / V300d', fuel: 'Diesel', years: range(2014, 2026) },
+          { label: 'EQV électrique', fuel: 'Electrique', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'SLK / SLC',
+        years: range(1996, 2020),
+        engines: [
+          { label: 'SLK 200 / 230 / 320 / 32 AMG (R170)', fuel: 'Essence', years: range(1996, 2004) },
+          { label: 'SLK 200 / 280 / 350 / 55 AMG (R171)', fuel: 'Essence', years: range(2004, 2011) },
+          { label: 'SLK 200 / 250 / 350 / 55 AMG (R172)', fuel: 'Essence', years: range(2011, 2016) },
+          { label: 'SLC 200 / 300 / 43 AMG (R172 facelift)', fuel: 'Essence', years: range(2016, 2020) },
+          { label: 'SLK 250 CDI / SLC 250d', fuel: 'Diesel', years: range(2011, 2020) },
+        ],
+      },
+      {
+        name: 'SL',
+        years: range(2001, 2026),
+        engines: [
+          { label: 'SL 350 / 500 / 600 / 55 AMG / 63 AMG / 65 AMG (R230/R231)', fuel: 'Essence', years: range(2001, 2020) },
+          { label: 'SL 43 / 55 / 63 AMG (R232)', fuel: 'Essence', years: range(2022, 2026) },
+        ],
+      },
+      {
+        name: 'AMG GT',
+        years: range(2014, 2026),
+        engines: [
+          { label: 'AMG GT / GT S / GT C / GT R 4.0 V8 BiTurbo (C190)', fuel: 'Essence', years: range(2014, 2022) },
+          { label: 'AMG GT 43 / 53 / 63 4-door (X290)', fuel: 'Essence', years: range(2018, 2026) },
+          { label: 'AMG GT 63 SE Plug-in Hybrid', fuel: 'Hybride', years: range(2021, 2026) },
         ],
       },
     ],
@@ -1235,10 +1529,29 @@ export const VEHICLE_CATALOG: BrandOption[] = [
       },
       {
         name: 'A4',
-        years: range(2000, 2026),
+        years: range(1994, 2026),
         engines: [
-          { label: '1.4 / 1.8 / 2.0 TFSI 150/190ch', fuel: 'Essence', years: range(2012, 2026) },
-          { label: '2.0 TDI 136/150/190ch', fuel: 'Diesel', years: range(2012, 2025) },
+          // B5 (1994-2001)
+          { label: '1.6 / 1.8 / 1.8T / 2.4 / 2.8 V6 (A4 B5)', fuel: 'Essence', years: range(1994, 2001) },
+          { label: 'S4 2.7 V6 BiTurbo 265ch (B5)', fuel: 'Essence', years: range(1997, 2001) },
+          { label: '1.9 TDI 90/110ch (A4 B5)', fuel: 'Diesel', years: range(1995, 2001) },
+          // B6 (2001-2005)
+          { label: '1.6 / 1.8T / 2.0 / 2.4 / 3.0 V6 (A4 B6)', fuel: 'Essence', years: range(2001, 2005) },
+          { label: 'S4 4.2 V8 344ch (B6)', fuel: 'Essence', years: range(2003, 2005) },
+          { label: '1.9 / 2.5 TDI V6 (A4 B6)', fuel: 'Diesel', years: range(2001, 2005) },
+          // B7 (2005-2008)
+          { label: '1.6 / 1.8T / 2.0 TFSI / 2.0 / 3.2 FSI (A4 B7)', fuel: 'Essence', years: range(2005, 2008) },
+          { label: 'RS4 4.2 V8 420ch (B7)', fuel: 'Essence', years: range(2006, 2008) },
+          { label: '1.9 / 2.0 / 2.7 / 3.0 TDI (A4 B7)', fuel: 'Diesel', years: range(2005, 2008) },
+          // B8 (2008-2015)
+          { label: '1.8 / 2.0 TFSI 120/170/211/220ch (A4 B8)', fuel: 'Essence', years: range(2008, 2015) },
+          { label: '3.0 TFSI / 3.2 FSI / RS4 4.2 V8 (A4 B8)', fuel: 'Essence', years: range(2008, 2015) },
+          { label: '2.0 / 2.7 / 3.0 TDI 120/143/170/190/204ch (A4 B8)', fuel: 'Diesel', years: range(2008, 2015) },
+          // B9 (2015+)
+          { label: '1.4 / 1.8 / 2.0 TFSI 150/190ch', fuel: 'Essence', years: range(2015, 2026) },
+          { label: '2.0 / 3.0 TFSI / RS4 2.9 V6 450ch (A4 B9)', fuel: 'Essence', years: range(2015, 2026) },
+          { label: '2.0 TDI 136/150/190ch', fuel: 'Diesel', years: range(2015, 2025) },
+          { label: '3.0 V6 TDI 218/272/286ch (A4 B9)', fuel: 'Diesel', years: range(2015, 2025) },
           { label: '55 TFSI e Plug-in Hybrid', fuel: 'Hybride', years: range(2020, 2026) },
         ],
       },
@@ -1246,9 +1559,24 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'A6',
         years: range(1994, 2026),
         engines: [
-          { label: '2.0 TFSI 190/252ch', fuel: 'Essence', years: range(2011, 2026) },
-          { label: '2.0 / 3.0 TDI 150/204/286ch', fuel: 'Diesel', years: range(2011, 2025) },
+          // C4/C5 (1994-2004)
+          { label: '1.8 / 2.4 / 2.8 V6 / 4.2 V8 (A6 C4/C5)', fuel: 'Essence', years: range(1994, 2004) },
+          { label: 'S6 4.2 V8 340ch (C5)', fuel: 'Essence', years: range(1999, 2004) },
+          { label: '1.9 / 2.5 TDI V6 (A6 C4/C5)', fuel: 'Diesel', years: range(1995, 2004) },
+          // C6 (2004-2011)
+          { label: '2.0 TFSI / 2.4 / 2.8 / 3.2 FSI / 4.2 V8 (A6 C6)', fuel: 'Essence', years: range(2004, 2011) },
+          { label: 'S6 5.2 V10 435ch / RS6 5.0 V10 580ch (C6)', fuel: 'Essence', years: range(2006, 2011) },
+          { label: '2.0 / 2.7 / 3.0 TDI V6 (A6 C6)', fuel: 'Diesel', years: range(2004, 2011) },
+          // C7 (2011-2018)
+          { label: '2.0 TFSI 190/252ch', fuel: 'Essence', years: range(2011, 2018) },
+          { label: '3.0 TFSI V6 / S6 4.0 V8 / RS6 4.0 V8 (C7)', fuel: 'Essence', years: range(2011, 2018) },
+          { label: '2.0 / 3.0 TDI 150/204/272ch (C7)', fuel: 'Diesel', years: range(2011, 2018) },
+          // C8 (2018+)
+          { label: '2.0 / 3.0 TFSI V6 (A6 C8)', fuel: 'Essence', years: range(2018, 2026) },
+          { label: 'S6 / RS6 4.0 V8 600ch (C8)', fuel: 'Essence', years: range(2019, 2026) },
+          { label: '2.0 / 3.0 TDI 204/286ch (A6 C8)', fuel: 'Diesel', years: range(2018, 2025) },
           { label: '55 TFSI e / 50 TFSIe Hybrid', fuel: 'Hybride', years: range(2019, 2026) },
+          { label: 'A6 e-tron électrique', fuel: 'Electrique', years: range(2024, 2026) },
         ],
       },
       {
