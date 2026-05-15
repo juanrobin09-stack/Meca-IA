@@ -167,11 +167,118 @@ export const VEHICLE_CATALOG: BrandOption[] = [
       },
       {
         name: 'Partner',
-        years: range(2008, 2026),
+        years: range(1996, 2026),
         engines: [
+          { label: '1.4 75ch (Partner I)', fuel: 'Essence', years: range(1996, 2008) },
+          { label: '1.6 16v 110ch (Partner I)', fuel: 'Essence', years: range(2002, 2008) },
+          { label: '1.9 D 70ch (Partner I)', fuel: 'Diesel', years: range(1996, 2008) },
+          { label: '1.6 HDi 75/90ch (Partner II)', fuel: 'Diesel', years: range(2008, 2018) },
           { label: '1.2 PureTech 110ch', fuel: 'Essence', years: range(2018, 2026) },
           { label: '1.5 BlueHDi 100/130ch', fuel: 'Diesel', years: range(2018, 2026) },
           { label: 'e-Partner électrique', fuel: 'Electrique', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: '1007',
+        years: range(2005, 2009),
+        engines: [
+          { label: '1.4 75ch', fuel: 'Essence', years: range(2005, 2009) },
+          { label: '1.6 16v 110ch', fuel: 'Essence', years: range(2005, 2009) },
+          { label: '1.4 HDi 70ch', fuel: 'Diesel', years: range(2005, 2009) },
+        ],
+      },
+      {
+        name: '4007',
+        years: range(2007, 2012),
+        engines: [
+          { label: '2.2 HDi 156ch', fuel: 'Diesel', years: range(2007, 2012) },
+          { label: '2.4 MIVEC 170ch', fuel: 'Essence', years: range(2007, 2012) },
+        ],
+      },
+      {
+        name: '4008',
+        years: range(2012, 2017),
+        engines: [
+          { label: '1.6 VTi 115ch', fuel: 'Essence', years: range(2012, 2017) },
+          { label: '1.6 / 1.8 HDi 115/150ch', fuel: 'Diesel', years: range(2012, 2017) },
+        ],
+      },
+      {
+        name: 'RCZ',
+        years: range(2010, 2015),
+        engines: [
+          { label: '1.6 THP 156/200/270ch', fuel: 'Essence', years: range(2010, 2015) },
+          { label: '2.0 HDi 163ch', fuel: 'Diesel', years: range(2010, 2015) },
+        ],
+      },
+      {
+        name: 'Bipper',
+        years: range(2008, 2018),
+        engines: [
+          { label: '1.4 75ch', fuel: 'Essence', years: range(2008, 2014) },
+          { label: '1.3 HDi 75ch', fuel: 'Diesel', years: range(2008, 2018) },
+          { label: '1.4 HDi 70ch', fuel: 'Diesel', years: range(2008, 2014) },
+        ],
+      },
+      {
+        name: 'Expert',
+        years: range(1996, 2026),
+        engines: [
+          { label: '2.0 HDi 95/110/120/138ch (Expert II)', fuel: 'Diesel', years: range(2007, 2016) },
+          { label: '1.5 / 2.0 BlueHDi (Expert III)', fuel: 'Diesel', years: range(2016, 2026) },
+          { label: 'e-Expert électrique', fuel: 'Electrique', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'Boxer',
+        years: range(1994, 2026),
+        engines: [
+          { label: '2.0 / 2.2 HDi 110/130/150ch', fuel: 'Diesel', years: range(2002, 2024) },
+          { label: '2.3 / 3.0 HDi 130/180ch', fuel: 'Diesel', years: range(2006, 2024) },
+          { label: 'e-Boxer électrique', fuel: 'Electrique', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: '405',
+        years: range(1987, 1997),
+        engines: [
+          { label: '1.4 75ch', fuel: 'Essence', years: range(1987, 1997) },
+          { label: '1.6 88/89ch', fuel: 'Essence', years: range(1987, 1997) },
+          { label: '1.9 16v Mi16 / T16', fuel: 'Essence', years: range(1989, 1995) },
+          { label: '1.9 D / TD 64/92ch', fuel: 'Diesel', years: range(1987, 1997) },
+        ],
+      },
+      {
+        name: '406',
+        years: range(1995, 2004),
+        engines: [
+          { label: '1.8 16v 116ch', fuel: 'Essence', years: range(1995, 2004) },
+          { label: '2.0 16v / Turbo 132/147ch', fuel: 'Essence', years: range(1995, 2004) },
+          { label: '3.0 V6 190ch', fuel: 'Essence', years: range(1997, 2004) },
+          { label: '1.9 TD 90ch', fuel: 'Diesel', years: range(1995, 2000) },
+          { label: '2.0 / 2.2 HDi 90/110/136ch', fuel: 'Diesel', years: range(1999, 2004) },
+        ],
+      },
+      {
+        name: '407',
+        years: range(2004, 2011),
+        engines: [
+          { label: '1.8 16v 116/125ch', fuel: 'Essence', years: range(2004, 2011) },
+          { label: '2.0 16v 140ch', fuel: 'Essence', years: range(2004, 2011) },
+          { label: '3.0 V6 211ch', fuel: 'Essence', years: range(2004, 2011) },
+          { label: '1.6 HDi 110ch', fuel: 'Diesel', years: range(2004, 2011) },
+          { label: '2.0 HDi 136/140ch', fuel: 'Diesel', years: range(2004, 2011) },
+          { label: '2.2 / 2.7 V6 HDi 170/204ch', fuel: 'Diesel', years: range(2005, 2011) },
+        ],
+      },
+      {
+        name: '607',
+        years: range(1999, 2010),
+        engines: [
+          { label: '2.2 16v 158ch', fuel: 'Essence', years: range(1999, 2010) },
+          { label: '3.0 V6 207/210ch', fuel: 'Essence', years: range(1999, 2010) },
+          { label: '2.0 / 2.2 HDi 110/136/170ch', fuel: 'Diesel', years: range(1999, 2010) },
+          { label: '2.7 V6 HDi 204ch', fuel: 'Diesel', years: range(2005, 2010) },
         ],
       },
     ],
@@ -349,6 +456,77 @@ export const VEHICLE_CATALOG: BrandOption[] = [
           { label: '1.5 dCi 75/90ch', fuel: 'Diesel', years: range(2004, 2022) },
         ],
       },
+      {
+        name: 'Espace',
+        years: range(1996, 2026),
+        engines: [
+          { label: '2.0 16v 140ch (Espace III/IV)', fuel: 'Essence', years: range(1996, 2014) },
+          { label: '3.0 V6 24v 190ch (Espace III/IV)', fuel: 'Essence', years: range(1996, 2010) },
+          { label: '1.9 dCi 120ch (Espace IV)', fuel: 'Diesel', years: range(2002, 2010) },
+          { label: '2.0 / 2.2 dCi 130/150/175ch (Espace IV)', fuel: 'Diesel', years: range(2002, 2014) },
+          { label: '3.0 V6 dCi 180/210ch (Espace IV)', fuel: 'Diesel', years: range(2002, 2014) },
+          { label: '1.6 dCi 130/160ch (Espace V)', fuel: 'Diesel', years: range(2015, 2023) },
+          { label: '2.0 dCi 200ch (Espace V)', fuel: 'Diesel', years: range(2015, 2020) },
+          { label: '1.8 TCe 225ch (Espace V)', fuel: 'Essence', years: range(2019, 2023) },
+          { label: 'E-Tech Hybrid 200ch (Espace VI)', fuel: 'Hybride', years: range(2023, 2026) },
+        ],
+      },
+      {
+        name: 'Laguna',
+        years: range(1994, 2015),
+        engines: [
+          { label: '1.6 16v 110ch (Laguna I/II/III)', fuel: 'Essence', years: range(1994, 2015) },
+          { label: '1.8 16v / 2.0 16v 120/140ch', fuel: 'Essence', years: range(1994, 2015) },
+          { label: '2.0 IDE / Turbo 170/205ch', fuel: 'Essence', years: range(2001, 2015) },
+          { label: '3.0 V6 207ch (Laguna II)', fuel: 'Essence', years: range(2001, 2007) },
+          { label: '1.9 dTi / dCi 100/110/120ch', fuel: 'Diesel', years: range(1996, 2010) },
+          { label: '2.0 dCi 130/150/180/205ch', fuel: 'Diesel', years: range(2005, 2015) },
+          { label: '1.5 dCi 110ch (Laguna III)', fuel: 'Diesel', years: range(2007, 2015) },
+          { label: '3.0 V6 dCi 240ch (Laguna III)', fuel: 'Diesel', years: range(2008, 2015) },
+        ],
+      },
+      {
+        name: 'Modus',
+        years: range(2004, 2012),
+        engines: [
+          { label: '1.2 16v 75ch', fuel: 'Essence', years: range(2004, 2012) },
+          { label: '1.4 16v 98ch', fuel: 'Essence', years: range(2004, 2012) },
+          { label: '1.6 16v 113ch', fuel: 'Essence', years: range(2004, 2008) },
+          { label: '1.5 dCi 65/85/106ch', fuel: 'Diesel', years: range(2004, 2012) },
+        ],
+      },
+      {
+        name: 'Master',
+        years: range(1997, 2026),
+        engines: [
+          { label: '2.2 / 2.5 dCi 90/120/150ch (Master II)', fuel: 'Diesel', years: range(2000, 2010) },
+          { label: '2.3 dCi 100/125/145/170ch (Master III)', fuel: 'Diesel', years: range(2010, 2026) },
+          { label: 'Master Z.E. électrique', fuel: 'Electrique', years: range(2018, 2026) },
+        ],
+      },
+      {
+        name: 'Vel Satis',
+        years: range(2001, 2009),
+        engines: [
+          { label: '2.0 / 3.5 V6 24v 165/241ch', fuel: 'Essence', years: range(2001, 2009) },
+          { label: '2.2 / 3.0 V6 dCi 150/177ch', fuel: 'Diesel', years: range(2001, 2009) },
+        ],
+      },
+      {
+        name: 'Twizy',
+        years: range(2012, 2020),
+        engines: [
+          { label: 'Z.E. 45 / 80 électrique', fuel: 'Electrique', years: range(2012, 2020) },
+        ],
+      },
+      {
+        name: 'Avantime',
+        years: range(2001, 2003),
+        engines: [
+          { label: '3.0 V6 207ch', fuel: 'Essence', years: range(2001, 2003) },
+          { label: '2.2 dCi 150ch', fuel: 'Diesel', years: range(2001, 2003) },
+        ],
+      },
     ],
   },
 
@@ -449,6 +627,109 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         engines: [
           { label: '1.6 / 2.0 BlueHDi 115/150/180ch', fuel: 'Diesel', years: range(2016, 2024) },
           { label: 'ë-Spacetourer électrique', fuel: 'Electrique', years: range(2020, 2024) },
+        ],
+      },
+      {
+        name: 'Saxo',
+        years: range(1996, 2004),
+        engines: [
+          { label: '1.0i 50ch', fuel: 'Essence', years: range(1996, 2003) },
+          { label: '1.1i 60ch', fuel: 'Essence', years: range(1996, 2004) },
+          { label: '1.4i 75ch', fuel: 'Essence', years: range(1996, 2004) },
+          { label: '1.6 16v 90/120ch VTS', fuel: 'Essence', years: range(1996, 2003) },
+          { label: '1.5 D 57ch', fuel: 'Diesel', years: range(1996, 2003) },
+        ],
+      },
+      {
+        name: 'Xsara',
+        years: range(1997, 2006),
+        engines: [
+          { label: '1.4 8v 75ch', fuel: 'Essence', years: range(1997, 2006) },
+          { label: '1.6 16v 110ch', fuel: 'Essence', years: range(2000, 2006) },
+          { label: '1.8 16v 117ch', fuel: 'Essence', years: range(1997, 2002) },
+          { label: '2.0 16v 137ch', fuel: 'Essence', years: range(1997, 2005) },
+          { label: '2.0 16v VTS 167ch', fuel: 'Essence', years: range(2000, 2005) },
+          { label: '1.9 D / TD 70/90ch', fuel: 'Diesel', years: range(1997, 2002) },
+          { label: '2.0 HDi 90/110ch', fuel: 'Diesel', years: range(2000, 2006) },
+        ],
+      },
+      {
+        name: 'Xsara Picasso',
+        years: range(1999, 2012),
+        engines: [
+          { label: '1.6 16v 110ch', fuel: 'Essence', years: range(1999, 2012) },
+          { label: '1.8 16v 117ch', fuel: 'Essence', years: range(1999, 2005) },
+          { label: '2.0 16v 138ch', fuel: 'Essence', years: range(2000, 2005) },
+          { label: '1.6 HDi 92/110ch', fuel: 'Diesel', years: range(2004, 2012) },
+          { label: '2.0 HDi 90ch', fuel: 'Diesel', years: range(2000, 2008) },
+        ],
+      },
+      {
+        name: 'C2',
+        years: range(2003, 2010),
+        engines: [
+          { label: '1.1 60ch', fuel: 'Essence', years: range(2003, 2010) },
+          { label: '1.4 16v 75/88ch', fuel: 'Essence', years: range(2003, 2010) },
+          { label: '1.6 16v 110/125ch VTS', fuel: 'Essence', years: range(2003, 2010) },
+          { label: '1.4 HDi 70ch', fuel: 'Diesel', years: range(2003, 2010) },
+          { label: '1.6 HDi 90/110ch', fuel: 'Diesel', years: range(2005, 2010) },
+        ],
+      },
+      {
+        name: 'C5',
+        years: range(2001, 2017),
+        engines: [
+          { label: '1.8 16v 117/125ch (C5 I/II)', fuel: 'Essence', years: range(2001, 2010) },
+          { label: '2.0 16v 136/143ch (C5 I/II)', fuel: 'Essence', years: range(2001, 2010) },
+          { label: '3.0 V6 24v 207/210ch (C5)', fuel: 'Essence', years: range(2001, 2008) },
+          { label: '1.6 THP 156ch (C5 II)', fuel: 'Essence', years: range(2010, 2017) },
+          { label: '1.6 HDi 110/115ch (C5)', fuel: 'Diesel', years: range(2004, 2017) },
+          { label: '2.0 HDi 110/138/140/163ch (C5)', fuel: 'Diesel', years: range(2001, 2017) },
+          { label: '2.2 / 3.0 V6 HDi 170/200/240ch', fuel: 'Diesel', years: range(2002, 2017) },
+        ],
+      },
+      {
+        name: 'C6',
+        years: range(2005, 2012),
+        engines: [
+          { label: '3.0 V6 215ch', fuel: 'Essence', years: range(2005, 2012) },
+          { label: '2.2 / 2.7 V6 HDi 170/200/204ch', fuel: 'Diesel', years: range(2005, 2012) },
+          { label: '3.0 V6 HDi 240ch', fuel: 'Diesel', years: range(2009, 2012) },
+        ],
+      },
+      {
+        name: 'C8',
+        years: range(2002, 2014),
+        engines: [
+          { label: '2.0 16v 140ch', fuel: 'Essence', years: range(2002, 2014) },
+          { label: '2.0 / 2.2 HDi 110/136/170ch', fuel: 'Diesel', years: range(2002, 2014) },
+        ],
+      },
+      {
+        name: 'Jumper',
+        years: range(1994, 2026),
+        engines: [
+          { label: '2.0 / 2.2 HDi 110/130/150ch', fuel: 'Diesel', years: range(2002, 2024) },
+          { label: '2.3 / 3.0 HDi 130/180ch', fuel: 'Diesel', years: range(2006, 2024) },
+          { label: 'ë-Jumper électrique', fuel: 'Electrique', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: 'Jumpy',
+        years: range(1995, 2026),
+        engines: [
+          { label: '2.0 HDi 95/110/120/138ch (Jumpy II)', fuel: 'Diesel', years: range(2007, 2016) },
+          { label: '1.5 / 2.0 BlueHDi (Jumpy III)', fuel: 'Diesel', years: range(2016, 2026) },
+          { label: 'ë-Jumpy électrique', fuel: 'Electrique', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'Nemo',
+        years: range(2008, 2018),
+        engines: [
+          { label: '1.4 75ch', fuel: 'Essence', years: range(2008, 2014) },
+          { label: '1.3 HDi 75ch', fuel: 'Diesel', years: range(2008, 2018) },
+          { label: '1.4 HDi 70ch', fuel: 'Diesel', years: range(2008, 2014) },
         ],
       },
     ],
@@ -705,6 +986,63 @@ export const VEHICLE_CATALOG: BrandOption[] = [
           { label: 'GTX 4Motion 299ch', fuel: 'Electrique', years: range(2021, 2026) },
         ],
       },
+      {
+        name: 'Sharan',
+        years: range(1995, 2022),
+        engines: [
+          { label: '1.8 / 2.0 8v 115/140ch (Sharan I)', fuel: 'Essence', years: range(1995, 2010) },
+          { label: '1.4 / 2.0 TSI 150/200ch (Sharan II)', fuel: 'Essence', years: range(2010, 2022) },
+          { label: '1.9 TDI 90/115/130ch (Sharan I)', fuel: 'Diesel', years: range(1996, 2010) },
+          { label: '2.0 TDI 110/140/170/184ch (Sharan II)', fuel: 'Diesel', years: range(2010, 2022) },
+        ],
+      },
+      {
+        name: 'Caddy',
+        years: range(2004, 2026),
+        engines: [
+          { label: '1.6 / 1.4 TSI 102/125ch', fuel: 'Essence', years: range(2004, 2020) },
+          { label: '1.9 / 2.0 TDI 75/105/140/170ch', fuel: 'Diesel', years: range(2004, 2020) },
+          { label: '2.0 TDI 102/122ch (Caddy V)', fuel: 'Diesel', years: range(2020, 2026) },
+          { label: 'Caddy California / Maxi', fuel: 'Diesel', years: range(2010, 2026) },
+        ],
+      },
+      {
+        name: 'Up',
+        years: range(2011, 2024),
+        engines: [
+          { label: '1.0 60/75ch', fuel: 'Essence', years: range(2011, 2024) },
+          { label: '1.0 TSI 90/115ch (Up GTI)', fuel: 'Essence', years: range(2018, 2024) },
+          { label: 'e-Up électrique', fuel: 'Electrique', years: range(2013, 2024) },
+        ],
+      },
+      {
+        name: 'Crafter',
+        years: range(2006, 2026),
+        engines: [
+          { label: '2.0 / 2.5 TDI 109/136/163ch (Crafter I)', fuel: 'Diesel', years: range(2006, 2016) },
+          { label: '2.0 TDI 102/140/177ch (Crafter II)', fuel: 'Diesel', years: range(2016, 2026) },
+          { label: 'e-Crafter électrique', fuel: 'Electrique', years: range(2018, 2026) },
+        ],
+      },
+      {
+        name: 'Beetle / New Beetle',
+        years: range(1998, 2019),
+        engines: [
+          { label: '1.4 / 1.6 / 2.0 16v 75/100/115ch', fuel: 'Essence', years: range(1998, 2010) },
+          { label: '1.2 / 1.4 / 1.8 TSI 105/160/220ch', fuel: 'Essence', years: range(2011, 2019) },
+          { label: '1.9 TDI 90/100/105ch (New Beetle)', fuel: 'Diesel', years: range(1998, 2010) },
+          { label: '1.6 / 2.0 TDI 105/140ch (Beetle)', fuel: 'Diesel', years: range(2011, 2019) },
+        ],
+      },
+      {
+        name: 'Scirocco',
+        years: range(2008, 2017),
+        engines: [
+          { label: '1.4 TSI 122/160ch', fuel: 'Essence', years: range(2008, 2017) },
+          { label: '2.0 TSI 200/220/280ch (R)', fuel: 'Essence', years: range(2008, 2017) },
+          { label: '2.0 TDI 140/170/184ch', fuel: 'Diesel', years: range(2008, 2017) },
+        ],
+      },
     ],
   },
 
@@ -950,6 +1288,75 @@ export const VEHICLE_CATALOG: BrandOption[] = [
           { label: 'Q8 e-tron 55 408ch', fuel: 'Electrique', years: range(2023, 2026) },
         ],
       },
+      {
+        name: 'A5',
+        years: range(2007, 2026),
+        engines: [
+          { label: '1.8 / 2.0 TFSI 170/211/252/265ch', fuel: 'Essence', years: range(2007, 2026) },
+          { label: '3.2 V6 FSI 265ch', fuel: 'Essence', years: range(2007, 2012) },
+          { label: '2.0 TDI 143/170/177/190ch', fuel: 'Diesel', years: range(2008, 2026) },
+          { label: '3.0 V6 TDI 240/272/286ch', fuel: 'Diesel', years: range(2008, 2024) },
+          { label: 'S5 3.0 TFSI 333/354ch', fuel: 'Essence', years: range(2007, 2024) },
+          { label: 'RS5 4.2 V8 / 2.9 V6 450ch', fuel: 'Essence', years: range(2010, 2024) },
+        ],
+      },
+      {
+        name: 'A7',
+        years: range(2010, 2026),
+        engines: [
+          { label: '2.0 / 3.0 TFSI 245/333/340ch', fuel: 'Essence', years: range(2010, 2026) },
+          { label: '3.0 TDI 204/245/272/286ch', fuel: 'Diesel', years: range(2010, 2025) },
+          { label: 'S7 / RS7 4.0 V8 / 3.0 V6', fuel: 'Essence', years: range(2013, 2026) },
+          { label: '55 TFSI e Plug-in Hybrid', fuel: 'Hybride', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'A8',
+        years: range(2002, 2026),
+        engines: [
+          { label: '3.0 / 4.2 V8 TFSI 290/371ch', fuel: 'Essence', years: range(2002, 2026) },
+          { label: '6.0 W12 450/500ch', fuel: 'Essence', years: range(2003, 2017) },
+          { label: '3.0 / 4.2 TDI 232/258/385ch', fuel: 'Diesel', years: range(2003, 2024) },
+        ],
+      },
+      {
+        name: 'Q2',
+        years: range(2016, 2026),
+        engines: [
+          { label: '1.0 / 1.4 / 1.5 TFSI 116/150ch', fuel: 'Essence', years: range(2016, 2026) },
+          { label: '2.0 TFSI 190ch / SQ2 300ch', fuel: 'Essence', years: range(2017, 2026) },
+          { label: '1.6 / 2.0 TDI 116/150ch', fuel: 'Diesel', years: range(2016, 2024) },
+        ],
+      },
+      {
+        name: 'Q4 e-tron',
+        years: range(2021, 2026),
+        engines: [
+          { label: 'Q4 35/40 e-tron 170/204ch', fuel: 'Electrique', years: range(2021, 2026) },
+          { label: 'Q4 50 e-tron quattro 299ch', fuel: 'Electrique', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: 'Q8',
+        years: range(2018, 2026),
+        engines: [
+          { label: '3.0 V6 TFSI 286/340ch', fuel: 'Essence', years: range(2018, 2026) },
+          { label: 'SQ8 / RS Q8 4.0 V8 507/600ch', fuel: 'Essence', years: range(2019, 2026) },
+          { label: '3.0 V6 TDI 231/286ch', fuel: 'Diesel', years: range(2018, 2024) },
+          { label: '60 TFSI e Plug-in Hybrid 462ch', fuel: 'Hybride', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'TT',
+        years: range(1998, 2024),
+        engines: [
+          { label: '1.8 T 150/180/225ch (TT 8N)', fuel: 'Essence', years: range(1998, 2006) },
+          { label: '3.2 V6 250ch (TT 8N/8J)', fuel: 'Essence', years: range(2003, 2010) },
+          { label: '2.0 TFSI 200/211/272/310ch', fuel: 'Essence', years: range(2006, 2024) },
+          { label: '2.5 TFSI RS 340/400ch', fuel: 'Essence', years: range(2009, 2024) },
+          { label: '2.0 TDI 170/184ch', fuel: 'Diesel', years: range(2008, 2024) },
+        ],
+      },
     ],
   },
 
@@ -1002,6 +1409,61 @@ export const VEHICLE_CATALOG: BrandOption[] = [
           { label: '1.4 / 1.5 TSI 150ch', fuel: 'Essence', years: range(2018, 2026) },
           { label: '2.0 TDI 150/190ch', fuel: 'Diesel', years: range(2018, 2025) },
           { label: 'e-Hybrid 245ch', fuel: 'Hybride', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: 'Alhambra',
+        years: range(1995, 2020),
+        engines: [
+          { label: '2.0 16v / 1.8 T 115/150ch (Alhambra I)', fuel: 'Essence', years: range(1995, 2010) },
+          { label: '1.4 / 2.0 TSI 150/200ch (Alhambra II)', fuel: 'Essence', years: range(2010, 2020) },
+          { label: '1.9 TDI 90/115/130ch (Alhambra I)', fuel: 'Diesel', years: range(1996, 2010) },
+          { label: '2.0 TDI 110/140/170/184ch (Alhambra II)', fuel: 'Diesel', years: range(2010, 2020) },
+        ],
+      },
+      {
+        name: 'Mii',
+        years: range(2012, 2021),
+        engines: [
+          { label: '1.0 60/75ch', fuel: 'Essence', years: range(2012, 2020) },
+          { label: 'Mii electric', fuel: 'Electrique', years: range(2020, 2021) },
+        ],
+      },
+      {
+        name: 'Toledo',
+        years: range(1991, 2019),
+        engines: [
+          { label: '1.6 / 1.8 / 2.0 16v (Toledo I/II/III)', fuel: 'Essence', years: range(1991, 2009) },
+          { label: '1.2 / 1.4 TSI 86/122ch (Toledo IV)', fuel: 'Essence', years: range(2012, 2019) },
+          { label: '1.6 TDI 105ch (Toledo IV)', fuel: 'Diesel', years: range(2012, 2019) },
+          { label: '1.9 / 2.0 TDI (Toledo II/III)', fuel: 'Diesel', years: range(1999, 2009) },
+        ],
+      },
+      {
+        name: 'Cordoba',
+        years: range(1993, 2009),
+        engines: [
+          { label: '1.4 / 1.6 16v 75/100ch', fuel: 'Essence', years: range(1993, 2009) },
+          { label: '1.8T / 2.0 / 2.0 16v (Cordoba GTI)', fuel: 'Essence', years: range(1996, 2002) },
+          { label: '1.9 SDI / TDI 64/100/130ch', fuel: 'Diesel', years: range(1996, 2009) },
+        ],
+      },
+      {
+        name: 'Altea',
+        years: range(2004, 2015),
+        engines: [
+          { label: '1.4 / 1.6 / 2.0 16v', fuel: 'Essence', years: range(2004, 2015) },
+          { label: '1.4 / 1.8 TSI 125/160ch', fuel: 'Essence', years: range(2007, 2015) },
+          { label: '2.0 FSI / TFSI 150/200ch', fuel: 'Essence', years: range(2004, 2015) },
+          { label: '1.6 / 1.9 / 2.0 TDI 90/105/140/170ch', fuel: 'Diesel', years: range(2004, 2015) },
+        ],
+      },
+      {
+        name: 'Exeo',
+        years: range(2009, 2013),
+        engines: [
+          { label: '1.6 / 1.8 / 2.0 TSI 102/160/200ch', fuel: 'Essence', years: range(2009, 2013) },
+          { label: '2.0 TDI 120/143/170ch', fuel: 'Diesel', years: range(2009, 2013) },
         ],
       },
     ],
@@ -1068,11 +1530,56 @@ export const VEHICLE_CATALOG: BrandOption[] = [
       },
       {
         name: 'Superb',
-        years: range(2008, 2026),
+        years: range(2001, 2026),
         engines: [
+          { label: '1.8 / 2.0 / 2.8 V6 (Superb I)', fuel: 'Essence', years: range(2001, 2008) },
+          { label: '1.4 / 1.8 / 2.0 TSI (Superb II)', fuel: 'Essence', years: range(2008, 2015) },
           { label: '1.4 / 1.5 / 2.0 TSI 150/190ch', fuel: 'Essence', years: range(2015, 2026) },
-          { label: '2.0 TDI 120/150/190ch', fuel: 'Diesel', years: range(2008, 2025) },
+          { label: '1.9 / 2.0 TDI (Superb I/II)', fuel: 'Diesel', years: range(2001, 2015) },
+          { label: '2.0 TDI 120/150/190ch', fuel: 'Diesel', years: range(2015, 2025) },
           { label: 'iV Plug-in Hybrid 218ch', fuel: 'Hybride', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'Yeti',
+        years: range(2009, 2017),
+        engines: [
+          { label: '1.2 / 1.4 / 1.8 TSI 105/122/160ch', fuel: 'Essence', years: range(2009, 2017) },
+          { label: '1.6 / 2.0 TDI 105/110/140/170ch', fuel: 'Diesel', years: range(2009, 2017) },
+        ],
+      },
+      {
+        name: 'Roomster',
+        years: range(2006, 2015),
+        engines: [
+          { label: '1.2 / 1.4 / 1.6 16v 70/86/105ch', fuel: 'Essence', years: range(2006, 2015) },
+          { label: '1.2 TSI 86/105ch', fuel: 'Essence', years: range(2010, 2015) },
+          { label: '1.4 / 1.9 / 1.6 TDI 80/90/105ch', fuel: 'Diesel', years: range(2006, 2015) },
+        ],
+      },
+      {
+        name: 'Rapid',
+        years: range(2012, 2019),
+        engines: [
+          { label: '1.2 / 1.4 TSI 86/122ch', fuel: 'Essence', years: range(2012, 2019) },
+          { label: '1.0 TSI 95/110ch', fuel: 'Essence', years: range(2015, 2019) },
+          { label: '1.4 / 1.6 TDI 90/105ch', fuel: 'Diesel', years: range(2012, 2019) },
+        ],
+      },
+      {
+        name: 'Citigo',
+        years: range(2012, 2020),
+        engines: [
+          { label: '1.0 60/75ch', fuel: 'Essence', years: range(2012, 2020) },
+          { label: 'Citigo-e iV électrique', fuel: 'Electrique', years: range(2019, 2020) },
+        ],
+      },
+      {
+        name: 'Enyaq',
+        years: range(2021, 2026),
+        engines: [
+          { label: 'Enyaq iV 50/60/80 électrique', fuel: 'Electrique', years: range(2021, 2026) },
+          { label: 'Enyaq RS iV 4x4 299ch', fuel: 'Electrique', years: range(2022, 2026) },
         ],
       },
     ],
@@ -1126,8 +1633,95 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'Vivaro',
         years: range(2001, 2026),
         engines: [
+          { label: '1.9 / 2.0 CDTI (Vivaro A)', fuel: 'Diesel', years: range(2001, 2014) },
+          { label: '1.6 BiTurbo CDTI 120/140ch (Vivaro B)', fuel: 'Diesel', years: range(2014, 2019) },
           { label: '2.0 BlueHDi 120/145ch', fuel: 'Diesel', years: range(2019, 2026) },
           { label: 'Vivaro-e électrique', fuel: 'Electrique', years: range(2020, 2026) },
+        ],
+      },
+      {
+        name: 'Meriva',
+        years: range(2003, 2017),
+        engines: [
+          { label: '1.4 16v 90ch (Meriva A/B)', fuel: 'Essence', years: range(2003, 2017) },
+          { label: '1.6 16v 100/115ch (Meriva A)', fuel: 'Essence', years: range(2003, 2010) },
+          { label: '1.4 Turbo 120/140ch (Meriva B)', fuel: 'Essence', years: range(2010, 2017) },
+          { label: '1.3 CDTI 75/95ch', fuel: 'Diesel', years: range(2003, 2017) },
+          { label: '1.6 / 1.7 CDTI 100/110/130ch', fuel: 'Diesel', years: range(2005, 2017) },
+        ],
+      },
+      {
+        name: 'Zafira',
+        years: range(1999, 2019),
+        engines: [
+          { label: '1.6 16v 105/115ch (Zafira A/B)', fuel: 'Essence', years: range(1999, 2014) },
+          { label: '1.8 16v 125ch (Zafira A/B)', fuel: 'Essence', years: range(1999, 2014) },
+          { label: '2.0 / 2.2 16v 147ch', fuel: 'Essence', years: range(1999, 2014) },
+          { label: '2.0 Turbo 192/200ch OPC', fuel: 'Essence', years: range(2001, 2010) },
+          { label: '1.4 Turbo 140ch (Zafira Tourer)', fuel: 'Essence', years: range(2011, 2019) },
+          { label: '1.6 / 1.7 / 1.9 CDTI 100/120/150ch', fuel: 'Diesel', years: range(2002, 2014) },
+          { label: '1.6 / 2.0 CDTI 110/130/170ch (Zafira Tourer)', fuel: 'Diesel', years: range(2011, 2019) },
+        ],
+      },
+      {
+        name: 'Insignia',
+        years: range(2008, 2022),
+        engines: [
+          { label: '1.4 / 1.6 / 1.8 16v 140/170ch', fuel: 'Essence', years: range(2008, 2017) },
+          { label: '2.0 Turbo 220/250/325ch', fuel: 'Essence', years: range(2008, 2022) },
+          { label: '1.4 / 1.5 / 1.6 Turbo 140/170/200ch (Insignia B)', fuel: 'Essence', years: range(2017, 2022) },
+          { label: '1.6 / 2.0 CDTI 110/130/170/195ch', fuel: 'Diesel', years: range(2008, 2017) },
+          { label: '1.6 / 2.0 Diesel 110/170/210ch (Insignia B)', fuel: 'Diesel', years: range(2017, 2022) },
+        ],
+      },
+      {
+        name: 'Antara',
+        years: range(2006, 2015),
+        engines: [
+          { label: '2.4 16v 140/167ch', fuel: 'Essence', years: range(2006, 2015) },
+          { label: '3.2 V6 227ch', fuel: 'Essence', years: range(2006, 2011) },
+          { label: '2.0 / 2.2 CDTI 127/150/184ch', fuel: 'Diesel', years: range(2006, 2015) },
+        ],
+      },
+      {
+        name: 'Adam',
+        years: range(2013, 2019),
+        engines: [
+          { label: '1.2 / 1.4 16v 70/87/100ch', fuel: 'Essence', years: range(2013, 2019) },
+          { label: '1.0 Turbo 90/115ch', fuel: 'Essence', years: range(2014, 2019) },
+        ],
+      },
+      {
+        name: 'Karl',
+        years: range(2015, 2019),
+        engines: [
+          { label: '1.0 73ch', fuel: 'Essence', years: range(2015, 2019) },
+        ],
+      },
+      {
+        name: 'Combo',
+        years: range(2001, 2026),
+        engines: [
+          { label: '1.6 / 1.7 / 2.0 CDTI 95/110ch (Combo D)', fuel: 'Diesel', years: range(2011, 2018) },
+          { label: '1.2 PureTech 110ch (Combo E)', fuel: 'Essence', years: range(2018, 2026) },
+          { label: '1.5 BlueHDi 100/130ch (Combo E)', fuel: 'Diesel', years: range(2018, 2026) },
+          { label: 'Combo-e électrique', fuel: 'Electrique', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: 'Crossland',
+        years: range(2017, 2024),
+        engines: [
+          { label: '1.2 Turbo 110/130ch', fuel: 'Essence', years: range(2017, 2024) },
+          { label: '1.5 / 1.6 CDTI 99/120ch', fuel: 'Diesel', years: range(2017, 2024) },
+        ],
+      },
+      {
+        name: 'Movano',
+        years: range(1998, 2026),
+        engines: [
+          { label: '2.3 / 2.5 / 3.0 CDTI 100/120/146/180ch', fuel: 'Diesel', years: range(2010, 2024) },
+          { label: 'Movano-e électrique', fuel: 'Electrique', years: range(2022, 2026) },
         ],
       },
     ],
@@ -1256,8 +1850,65 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'Hilux',
         years: range(2005, 2026),
         engines: [
+          { label: '2.5 D-4D 120/144ch (Hilux VII)', fuel: 'Diesel', years: range(2005, 2015) },
+          { label: '3.0 D-4D 171ch (Hilux VII)', fuel: 'Diesel', years: range(2007, 2015) },
           { label: '2.4 D-4D 150ch', fuel: 'Diesel', years: range(2015, 2026) },
           { label: '2.8 D-4D 177/204ch', fuel: 'Diesel', years: range(2015, 2026) },
+        ],
+      },
+      {
+        name: 'Auris',
+        years: range(2007, 2019),
+        engines: [
+          { label: '1.33 Dual VVT-i 99ch', fuel: 'Essence', years: range(2009, 2019) },
+          { label: '1.4 / 1.6 VVT-i 97/124/132ch', fuel: 'Essence', years: range(2007, 2019) },
+          { label: '1.2 Turbo 116ch (Auris II)', fuel: 'Essence', years: range(2015, 2019) },
+          { label: 'Hybride HSD 136ch', fuel: 'Hybride', years: range(2010, 2019) },
+          { label: '1.4 / 2.0 D-4D 90/124/143ch', fuel: 'Diesel', years: range(2007, 2019) },
+          { label: '1.6 D-4D 112ch (Auris II)', fuel: 'Diesel', years: range(2015, 2019) },
+        ],
+      },
+      {
+        name: 'Avensis',
+        years: range(1997, 2018),
+        engines: [
+          { label: '1.6 / 1.8 / 2.0 VVT-i 110/147/152ch', fuel: 'Essence', years: range(1997, 2018) },
+          { label: '2.4 VVT-i 163ch', fuel: 'Essence', years: range(2003, 2009) },
+          { label: '2.0 / 2.2 D-4D 116/126/150/177ch', fuel: 'Diesel', years: range(2003, 2018) },
+          { label: '1.6 / 2.0 D-4D 112/124/143ch', fuel: 'Diesel', years: range(2009, 2018) },
+        ],
+      },
+      {
+        name: 'Verso',
+        years: range(2009, 2018),
+        engines: [
+          { label: '1.6 / 1.8 VVT-i 132/147ch', fuel: 'Essence', years: range(2009, 2018) },
+          { label: '2.0 / 2.2 D-4D 124/150/177ch', fuel: 'Diesel', years: range(2009, 2018) },
+        ],
+      },
+      {
+        name: 'Verso-S',
+        years: range(2010, 2016),
+        engines: [
+          { label: '1.33 Dual VVT-i 99ch', fuel: 'Essence', years: range(2010, 2016) },
+          { label: '1.4 D-4D 90ch', fuel: 'Diesel', years: range(2010, 2016) },
+        ],
+      },
+      {
+        name: 'iQ',
+        years: range(2009, 2015),
+        engines: [
+          { label: '1.0 / 1.33 VVT-i 68/98ch', fuel: 'Essence', years: range(2009, 2015) },
+          { label: '1.4 D-4D 90ch', fuel: 'Diesel', years: range(2009, 2014) },
+        ],
+      },
+      {
+        name: 'Proace',
+        years: range(2013, 2026),
+        engines: [
+          { label: '1.6 / 2.0 HDi 90/125/150ch (Proace I)', fuel: 'Diesel', years: range(2013, 2016) },
+          { label: '1.5 / 2.0 BlueHDi (Proace II)', fuel: 'Diesel', years: range(2016, 2026) },
+          { label: 'Proace Electric', fuel: 'Electrique', years: range(2021, 2026) },
         ],
       },
     ],
@@ -1715,8 +2366,85 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         name: 'Transit',
         years: range(2006, 2026),
         engines: [
+          { label: '2.2 TDCi 100/125/140ch', fuel: 'Diesel', years: range(2006, 2016) },
           { label: '2.0 EcoBlue 105/130/170ch', fuel: 'Diesel', years: range(2016, 2026) },
           { label: 'E-Transit électrique 184ch', fuel: 'Electrique', years: range(2022, 2026) },
+        ],
+      },
+      {
+        name: 'Ka',
+        years: range(1996, 2021),
+        engines: [
+          { label: '1.3 50/60ch (Ka I)', fuel: 'Essence', years: range(1996, 2008) },
+          { label: '1.2 8v 69ch (Ka II)', fuel: 'Essence', years: range(2008, 2016) },
+          { label: '1.3 TDCi 75ch (Ka II)', fuel: 'Diesel', years: range(2008, 2016) },
+          { label: '1.2 / 1.5 Ti-VCT (Ka+)', fuel: 'Essence', years: range(2016, 2021) },
+        ],
+      },
+      {
+        name: 'C-Max',
+        years: range(2003, 2019),
+        engines: [
+          { label: '1.6 / 1.8 / 2.0 16v 100/125/145ch', fuel: 'Essence', years: range(2003, 2010) },
+          { label: '1.0 EcoBoost 100/125ch', fuel: 'Essence', years: range(2012, 2019) },
+          { label: '1.6 EcoBoost 150/182ch', fuel: 'Essence', years: range(2010, 2019) },
+          { label: '1.5 / 1.6 / 1.8 / 2.0 TDCi', fuel: 'Diesel', years: range(2003, 2019) },
+        ],
+      },
+      {
+        name: 'S-Max',
+        years: range(2006, 2024),
+        engines: [
+          { label: '2.0 / 2.3 16v 145/162ch', fuel: 'Essence', years: range(2006, 2015) },
+          { label: '2.5 Turbo 220ch', fuel: 'Essence', years: range(2006, 2014) },
+          { label: '1.5 / 2.0 EcoBoost 160/240ch', fuel: 'Essence', years: range(2015, 2024) },
+          { label: '1.8 / 2.0 / 2.2 TDCi 115/140/200ch', fuel: 'Diesel', years: range(2006, 2024) },
+          { label: 'Hybrid 190ch', fuel: 'Hybride', years: range(2021, 2024) },
+        ],
+      },
+      {
+        name: 'Galaxy',
+        years: range(2006, 2023),
+        engines: [
+          { label: '2.0 16v 145ch', fuel: 'Essence', years: range(2006, 2015) },
+          { label: '2.0 EcoBoost 200/240ch', fuel: 'Essence', years: range(2015, 2023) },
+          { label: '1.8 / 2.0 / 2.2 TDCi 125/140/200ch', fuel: 'Diesel', years: range(2006, 2023) },
+          { label: 'Hybrid 190ch', fuel: 'Hybride', years: range(2021, 2023) },
+        ],
+      },
+      {
+        name: 'B-Max',
+        years: range(2012, 2017),
+        engines: [
+          { label: '1.0 EcoBoost 100/125ch', fuel: 'Essence', years: range(2012, 2017) },
+          { label: '1.4 / 1.6 16v Ti-VCT', fuel: 'Essence', years: range(2012, 2017) },
+          { label: '1.5 / 1.6 TDCi', fuel: 'Diesel', years: range(2012, 2017) },
+        ],
+      },
+      {
+        name: 'Tourneo Connect',
+        years: range(2002, 2026),
+        engines: [
+          { label: '1.0 EcoBoost 100ch', fuel: 'Essence', years: range(2014, 2022) },
+          { label: '1.5 / 1.6 / 1.8 TDCi', fuel: 'Diesel', years: range(2002, 2022) },
+          { label: '2.0 EcoBlue (gen 3)', fuel: 'Diesel', years: range(2022, 2026) },
+        ],
+      },
+      {
+        name: 'Tourneo Custom',
+        years: range(2012, 2026),
+        engines: [
+          { label: '2.0 / 2.2 TDCi 100/125/155ch', fuel: 'Diesel', years: range(2012, 2026) },
+          { label: 'E-Tourneo Custom électrique', fuel: 'Electrique', years: range(2024, 2026) },
+        ],
+      },
+      {
+        name: 'Ranger',
+        years: range(2011, 2026),
+        engines: [
+          { label: '2.2 TDCi 125/150ch', fuel: 'Diesel', years: range(2011, 2019) },
+          { label: '2.0 EcoBlue 130/170/213ch', fuel: 'Diesel', years: range(2019, 2026) },
+          { label: '3.2 / 3.0 V6 TDCi 200/240ch', fuel: 'Diesel', years: range(2011, 2026) },
         ],
       },
     ],
@@ -1821,6 +2549,105 @@ export const VEHICLE_CATALOG: BrandOption[] = [
         engines: [
           { label: '2.0 / 2.3 Multijet 115/130/160ch', fuel: 'Diesel', years: range(2011, 2026) },
           { label: 'e-Ducato électrique', fuel: 'Electrique', years: range(2021, 2026) },
+        ],
+      },
+      {
+        name: 'Punto',
+        years: range(1999, 2018),
+        engines: [
+          { label: '1.2 8v 60ch (Punto II/III)', fuel: 'Essence', years: range(1999, 2018) },
+          { label: '1.4 8v/16v 77/95ch', fuel: 'Essence', years: range(2003, 2018) },
+          { label: '1.4 T-Jet 120/135ch (Abarth)', fuel: 'Essence', years: range(2007, 2018) },
+          { label: '1.6 16v Sporting 100ch', fuel: 'Essence', years: range(1999, 2003) },
+          { label: '1.3 Multijet 70/75/85ch', fuel: 'Diesel', years: range(2003, 2018) },
+          { label: '1.9 JTD 80/100ch (Punto II)', fuel: 'Diesel', years: range(1999, 2005) },
+        ],
+      },
+      {
+        name: 'Bravo',
+        years: range(2007, 2015),
+        engines: [
+          { label: '1.4 16v 90ch', fuel: 'Essence', years: range(2007, 2015) },
+          { label: '1.4 T-Jet 120/150ch', fuel: 'Essence', years: range(2007, 2015) },
+          { label: '1.6 / 2.0 Multijet 105/120/165ch', fuel: 'Diesel', years: range(2007, 2015) },
+        ],
+      },
+      {
+        name: 'Stilo',
+        years: range(2001, 2010),
+        engines: [
+          { label: '1.2 16v 80ch', fuel: 'Essence', years: range(2001, 2007) },
+          { label: '1.4 16v 90ch', fuel: 'Essence', years: range(2003, 2010) },
+          { label: '1.6 16v 103ch', fuel: 'Essence', years: range(2001, 2010) },
+          { label: '1.8 16v 133ch', fuel: 'Essence', years: range(2001, 2010) },
+          { label: '2.4 20v Abarth 170ch', fuel: 'Essence', years: range(2001, 2007) },
+          { label: '1.9 JTD / Multijet 80/100/115/140ch', fuel: 'Diesel', years: range(2001, 2010) },
+        ],
+      },
+      {
+        name: 'Doblo',
+        years: range(2001, 2024),
+        engines: [
+          { label: '1.4 / 1.6 16v 90/110ch', fuel: 'Essence', years: range(2001, 2022) },
+          { label: '1.3 Multijet 75/85/95ch', fuel: 'Diesel', years: range(2005, 2022) },
+          { label: '1.6 / 2.0 Multijet 105/120/135ch', fuel: 'Diesel', years: range(2001, 2022) },
+          { label: '1.5 BlueHDi (Doblo III)', fuel: 'Diesel', years: range(2022, 2024) },
+          { label: 'e-Doblo électrique', fuel: 'Electrique', years: range(2022, 2024) },
+        ],
+      },
+      {
+        name: '500L',
+        years: range(2012, 2022),
+        engines: [
+          { label: '0.9 TwinAir 105ch', fuel: 'Essence', years: range(2012, 2018) },
+          { label: '1.4 16v 95ch', fuel: 'Essence', years: range(2012, 2022) },
+          { label: '1.4 T-Jet 120ch', fuel: 'Essence', years: range(2012, 2022) },
+          { label: '1.3 / 1.6 Multijet 85/105/120ch', fuel: 'Diesel', years: range(2012, 2022) },
+        ],
+      },
+      {
+        name: 'Linea',
+        years: range(2007, 2015),
+        engines: [
+          { label: '1.4 8v / 16v 77/95ch', fuel: 'Essence', years: range(2007, 2015) },
+          { label: '1.4 T-Jet 120ch', fuel: 'Essence', years: range(2007, 2015) },
+          { label: '1.3 Multijet 90ch', fuel: 'Diesel', years: range(2007, 2015) },
+          { label: '1.6 Multijet 105/120ch', fuel: 'Diesel', years: range(2007, 2015) },
+        ],
+      },
+      {
+        name: 'Croma',
+        years: range(2005, 2011),
+        engines: [
+          { label: '2.2 16v 147ch', fuel: 'Essence', years: range(2005, 2011) },
+          { label: '1.8 Mjet 140ch', fuel: 'Diesel', years: range(2005, 2008) },
+          { label: '1.9 / 2.4 Multijet 120/150/200ch', fuel: 'Diesel', years: range(2005, 2011) },
+        ],
+      },
+      {
+        name: 'Multipla',
+        years: range(1998, 2010),
+        engines: [
+          { label: '1.6 16v 95/103ch', fuel: 'Essence', years: range(1998, 2010) },
+          { label: '1.6 Bipower (essence/GPL)', fuel: 'Essence', years: range(2000, 2004) },
+          { label: '1.9 JTD / Multijet 105/116ch', fuel: 'Diesel', years: range(1998, 2010) },
+        ],
+      },
+      {
+        name: 'Sedici',
+        years: range(2006, 2014),
+        engines: [
+          { label: '1.6 16v 107/120ch', fuel: 'Essence', years: range(2006, 2014) },
+          { label: '1.9 / 2.0 Multijet 120/135ch', fuel: 'Diesel', years: range(2006, 2014) },
+        ],
+      },
+      {
+        name: 'Idea',
+        years: range(2003, 2012),
+        engines: [
+          { label: '1.2 / 1.4 16v 80/95ch', fuel: 'Essence', years: range(2003, 2012) },
+          { label: '1.3 Multijet 70/90ch', fuel: 'Diesel', years: range(2003, 2012) },
+          { label: '1.9 Multijet 100ch', fuel: 'Diesel', years: range(2003, 2008) },
         ],
       },
     ],
