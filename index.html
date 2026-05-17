@@ -12,7 +12,8 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/logo-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/logo-192.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="MECAI" />
@@ -40,9 +41,6 @@
     <link rel="dns-prefetch" href="https://supabase.co" />
     <link rel="dns-prefetch" href="https://api.anthropic.com" />
     <link rel="dns-prefetch" href="https://js.stripe.com" />
-
-    <!-- Preload critical resources -->
-    <link rel="preload" href="/favicon.svg" as="image" type="image/svg+xml" />
 
     <!-- Font avec display swap pour éviter FOIT -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />

@@ -181,24 +181,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader('Cache-Control', 'no-cache, no-transform')
       res.setHeader('X-Accel-Buffering', 'no')
       res.status(200)
-      // Flush headers immediately so the client receives the SSE handshake
-      // before any content arrives — critical for Vercel streaming to work.
       res.flushHeaders()
 
-      const stream = anthropic.messages.stream({
-        model: 'claude-sonnet-4-5-20250514',
-        max_tokens: 1200,
-        system: SYSTEM_PROMPT,
-        messages: formattedMessages,
-      })
+      try {
+        const stream = anthropic.messages.stream({
+          model: 'claude-sonnet-4-5-20250514',
+          max_tokens: 1200,
+          system: SYSTEM_PROMPT,
+          messages: formattedMessages,
+        })
 
-      for await (const event of stream) {
-        if (
-          event.type === 'content_block_delta' &&
-          event.delta.type === 'text_delta'
-        ) {
-          res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
+        for await (const event of stream) {
+          if (
+            event.type === 'content_block_delta' &&
+            event.delta.type === 'text_delta'
+          ) {
+            res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
+          }
         }
+      } catch (streamError) {
+        console.error('Stream error:', streamError)
+        res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`)
       }
 
       res.write('data: [DONE]\n\n')
