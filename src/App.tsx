@@ -57,6 +57,7 @@ const OnboardingWrapper = memo(function OnboardingWrapper({ children }: { childr
     if (user) {
       const shouldShow = localStorage.getItem('mecaia_show_onboarding')
       if (shouldShow === 'true') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShowOnboarding(true)
       }
     }

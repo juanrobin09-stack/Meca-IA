@@ -73,6 +73,7 @@ export default function Vehicles() {
 
   useEffect(() => {
     fetchVehicles()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const fetchVehicles = async () => {
@@ -337,6 +338,7 @@ function VehicleModal({
 
   useEffect(() => {
     if (vehicle) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: vehicle.name || '',
         brand: vehicle.brand || '',

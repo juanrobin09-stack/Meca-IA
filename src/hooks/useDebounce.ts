@@ -70,7 +70,7 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
  */
 export function useThrottle<T>(value: T, limit = 300): T {
   const [throttledValue, setThrottledValue] = useState<T>(value)
-  const lastRan = useRef(Date.now())
+  const lastRan = useRef(0)
 
   useEffect(() => {
     const handler = setTimeout(() => {

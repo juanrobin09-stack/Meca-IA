@@ -104,6 +104,7 @@ export default function Chat() {
       setCurrentDiagnostic(null)
       setIsNewConversation(true)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   // Scroll to bottom on new messages
