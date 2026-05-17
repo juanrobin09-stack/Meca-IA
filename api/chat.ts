@@ -185,7 +185,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.flushHeaders()
 
       const stream = anthropic.messages.stream({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250514',
         max_tokens: 1200,
         system: SYSTEM_PROMPT,
         messages: formattedMessages,
@@ -207,7 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Non-streaming fallback
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250514',
       max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages: formattedMessages,

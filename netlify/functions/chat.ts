@@ -214,7 +214,7 @@ export const handler: Handler = async (event) => {
       // For streaming, we need to use a different approach
       // Netlify functions don't support true streaming, so we return the full response
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250514',
         max_tokens: 2048,
         system: SYSTEM_PROMPT,
         messages: formattedMessages,
@@ -229,7 +229,7 @@ export const handler: Handler = async (event) => {
       }
     } else {
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250514',
         max_tokens: 2048,
         system: SYSTEM_PROMPT,
         messages: formattedMessages,
