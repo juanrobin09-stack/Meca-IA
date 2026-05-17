@@ -45,14 +45,21 @@ async function buildContext(userId: string, vehicleId?: string) {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return
-  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
-
-  const { userId, conversationId, message, vehicleId } = req.body as RequestBody
-  if (!userId || !conversationId || !message) {
-    return json(res, 400, { error: 'Missing required fields' })
-  }
 
   try {
+    if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
+
+    const body = req.body as RequestBody | null
+    const userId = body?.userId
+    const conversationId = body?.conversationId
+    const message = body?.message
+    const vehicleId = body?.vehicleId
+
+    if (!userId || !conversationId || !message) {
+      return json(res, 400, { error: 'Missing required fields' })
+    }
+
+    {
     const { data: profile } = await supabase
       .from('profiles')
       .select('subscription_status')
@@ -137,8 +144,9 @@ RÈGLES: Réponds en français, tutoie, max 300 mots, emojis bienvenus 🔧🚗,
       conversationId,
       messagesRemaining: isPremium ? null : FREE_MESSAGES_LIMIT_PER_DAY - messagesUsedToday - 1,
     })
+    }
   } catch (error) {
-    console.error('Mechanic chat error:', error)
+    console.error('MECHANIC CHAT ERROR:', error)
     return json(res, 500, { error: error instanceof Error ? error.message : 'Internal server error' })
   }
 }

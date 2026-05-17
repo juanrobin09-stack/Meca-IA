@@ -38,18 +38,23 @@ Si le devis n'est pas lisible ou n'est pas un devis auto, dis-le poliment.`
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return
 
-  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
-
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return json(res, 401, { error: 'Unauthorized' })
-
-  const { imageBase64 } = req.body as { imageBase64: string }
-  if (!imageBase64) return json(res, 400, { error: 'Missing image data' })
-
-  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
   try {
+    if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
+
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) return json(res, 401, { error: 'Unauthorized' })
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return json(res, 500, { error: 'Server misconfiguration: ANTHROPIC_API_KEY missing' })
+    }
+
+    const body = req.body as { imageBase64?: string } | null
+    const imageBase64 = body?.imageBase64
+    if (!imageBase64) return json(res, 400, { error: 'Missing image data' })
+
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+    {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250514',
       max_tokens: 2048,
@@ -66,8 +71,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
     return json(res, 200, { content: text })
+    }
   } catch (error) {
-    console.error('Anthropic API error:', error)
-    return json(res, 500, { error: 'Failed to analyze quote' })
+    console.error('ANALYZE QUOTE ERROR:', error)
+    return json(res, 500, { error: error instanceof Error ? error.message : 'Failed to analyze quote' })
   }
 }

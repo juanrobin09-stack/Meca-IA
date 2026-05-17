@@ -152,18 +152,26 @@ interface ChatMessage {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return
 
-  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
-
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return json(res, 401, { error: 'Unauthorized' })
-
-  const { messages, stream: wantStream } = req.body as { messages: ChatMessage[]; stream?: boolean }
-  if (!messages || !Array.isArray(messages)) return json(res, 400, { error: 'Invalid messages format' })
-
-  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
   try {
+    if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
+
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) return json(res, 401, { error: 'Unauthorized' })
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return json(res, 500, { error: 'Server misconfiguration: ANTHROPIC_API_KEY missing' })
+    }
+
+    const body = req.body as { messages?: ChatMessage[]; stream?: boolean } | null
+    const messages = body?.messages
+    const wantStream = body?.stream ?? false
+
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return json(res, 400, { error: 'Invalid or empty messages array' })
+    }
+
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
     const formattedMessages = messages.map((m) => {
       if (m.image) {
         return {
@@ -193,16 +201,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
 
         for await (const event of stream) {
-          if (
-            event.type === 'content_block_delta' &&
-            event.delta.type === 'text_delta'
-          ) {
+          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
             res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
           }
         }
       } catch (streamError) {
-        console.error('Stream error:', streamError)
-        res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`)
+        console.error('CHAT STREAM ERROR:', streamError)
+        res.write(`data: ${JSON.stringify({ error: streamError instanceof Error ? streamError.message : 'Stream error' })}\n\n`)
       }
 
       res.write('data: [DONE]\n\n')
@@ -210,7 +215,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return
     }
 
-    // Non-streaming fallback
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250514',
       max_tokens: 1500,
@@ -220,6 +224,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
     return json(res, 200, { content: text })
+
   } catch (error) {
     console.error('CHAT API ERROR:', error)
     return json(res, 500, {
