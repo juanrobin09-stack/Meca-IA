@@ -1,10 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Handler } from '@netlify/functions'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 const SYSTEM_PROMPT = `Tu es MECAI, un assistant expert en diagnostic automobile pour le marché français. Tu aides les propriétaires de voitures à comprendre leurs problèmes mécaniques et à prendre des décisions éclairées.
 
 PERSONNALITÉ:
@@ -186,6 +182,11 @@ export const handler: Handler = async (event) => {
       }
     }
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) }
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
     // Format messages for Anthropic API
     const formattedMessages = messages.map((m) => {
       if (m.image) {
@@ -214,7 +215,7 @@ export const handler: Handler = async (event) => {
       // For streaming, we need to use a different approach
       // Netlify functions don't support true streaming, so we return the full response
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250514',
         max_tokens: 2048,
         system: SYSTEM_PROMPT,
         messages: formattedMessages,
@@ -229,7 +230,7 @@ export const handler: Handler = async (event) => {
       }
     } else {
       const response = await anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5-20250514',
         max_tokens: 2048,
         system: SYSTEM_PROMPT,
         messages: formattedMessages,

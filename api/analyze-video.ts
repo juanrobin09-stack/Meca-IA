@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const VIDEO_ANALYSIS_PROMPT = `Tu es un expert mécanicien automobile français avec 30 ans d'expérience. On te montre plusieurs images extraites d'une vidéo filmée par un utilisateur qui a un problème avec sa voiture.
 
@@ -43,6 +42,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return json(res, 400, { error: 'Missing or invalid frames data' })
   }
 
+  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
   try {
     const content: Anthropic.Messages.ContentBlockParam[] = []
 
@@ -52,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     content.push({ type: 'text', text: VIDEO_ANALYSIS_PROMPT })
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250514',
       max_tokens: 1024,
       messages: [{ role: 'user', content }],
     })

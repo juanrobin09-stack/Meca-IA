@@ -1,10 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Handler } from '@netlify/functions'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile française. Analyse ce devis de garage.
 
 Pour chaque ligne identifiable sur le devis:
@@ -90,8 +86,13 @@ export const handler: Handler = async (event) => {
       }
     }
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) }
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250514',
       max_tokens: 2048,
       messages: [
         {

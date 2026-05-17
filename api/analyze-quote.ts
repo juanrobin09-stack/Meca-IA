@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile française. Analyse ce devis de garage.
 
@@ -47,9 +46,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { imageBase64 } = req.body as { imageBase64: string }
   if (!imageBase64) return json(res, 400, { error: 'Missing image data' })
 
+  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250514',
       max_tokens: 2048,
       messages: [
         {

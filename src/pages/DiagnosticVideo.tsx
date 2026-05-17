@@ -98,6 +98,7 @@ export default function DiagnosticVideo() {
       console.error('Error accessing camera:', err)
       setError("Impossible d'accéder à la caméra. Vérifiez les permissions.")
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPremium])
 
   const stopRecording = useCallback(() => {

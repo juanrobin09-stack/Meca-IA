@@ -18,6 +18,30 @@ export function useAuth() {
     loading: true,
   })
 
+  async function fetchProfile(userId: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    if (error) {
+      console.error('Error fetching profile:', error)
+      // Create profile if it doesn't exist
+      if (error.code === 'PGRST116') {
+        const { data: newProfile } = await supabase
+          .from('profiles')
+          .insert({ id: userId })
+          .select()
+          .single()
+        setState((prev) => ({ ...prev, profile: newProfile as Profile, loading: false }))
+        return
+      }
+    }
+
+    setState((prev) => ({ ...prev, profile: data as Profile, loading: false }))
+  }
+
   useEffect(() => {
     // Timeout pour éviter le loading infini si Supabase ne répond pas
     const timeout = setTimeout(() => {
@@ -42,7 +66,6 @@ export function useAuth() {
     }).catch((error) => {
       clearTimeout(timeout)
       console.error('Error getting session:', error)
-      // Si erreur Supabase, on arrête le loading pour permettre l'accès
       setState((prev) => ({ ...prev, loading: false }))
     })
 
@@ -63,30 +86,6 @@ export function useAuth() {
       subscription.unsubscribe()
     }
   }, [])
-
-  async function fetchProfile(userId: string) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
-    if (error) {
-      console.error('Error fetching profile:', error)
-      // Create profile if it doesn't exist
-      if (error.code === 'PGRST116') {
-        const { data: newProfile } = await supabase
-          .from('profiles')
-          .insert({ id: userId })
-          .select()
-          .single()
-        setState((prev) => ({ ...prev, profile: newProfile as Profile, loading: false }))
-        return
-      }
-    }
-
-    setState((prev) => ({ ...prev, profile: data as Profile, loading: false }))
-  }
 
   async function signUp(email: string, password: string, displayName?: string) {
     const { data, error } = await supabase.auth.signUp({

@@ -7,10 +7,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY!
-})
-
 const FREE_MESSAGES_LIMIT_PER_DAY = 10
 
 interface RequestBody {
@@ -216,8 +212,13 @@ TONALITÉ :
     ]
 
     // 7. Call Claude
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) }
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250514',
       max_tokens: 2000,
       system: systemPrompt,
       messages

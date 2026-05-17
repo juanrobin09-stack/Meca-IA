@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const SYSTEM_PROMPT = `Tu es MECAI, un assistant expert en diagnostic automobile pour le marché français. Tu aides les propriétaires de voitures à comprendre leurs problèmes mécaniques et à prendre des décisions éclairées.
 
@@ -161,6 +160,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { messages, stream: wantStream } = req.body as { messages: ChatMessage[]; stream?: boolean }
   if (!messages || !Array.isArray(messages)) return json(res, 400, { error: 'Invalid messages format' })
 
+  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
   try {
     const formattedMessages = messages.map((m) => {
       if (m.image) {
@@ -180,24 +182,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader('Cache-Control', 'no-cache, no-transform')
       res.setHeader('X-Accel-Buffering', 'no')
       res.status(200)
-      // Flush headers immediately so the client receives the SSE handshake
-      // before any content arrives — critical for Vercel streaming to work.
       res.flushHeaders()
 
-      const stream = anthropic.messages.stream({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1200,
-        system: SYSTEM_PROMPT,
-        messages: formattedMessages,
-      })
+      try {
+        const stream = anthropic.messages.stream({
+          model: 'claude-sonnet-4-5-20250514',
+          max_tokens: 1200,
+          system: SYSTEM_PROMPT,
+          messages: formattedMessages,
+        })
 
-      for await (const event of stream) {
-        if (
-          event.type === 'content_block_delta' &&
-          event.delta.type === 'text_delta'
-        ) {
-          res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
+        for await (const event of stream) {
+          if (
+            event.type === 'content_block_delta' &&
+            event.delta.type === 'text_delta'
+          ) {
+            res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`)
+          }
         }
+      } catch (streamError) {
+        console.error('Stream error:', streamError)
+        res.write(`data: ${JSON.stringify({ error: 'Stream error' })}\n\n`)
       }
 
       res.write('data: [DONE]\n\n')
@@ -207,7 +212,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Non-streaming fallback
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-5-20250514',
       max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages: formattedMessages,
@@ -216,7 +221,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
     return json(res, 200, { content: text })
   } catch (error) {
-    console.error('Anthropic API error:', error)
-    return json(res, 500, { error: 'Failed to get AI response' })
+    console.error('CHAT API ERROR:', error)
+    return json(res, 500, {
+      error: error instanceof Error ? error.message : 'Unknown server error'
+    })
   }
 }

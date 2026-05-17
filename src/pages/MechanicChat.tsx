@@ -85,6 +85,7 @@ export default function MechanicChat() {
       loadVehicles()
       loadConversations()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   // Auto-scroll to bottom
@@ -289,14 +290,15 @@ export default function MechanicChat() {
       // Reload conversations to update title/timestamp
       loadConversations()
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('Send error:', err)
-      setError(err.message || 'Erreur lors de l\'envoi du message')
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi du message')
       // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== tempUserMsg.id))
     } finally {
       setIsTyping(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inputMessage, isTyping, currentConversation, user, selectedVehicleId])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
