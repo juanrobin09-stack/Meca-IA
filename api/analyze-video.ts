@@ -32,20 +32,25 @@ ESTIMATION COÛT: Prix garage indépendant français (pièces + main d'œuvre), 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return
 
-  if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
-
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) return json(res, 401, { error: 'Unauthorized' })
-
-  const { frames } = req.body as { frames: string[] }
-  if (!frames || !Array.isArray(frames) || frames.length === 0) {
-    return json(res, 400, { error: 'Missing or invalid frames data' })
-  }
-
-  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
   try {
+    if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' })
+
+    const authHeader = req.headers.authorization
+    if (!authHeader?.startsWith('Bearer ')) return json(res, 401, { error: 'Unauthorized' })
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return json(res, 500, { error: 'Server misconfiguration: ANTHROPIC_API_KEY missing' })
+    }
+
+    const body = req.body as { frames?: string[] } | null
+    const frames = body?.frames
+    if (!frames || !Array.isArray(frames) || frames.length === 0) {
+      return json(res, 400, { error: 'Missing or invalid frames data' })
+    }
+
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+    {
     const content: Anthropic.Messages.ContentBlockParam[] = []
 
     for (let i = 0; i < Math.min(frames.length, 5); i++) {
@@ -75,8 +80,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       estimation_cout: { min: 50, max: 200 },
       recommandations: 'Filme à nouveau avec plus de lumière ou consulte un mécanicien pour un diagnostic physique.',
     })
+    }
   } catch (error) {
-    console.error('Video analysis error:', error)
-    return json(res, 500, { error: 'Failed to analyze video' })
+    console.error('ANALYZE VIDEO ERROR:', error)
+    return json(res, 500, { error: error instanceof Error ? error.message : 'Failed to analyze video' })
   }
 }
