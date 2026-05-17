@@ -1,10 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Handler } from '@netlify/functions'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 const VIDEO_ANALYSIS_PROMPT = `Tu es un expert mécanicien automobile français avec 30 ans d'expérience. On te montre plusieurs images extraites d'une vidéo filmée par un utilisateur qui a un problème avec sa voiture.
 
 ANALYSE CES IMAGES ATTENTIVEMENT:
@@ -85,6 +81,11 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({ error: 'Missing or invalid frames data' }),
       }
     }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) }
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     // Build the content array with all frames
     const content: Anthropic.Messages.ContentBlockParam[] = []

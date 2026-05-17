@@ -2,8 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 const SYSTEM_PROMPT = `Tu es MECAI, un assistant expert en diagnostic automobile pour le marché français. Tu aides les propriétaires de voitures à comprendre leurs problèmes mécaniques et à prendre des décisions éclairées.
 
 PERSONNALITÉ:
@@ -160,6 +158,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { messages, stream: wantStream } = req.body as { messages: ChatMessage[]; stream?: boolean }
   if (!messages || !Array.isArray(messages)) return json(res, 400, { error: 'Invalid messages format' })
+
+  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   try {
     const formattedMessages = messages.map((m) => {

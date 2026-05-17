@@ -2,8 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 const VIDEO_ANALYSIS_PROMPT = `Tu es un expert mécanicien automobile français avec 30 ans d'expérience. On te montre plusieurs images extraites d'une vidéo filmée par un utilisateur qui a un problème avec sa voiture.
 
 ANALYSE CES IMAGES ATTENTIVEMENT:
@@ -42,6 +40,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!frames || !Array.isArray(frames) || frames.length === 0) {
     return json(res, 400, { error: 'Missing or invalid frames data' })
   }
+
+  if (!process.env.ANTHROPIC_API_KEY) return json(res, 500, { error: 'Server misconfiguration: missing API key' })
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
   try {
     const content: Anthropic.Messages.ContentBlockParam[] = []

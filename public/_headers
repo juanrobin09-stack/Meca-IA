@@ -1,5 +1,6 @@
 /*
   # Security Headers
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://js.stripe.com https://m.stripe.network blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.stripe.com https://errors.stripe.com https://m.stripe.network https://*.supabase.co wss://*.supabase.co https://api.anthropic.com; frame-src https://js.stripe.com https://hooks.stripe.com; worker-src blob:;
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block

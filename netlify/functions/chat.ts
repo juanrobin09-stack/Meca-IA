@@ -1,10 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { Handler } from '@netlify/functions'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
-
 const SYSTEM_PROMPT = `Tu es MECAI, un assistant expert en diagnostic automobile pour le marché français. Tu aides les propriétaires de voitures à comprendre leurs problèmes mécaniques et à prendre des décisions éclairées.
 
 PERSONNALITÉ:
@@ -185,6 +181,11 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({ error: 'Invalid messages format' }),
       }
     }
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server misconfiguration: missing API key' }) }
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
     // Format messages for Anthropic API
     const formattedMessages = messages.map((m) => {
