@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
+export const config = { runtime: 'nodejs' }
+
 const SYSTEM_PROMPT = `Tu es MECAI, un assistant expert en diagnostic automobile pour le marché français. Tu aides les propriétaires de voitures à comprendre leurs problèmes mécaniques et à prendre des décisions éclairées.
 
 PERSONNALITÉ:
@@ -220,7 +222,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const text = response.content[0].type === 'text' ? response.content[0].text : ''
     return json(res, 200, { content: text })
   } catch (error) {
-    console.error('Anthropic API error:', error)
-    return json(res, 500, { error: 'Failed to get AI response' })
+    console.error('CHAT API ERROR:', error)
+    return json(res, 500, {
+      error: error instanceof Error ? error.message : 'Unknown server error'
+    })
   }
 }

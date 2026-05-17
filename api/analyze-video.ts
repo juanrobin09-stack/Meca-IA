@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
+export const config = { runtime: 'nodejs' }
+
 const VIDEO_ANALYSIS_PROMPT = `Tu es un expert mécanicien automobile français avec 30 ans d'expérience. On te montre plusieurs images extraites d'une vidéo filmée par un utilisateur qui a un problème avec sa voiture.
 
 ANALYSE CES IMAGES ATTENTIVEMENT:

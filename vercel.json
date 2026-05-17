@@ -4,13 +4,18 @@
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
+  "functions": {
+    "api/*.ts": {
+      "runtime": "nodejs20.x"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://js.stripe.com https://m.stripe.network blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.stripe.com https://errors.stripe.com https://m.stripe.network https://*.supabase.co wss://*.supabase.co https://api.anthropic.com; frame-src https://js.stripe.com https://hooks.stripe.com; worker-src blob:;"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://js.stripe.com https://m.stripe.network; script-src-elem 'self' blob: https://js.stripe.com https://m.stripe.network; connect-src 'self' https://api.stripe.com https://errors.stripe.com https://m.stripe.network https://js.stripe.com https://*.supabase.co wss://*.supabase.co https://api.anthropic.com; frame-src https://js.stripe.com https://hooks.stripe.com; img-src 'self' data: blob: https://*.stripe.com https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; worker-src blob:;"
         },
         {
           "key": "X-Frame-Options",
