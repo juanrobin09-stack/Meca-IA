@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
-export const config = { runtime: 'nodejs' }
 
 const QUOTE_ANALYSIS_PROMPT = `Tu es un expert en tarification automobile française. Analyse ce devis de garage.
 

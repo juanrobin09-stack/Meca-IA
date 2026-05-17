@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { handleCors, json } from './_cors'
 
-export const config = { runtime: 'nodejs' }
 
 const SYSTEM_PROMPT = `Tu es MECAI, un assistant expert en diagnostic automobile pour le marché français. Tu aides les propriétaires de voitures à comprendre leurs problèmes mécaniques et à prendre des décisions éclairées.
 
